@@ -32,33 +32,31 @@ Simplifiez votre workflow Git avec des commits conventionnels et des PRs génér
 - Gestion intelligente des conflits
 - Intégration GitHub CLI
 
-## 🚀 Installation Rapide
+## 🚀 Installation Ultra-Simple
 
-### **1. Dans votre projet**
+### **1 commande = Installation complète**
 ```bash
-# Ajouter en submodule
-git submodule add https://github.com/genix-x/git-auto-flow.git .git-auto-flow
-
-# Installer (une seule fois)
-./.git-auto-flow/install-alias.sh
+# Cloner + installer en 1 fois
+git clone https://github.com/genix-x/git-auto-flow.git && cd git-auto-flow && ./install.sh
 ```
 
-### **2. Configuration des APIs**
-```bash
-# Créer .git-auto-flow/.env
-GEMINI_API_KEY=votre_cle_gemini
-GROQ_API_KEY=votre_cle_groq
-```
+**C'est tout ! 🎉**
 
-**🔗 Obtenir les clés:**
+Le script va :
+- ✅ Demander vos clés API (Gemini + Groq) - **optionnel**
+- ✅ Installer les dépendances Python automatiquement  
+- ✅ Configurer tous les alias Git
+- ✅ Créer la branche `develop` si nécessaire
+
+### **🔗 Obtenir les clés API (optionnel)**
 - **Gemini**: https://makersuite.google.com/app/apikey (gratuit)
 - **Groq**: https://console.groq.com/keys (gratuit, 1000 calls/mois)
 
-### **3. Utilisation immédiate**
+### **✨ Workflow ultra-court**
 ```bash
-git add .
-git cz-auto              # ✨ Commit automatique
-git pr-create-auto       # ✨ PR automatique
+git feature-start ma-feature  # Nouvelle feature
+git ca                        # Commit auto
+git pr                        # PR auto
 ```
 
 ## 📖 Guide d'utilisation
@@ -85,13 +83,12 @@ git pr-create-auto
 
 ### **🛠️ Commandes Disponibles**
 
-| Commande | Description | Usage |
-|----------|-------------|--------|
-| `git feature-start <nom>` | Créer nouvelle feature | `git feature-start auth-system` |
-| `git commit-auto` | Commit + rebase + IA | `git commit-auto` (auto-stage) |
-| `git ca` | Alias court | `git ca` (même chose) |
-| `git feature-finish` | Finaliser feature | `git feature-finish` |
-| `git pr-create-auto` | **Créer PR auto** | `git pr-create-auto` |
+| Commande | Alias | Description | Usage |
+|----------|-------|-------------|--------|
+| `git feature-start <nom>` | - | Créer nouvelle feature | `git feature-start auth-system` |
+| `git commit-auto` | `git ca` | Commit + rebase + IA | `git ca` (recommandé) |
+| `git pr-create-auto` | `git pr` | **Créer PR auto** | `git pr` (recommandé) |
+| `git feature-finish` | - | Finaliser feature | `git feature-finish` |
 
 ### **⚙️ Options Avancées**
 
