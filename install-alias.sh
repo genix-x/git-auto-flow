@@ -119,6 +119,15 @@ cat >> ~/.gitconfig << EOF
     
     # PR automation
     pr-create-auto = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-create-auto.py"
+    
+    # Nettoyage des branches  
+    cleanup-branches = "!f() { \
+        echo '🧹 Nettoyage des branches locales...'; \
+        git fetch --prune origin; \
+        git branch --merged develop | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; \
+        git branch --merged main | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; \
+        echo '✅ Branches mergées supprimées'; \
+    }; f"
 
 EOF
 
@@ -188,6 +197,12 @@ if command -v gh &> /dev/null; then
               --field restrictions=null \
               >/dev/null 2>&1 && echo -e "${GREEN}✅ Protection main activée${NC}" || echo -e "${YELLOW}⚠️  Protection main échouée${NC}"
         fi
+        
+        # Configuration auto-suppression des branches après merge
+        gh api repos/:owner/:repo \
+          --method PATCH \
+          --field delete_branch_on_merge=true \
+          >/dev/null 2>&1 && echo -e "${GREEN}✅ Auto-suppression branches activée${NC}" || echo -e "${YELLOW}⚠️  Auto-suppression échouée${NC}"
     else
         echo -e "${YELLOW}⚠️  GitHub CLI non connecté - lancez: gh auth login${NC}"
         echo -e "${YELLOW}💡 Protection manuelle requise sur GitHub.com${NC}"
@@ -302,10 +317,11 @@ echo -e "${BLUE}📋 Workflow disponible:${NC}"
 echo -e "   1️⃣  ${GREEN}git feature-start <nom>${NC}     # Nouvelle feature depuis develop"
 echo -e "   2️⃣  ${GREEN}git commit-auto${NC} (ou ${GREEN}git ca${NC})   # Commit + rebase automatique"  
 echo -e "   3️⃣  ${GREEN}git feature-finish${NC}           # Finaliser feature"
-echo -e "   4️⃣  ${GREEN}git pr-create-auto${NC}           # PR feature→develop"
-echo -e "   5️⃣  Merge PR → ${GREEN}develop${NC}"
+echo -e "   4️⃣  ${GREEN}git pr-create-auto${NC}           # PR feature→develop (auto-delete branch)"
+echo -e "   5️⃣  Merge PR → ${GREEN}develop${NC} (branche supprimée automatiquement)"
 echo -e "   6️⃣  ${GREEN}gh pr create --base main --head develop${NC} # Release vers main"
 echo -e "   7️⃣  Merge → ${GREEN}main${NC} = 🚀 Tag + Release automatique !"
+echo -e "   🧹  ${GREEN}git cleanup-branches${NC}         # Nettoyer branches locales mergées"
 echo ""
 echo -e "${BLUE}🔧 Configuration:${NC}"
 echo -e "   1. Éditez: ${YELLOW}${INSTALL_DIR}/.env${NC}"
