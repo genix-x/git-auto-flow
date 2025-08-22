@@ -98,6 +98,17 @@ if ! git show-ref --verify --quiet refs/heads/develop; then
     git push -u origin develop 2>/dev/null || echo "⚠️ Push develop: configurez origin"
 fi
 
+# 6. Configuration auto-delete branches (GitHub)
+if command -v gh &> /dev/null; then
+    echo -e "${BLUE}🗑️  Configuration auto-suppression branches...${NC}"
+    if gh api repos/:owner/:repo --method PATCH --field delete_branch_on_merge=true >/dev/null 2>&1; then
+        echo -e "${GREEN}✅ Auto-suppression branches activée${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Auto-suppression échouée (permissions GitHub?)${NC}"
+        echo -e "${YELLOW}💡 Activez manuellement: Repo Settings > Pull Requests > Auto-delete${NC}"
+    fi
+fi
+
 echo ""
 echo -e "${GREEN}🎉 Installation terminée !${NC}"
 echo ""
