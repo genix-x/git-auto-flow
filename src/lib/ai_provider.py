@@ -164,6 +164,47 @@ class AIProvider:
             "💡 Vérifiez vos clés API et votre connexion internet"
         )
     
+    def analyze_for_release(self, diff: str, files: str, commits: list = None) -> Dict:
+        """
+        Analyse intelligente pour release PR avec fallback automatique
+        
+        Args:
+            diff: Le git diff complet develop -> main
+            files: La liste des fichiers modifiés
+            commits: Liste des messages de commits
+            
+        Returns:
+            Dict contenant les données de la PR de release
+        """
+        # Tentative 1: Gemini (priorité 1)
+        if self.gemini_available:
+            try:
+                print("🤖 Génération Release PR avec Gemini...")
+                client = self._get_gemini_client()
+                if client:
+                    return client.analyze_for_release(diff, files, commits)
+            except Exception as e:
+                print(f"❌ Gemini: {e}")
+                print("🔄 Fallback vers Groq...")
+                self.gemini_available = False
+        
+        # Tentative 2: Groq (fallback)
+        if self.groq_available:
+            try:
+                print("🚀 Génération Release PR avec Groq (fallback)...")
+                client = self._get_groq_client()
+                if client:
+                    return client.analyze_for_release(diff, files, commits)
+            except Exception as e:
+                print(f"❌ Groq: {e}")
+                self.groq_available = False
+        
+        # Aucune IA disponible
+        raise RuntimeError(
+            "❌ Aucune IA disponible!\n"
+            "💡 Vérifiez vos clés API et votre connexion internet"
+        )
+    
     def get_status(self) -> str:
         """Retourne le statut des APIs disponibles"""
         status = []
