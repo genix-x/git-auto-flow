@@ -72,7 +72,7 @@ class GitUtils:
             raise RuntimeError(f"Erreur lors de la récupération du diff de branche: {e}")
     
     @staticmethod
-    def get_branch_files(base_branch: str = "develop") -> str:
+    def get_branch_files(base_branch: str = "develop") -> list:
         """
         Récupère la liste des fichiers modifiés dans la branche courante vs base_branch
         
@@ -80,7 +80,7 @@ class GitUtils:
             base_branch: La branche de référence (par défaut: develop)
             
         Returns:
-            str: La liste des noms de fichiers modifiés (un par ligne)
+            list: Liste des noms de fichiers modifiés
         """
         try:
             result = subprocess.run(
@@ -89,7 +89,9 @@ class GitUtils:
                 text=True,
                 check=True
             )
-            return result.stdout
+            # Retourner une liste de fichiers, pas une string
+            files = result.stdout.strip().split('\n') if result.stdout.strip() else []
+            return [file for file in files if file.strip()]
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Erreur lors de la récupération des fichiers de branche: {e}")
     

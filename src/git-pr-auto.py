@@ -182,8 +182,11 @@ def main():
         # Récupère les changements de la branche
         print(f"🔍 Analyse des changements vs {args.base}...")
         diff = GitUtils.get_branch_diff(args.base)
-        files = GitUtils.get_branch_files(args.base)
+        files_list = GitUtils.get_branch_files(args.base)
         commits = GitUtils.get_commit_messages(args.base)
+        
+        # Convertit la liste de fichiers en string pour l'IA
+        files = '\n'.join(files_list)
         
         print("🤖 Génération de la PR avec Multi-IA...")
         pr_data = ai.analyze_for_pr(diff, files, args.base)

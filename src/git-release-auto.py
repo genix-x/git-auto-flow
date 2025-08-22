@@ -189,11 +189,14 @@ def main():
         
         # Récupère les informations pour la PR
         diff = GitUtils.get_branch_diff('main')
-        files = GitUtils.get_branch_files('main')
+        files_list = GitUtils.get_branch_files('main')
         commits = GitUtils.get_commit_messages('main')
         
         print(f"📊 {len(commits)} commits à releaser")
-        print(f"📁 {len(files)} fichiers modifiés")
+        print(f"📁 {len(files_list)} fichiers modifiés")
+        
+        # Convertit la liste de fichiers en string pour l'IA
+        files = '\n'.join(files_list)
         
         # Étape 3: Génération de la PR avec IA
         print("\n🤖 Étape 3: Génération de la PR de release avec IA...")
