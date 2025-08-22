@@ -43,13 +43,13 @@ DIFF:
 
 Génère un JSON avec cette structure exacte:
 {{
-    "title": "Release: v0.x.x - Description courte",
+    "title": "Release: Description courte des changements",
     "body": "## 🚀 Release Notes\\n\\n### ✨ New Features\\n- Feature 1\\n\\n### 🐛 Bug Fixes\\n- Fix 1\\n\\n### 📝 Documentation\\n- Doc update\\n\\n### 🔧 Other Changes\\n- Other changes",
     "labels": ["release"]
 }}
 
 Instructions:
-- Titre: Format "Release: v0.x.x - Description" (incrementer automatiquement)
+- Titre: Format "Release: Description courte" (PAS de numéro de version)
 - Body: Release notes structure avec emojis et sections
 - Résumer TOUTES les features/fixes importants de cette release
 - Être factuel et professionnel
