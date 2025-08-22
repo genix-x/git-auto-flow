@@ -124,7 +124,82 @@ EOF
 
 echo -e "${GREEN}✅ Alias Git Auto-Flow ajoutés à ~/.gitconfig${NC}"
 
-# 4. Configuration des clés API
+# 4. Configuration du repository Git Flow
+echo ""
+echo -e "${BLUE}🌿 Configuration Git Flow (develop/main)...${NC}"
+
+# Vérifier qu'on est dans un repo Git
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo -e "${RED}❌ Pas dans un repository Git${NC}"
+    echo -e "${YELLOW}💡 Lancez cette commande depuis un repo Git${NC}"
+    exit 1
+fi
+
+# Créer branche develop si elle n'existe pas
+if ! git show-ref --verify --quiet refs/heads/develop; then
+    echo -e "${YELLOW}📝 Création de la branche develop...${NC}"
+    
+    # S'assurer qu'on est sur main
+    if git show-ref --verify --quiet refs/heads/main; then
+        git checkout main >/dev/null 2>&1 || true
+        git pull origin main >/dev/null 2>&1 || echo -e "${YELLOW}⚠️  Pull main ignoré (pas de remote ou conflit)${NC}"
+    fi
+    
+    # Créer develop depuis main (ou HEAD si main n'existe pas)
+    git checkout -b develop >/dev/null 2>&1
+    echo -e "${GREEN}✅ Branche develop créée localement${NC}"
+    
+    # Push develop vers origin si possible
+    if git remote get-url origin >/dev/null 2>&1; then
+        if git push -u origin develop >/dev/null 2>&1; then
+            echo -e "${GREEN}✅ Branche develop pushée vers origin${NC}"
+        else
+            echo -e "${YELLOW}⚠️  Push develop échoué (configurez origin d'abord)${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠️  Pas de remote origin configuré${NC}"
+    fi
+else
+    echo -e "${GREEN}✅ Branche develop existe déjà${NC}"
+fi
+
+# Configurer branch protection via GitHub CLI si disponible
+if command -v gh &> /dev/null; then
+    echo -e "${BLUE}🛡️  Configuration protection develop...${NC}"
+    
+    # Vérifier qu'on est connecté à GitHub
+    if gh auth status >/dev/null 2>&1; then
+        # Protection develop (require PR + up-to-date)
+        gh api repos/:owner/:repo/branches/develop/protection \
+          --method PUT \
+          --field required_status_checks='{"strict":true,"contexts":[]}' \
+          --field enforce_admins=true \
+          --field required_pull_request_reviews='{"required_approving_review_count":1,"dismiss_stale_reviews":true}' \
+          --field restrictions=null \
+          >/dev/null 2>&1 && echo -e "${GREEN}✅ Protection develop activée${NC}" || echo -e "${YELLOW}⚠️  Protection develop échouée (permissions?)${NC}"
+        
+        # Protection main (require PR + up-to-date)  
+        if git show-ref --verify --quiet refs/heads/main; then
+            gh api repos/:owner/:repo/branches/main/protection \
+              --method PUT \
+              --field required_status_checks='{"strict":true,"contexts":[]}' \
+              --field enforce_admins=true \
+              --field required_pull_request_reviews='{"required_approving_review_count":1,"dismiss_stale_reviews":true}' \
+              --field restrictions=null \
+              >/dev/null 2>&1 && echo -e "${GREEN}✅ Protection main activée${NC}" || echo -e "${YELLOW}⚠️  Protection main échouée${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠️  GitHub CLI non connecté - lancez: gh auth login${NC}"
+        echo -e "${YELLOW}💡 Protection manuelle requise sur GitHub.com${NC}"
+    fi
+else
+    echo -e "${YELLOW}⚠️  GitHub CLI non trouvé - protection manuelle requise${NC}"
+fi
+
+# Revenir sur develop pour setup
+git checkout develop >/dev/null 2>&1 || true
+
+# 5. Configuration des clés API
 echo ""
 echo -e "${BLUE}🔑 Configuration des clés API...${NC}"
 
@@ -147,7 +222,7 @@ echo ""
 echo -e "${BLUE}📝 Éditez le fichier de configuration:${NC}"
 echo -e "   ${YELLOW}${INSTALL_DIR}/.env${NC}"
 
-# 5. Test de l'installation
+# 6. Test de l'installation
 echo ""
 echo -e "${BLUE}🧪 Test de l'installation...${NC}"
 
@@ -157,16 +232,22 @@ else
     echo -e "${YELLOW}⚠️  Test partiel - configurez les clés API${NC}"
 fi
 
-# 6. Instructions finales
+# 7. Instructions finales
 echo ""
 echo -e "${GREEN}🎉 Installation terminée!${NC}"
 echo ""
-echo -e "${BLUE}📋 Workflow complet disponible:${NC}"
-echo -e "   ${GREEN}git feature-start <nom>${NC}   # Démarrer nouvelle feature"
-echo -e "   ${GREEN}git commit-auto${NC}            # Commit avec rebase + IA"  
-echo -e "   ${GREEN}git ca${NC}                     # Alias court pour commit-auto"
-echo -e "   ${GREEN}git feature-finish${NC}         # Finaliser avant PR"
-echo -e "   ${GREEN}git pr-create-auto${NC}         # Créer PR automatique"
+echo -e "${BLUE}📋 Git Flow complet configuré:${NC}"
+echo -e "   ${GREEN}🌿 develop${NC} (intégration) ← ${GREEN}🚀 feature/*${NC}"
+echo -e "   ${GREEN}🎯 main${NC} (production) ← ${GREEN}🌿 develop${NC} (release)"
+echo ""
+echo -e "${BLUE}📋 Workflow disponible:${NC}"
+echo -e "   1️⃣  ${GREEN}git feature-start <nom>${NC}     # Nouvelle feature depuis develop"
+echo -e "   2️⃣  ${GREEN}git commit-auto${NC} (ou ${GREEN}git ca${NC})   # Commit + rebase automatique"  
+echo -e "   3️⃣  ${GREEN}git feature-finish${NC}           # Finaliser feature"
+echo -e "   4️⃣  ${GREEN}git pr-create-auto${NC}           # PR feature→develop"
+echo -e "   5️⃣  Merge PR → ${GREEN}develop${NC}"
+echo -e "   6️⃣  ${GREEN}gh pr create --base main --head develop${NC} # Release vers main"
+echo -e "   7️⃣  Merge → ${GREEN}main${NC} = 🚀 Tag + Release automatique !"
 echo ""
 echo -e "${BLUE}🔧 Configuration:${NC}"
 echo -e "   1. Éditez: ${YELLOW}${INSTALL_DIR}/.env${NC}"
