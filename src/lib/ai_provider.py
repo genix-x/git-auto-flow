@@ -47,9 +47,14 @@ class AIProvider:
         """Initialise le client Gemini si pas encore fait"""
         if not self.gemini_client and self.gemini_available:
             try:
-                from .gemini_client import GeminiClient
-                # On initialise avec une clé factice pour tester la structure
-                # Le vrai GeminiClient gère sa propre clé API
+                # Import dynamique pour éviter les erreurs de chemin
+                import sys
+                from pathlib import Path
+                lib_path = Path(__file__).parent
+                if str(lib_path) not in sys.path:
+                    sys.path.insert(0, str(lib_path))
+                
+                from gemini_client import GeminiClient
                 self.gemini_client = GeminiClient()
                 return self.gemini_client
             except Exception as e:
@@ -62,7 +67,14 @@ class AIProvider:
         """Initialise le client Groq si pas encore fait"""
         if not self.groq_client and self.groq_available:
             try:
-                from .groq_client import GroqClient
+                # Import dynamique pour éviter les erreurs de chemin
+                import sys
+                from pathlib import Path
+                lib_path = Path(__file__).parent
+                if str(lib_path) not in sys.path:
+                    sys.path.insert(0, str(lib_path))
+                
+                from groq_client import GroqClient
                 self.groq_client = GroqClient(self.groq_key)
                 return self.groq_client
             except Exception as e:
