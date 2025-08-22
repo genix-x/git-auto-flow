@@ -192,21 +192,25 @@ gh auth login
 ### 📊 **Schéma du Git Flow**
 
 ```
-feature/auth-system ──┐                              (PR #1)
-feature/user-profile ─┤                              (PR #2)
-feature/dashboard ────┼──► develop ──┐               (PR #3)
-                      │               │
-feature/api-integration ─┘            ├──► main ──► 🚀 v0.2.0
-                                      │
-feature/notifications ──┐             │
-feature/search-filters ─┼──► develop ─┤
-feature/dark-mode ──────┤             │
-feature/mobile-ui ──────┘             ├──► main ──► 🚀 v0.3.0
-                                      │
-feature/performance ──┐               
-feature/analytics ────┼──► develop ───┐
-feature/admin-panel ──┘               │
-                                      ├──► main ──► 🚀 v0.4.0
+feature/auth-system ─────┐
+feature/user-profile ────┤
+feature/dashboard ───────┤
+feature/api-integration ─┴──► develop ──┐                (PR #1)
+                                        │
+                                        ├──► main ──► 🚀 v0.2.0
+                                        │
+feature/notifications ───┐              │
+feature/search-filters ──┤              │
+feature/dark-mode ───────┤              │
+feature/mobile-ui ───────┴──► develop ──┤                (PR #2)
+                                        │
+                                        ├──► main ──► 🚀 v0.3.0
+                                        │
+feature/performance ─────┐              │
+feature/analytics ───────┤              │
+feature/admin-panel ─────┴──► develop ──┤                (PR #3)
+                                        │
+                                        ├──► main ──► 🚀 v0.4.0
 
 
 🔄 Cycle de Release :
