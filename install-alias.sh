@@ -197,6 +197,12 @@ if command -v gh &> /dev/null; then
               --field restrictions=null \
               >/dev/null 2>&1 && echo -e "${GREEN}✅ Protection main activée${NC}" || echo -e "${YELLOW}⚠️  Protection main échouée${NC}"
         fi
+        
+        # Configuration auto-suppression des branches après merge
+        gh api repos/:owner/:repo \
+          --method PATCH \
+          --field delete_branch_on_merge=true \
+          >/dev/null 2>&1 && echo -e "${GREEN}✅ Auto-suppression branches activée${NC}" || echo -e "${YELLOW}⚠️  Auto-suppression échouée${NC}"
     else
         echo -e "${YELLOW}⚠️  GitHub CLI non connecté - lancez: gh auth login${NC}"
         echo -e "${YELLOW}💡 Protection manuelle requise sur GitHub.com${NC}"
