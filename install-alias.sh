@@ -214,6 +214,30 @@ fi
 # Revenir sur develop pour setup
 git checkout develop >/dev/null 2>&1 || true
 
+# Créer tag initial v0.0.0 pour semantic-release (si pas déjà créé)
+if ! git tag -l | grep -q "^v0\.0\.0$"; then
+    echo -e "${YELLOW}🏷️  Création du tag initial v0.0.0 pour versioning...${NC}"
+    if git tag v0.0.0 >/dev/null 2>&1; then
+        echo -e "${GREEN}✅ Tag v0.0.0 créé localement${NC}"
+        
+        # Push le tag vers origin si possible
+        if git remote get-url origin >/dev/null 2>&1; then
+            if git push origin v0.0.0 >/dev/null 2>&1; then
+                echo -e "${GREEN}✅ Tag v0.0.0 pushé vers origin${NC}"
+                echo -e "${YELLOW}💡 Semantic-release démarrera à v0.1.0${NC}"
+            else
+                echo -e "${YELLOW}⚠️  Push tag échoué - pushez manuellement: git push origin v0.0.0${NC}"
+            fi
+        else
+            echo -e "${YELLOW}⚠️  Tag créé localement uniquement${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠️  Création du tag échouée${NC}"
+    fi
+else
+    echo -e "${GREEN}✅ Tag v0.0.0 existe déjà${NC}"
+fi
+
 # 5. Installation semantic-release (si Node.js disponible)
 if command -v npm &> /dev/null || command -v pnpm &> /dev/null || command -v yarn &> /dev/null; then
     echo ""
@@ -313,15 +337,35 @@ echo -e "${BLUE}📋 Git Flow complet configuré:${NC}"
 echo -e "   ${GREEN}🌿 develop${NC} (intégration) ← ${GREEN}🚀 feature/*${NC}"
 echo -e "   ${GREEN}🎯 main${NC} (production) ← ${GREEN}🌿 develop${NC} (release)"
 echo ""
-echo -e "${BLUE}📋 Workflow disponible:${NC}"
-echo -e "   1️⃣  ${GREEN}git feature-start <nom>${NC}     # Nouvelle feature depuis develop"
-echo -e "   2️⃣  ${GREEN}git commit-auto${NC} (ou ${GREEN}git ca${NC})   # Commit + rebase automatique"  
-echo -e "   3️⃣  ${GREEN}git feature-finish${NC}           # Finaliser feature"
-echo -e "   4️⃣  ${GREEN}git pr-create-auto${NC}           # PR feature→develop (auto-delete branch)"
-echo -e "   5️⃣  Merge PR → ${GREEN}develop${NC} (branche supprimée automatiquement)"
-echo -e "   6️⃣  ${GREEN}gh pr create --base main --head develop${NC} # Release vers main"
-echo -e "   7️⃣  Merge → ${GREEN}main${NC} = 🚀 Tag + Release automatique !"
-echo -e "   🧹  ${GREEN}git cleanup-branches${NC}         # Nettoyer branches locales mergées"
+echo -e "${BLUE}🚀 WORKFLOW COMPLET - Git Auto-Flow:${NC}"
+echo ""
+echo -e "${YELLOW}📋 Développement d'une feature:${NC}"
+echo -e "   1️⃣  ${GREEN}git feature-start ma-feature${NC}  # Crée feature/ma-feature depuis develop"
+echo -e "   2️⃣  ${GREEN}git commit-auto${NC} (ou ${GREEN}git ca${NC})    # Commit avec IA + rebase auto"  
+echo -e "   3️⃣  ${GREEN}git feature-finish${NC}            # Finalise feature (rebase + push)"
+echo -e "   4️⃣  ${GREEN}git pr-create-auto${NC}            # Crée PR avec analyse IA complète"
+echo ""
+echo -e "${YELLOW}📋 Gestion des releases:${NC}"
+echo -e "   5️⃣  Merge PR → ${GREEN}develop${NC}         # (branche auto-supprimée)"
+echo -e "   6️⃣  ${GREEN}gh pr create --base main --head develop${NC}  # Release PR"
+echo -e "   7️⃣  Merge → ${GREEN}main${NC} = 🚀 ${YELLOW}v0.1.0 Tag + Release automatique !${NC}"
+echo ""
+echo -e "${YELLOW}🧹 Maintenance:${NC}"
+echo -e "   🔧  ${GREEN}git cleanup-branches${NC}          # Nettoie branches locales mergées"
+echo ""
+echo -e "${YELLOW}🤖 APIs supportées:${NC}"
+if [ ! -z "$GEMINI_KEY" ]; then
+    echo -e "   ✅  ${GREEN}Gemini${NC} (Google AI) - Configuré"
+else
+    echo -e "   ⚠️   ${YELLOW}Gemini${NC} (Google AI) - À configurer"
+fi
+if [ ! -z "$GROQ_KEY" ]; then
+    echo -e "   ✅  ${GREEN}Groq${NC} (Fallback) - Configuré"  
+else
+    echo -e "   ⚠️   ${YELLOW}Groq${NC} (Fallback) - À configurer"
+fi
+echo ""
+echo -e "${YELLOW}🎯 Résultat: Workflow Git 100% automatisé avec IA !${NC}"
 echo ""
 echo -e "${BLUE}🔧 Configuration:${NC}"
 echo -e "   1. Éditez: ${YELLOW}${INSTALL_DIR}/.env${NC}"
