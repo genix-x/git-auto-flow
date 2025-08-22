@@ -82,10 +82,12 @@ def main():
         sys.exit(1)
     
     try:
-        # 1. Rebase automatique sur develop (ou main si pas de develop)
-        base_branch = "develop"
+        # 1. Rebase automatique (seulement si pas sur branche de base)
+        current_branch = subprocess.run(['git', 'branch', '--show-current'], 
+                                      capture_output=True, text=True, check=True).stdout.strip()
         
-        # Vérifier si develop existe
+        # Déterminer la branche de base
+        base_branch = "develop"
         try:
             subprocess.run(['git', 'show-ref', '--verify', '--quiet', 'refs/heads/develop'], 
                          check=True, capture_output=True)
@@ -94,12 +96,16 @@ def main():
             base_branch = "main"
             print("ℹ️  Branche develop non trouvée, utilisation de main")
         
-        print(f"🔄 Rebase sur {base_branch}...")
-        if GitUtils.rebase_on_target(base_branch):
-            print("✅ Rebase réussi")
+        # Rebase seulement si on n'est PAS sur la branche de base
+        if current_branch != base_branch:
+            print(f"🔄 Rebase {current_branch} sur {base_branch}...")
+            if GitUtils.rebase_on_target(base_branch):
+                print("✅ Rebase réussi")
+            else:
+                print("⚠️  Conflits détectés ! Résolvez-les puis relancez la commande")
+                sys.exit(1)
         else:
-            print("⚠️  Conflits détectés ! Résolvez-les puis relancez la commande")
-            sys.exit(1)
+            print(f"ℹ️  Déjà sur {base_branch}, pas de rebase nécessaire")
         
         # 2. Vérifie qu'il y a des changements stagés OU auto-stage tout
         if not GitUtils.has_staged_changes():

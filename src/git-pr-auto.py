@@ -11,7 +11,7 @@ from pathlib import Path
 # Ajout du dossier lib au path pour les imports
 sys.path.insert(0, str(Path(__file__).parent / 'lib'))
 
-from gemini_client import GeminiClient
+from ai_provider import AIProvider
 from git_utils import GitUtils
 
 
@@ -161,8 +161,9 @@ def main():
             pass
     
     try:
-        # Initialise le client Gemini
-        gemini = GeminiClient()
+        # Initialise le gestionnaire multi-IA
+        ai = AIProvider()
+        print(ai.get_status())
         
         # Récupère les changements de la branche
         print(f"🔍 Analyse des changements vs {args.base}...")
@@ -170,8 +171,8 @@ def main():
         files = GitUtils.get_branch_files(args.base)
         commits = GitUtils.get_commit_messages(args.base)
         
-        print("🤖 Génération de la PR avec Gemini...")
-        pr_data = gemini.analyze_for_pr(diff, files, args.base)
+        print("🤖 Génération de la PR avec Multi-IA...")
+        pr_data = ai.analyze_for_pr(diff, files, args.base)
         
         # Force le mode draft si demandé
         if args.draft:
