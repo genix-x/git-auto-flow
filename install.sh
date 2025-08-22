@@ -72,6 +72,7 @@ echo -e "${GREEN}⚙️ Configuration aliases Git...${NC}"
 git config --global alias.commit-auto "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-commit-auto.py"
 git config --global alias.ca "!git commit-auto"
 git config --global alias.pr-create-auto "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-create-auto.py"
+git config --global alias.pr "!git pr-create-auto"
 
 git config --global alias.feature-start "!f() { 
     echo '🚀 Feature: '\$1; 
