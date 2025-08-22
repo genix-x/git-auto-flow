@@ -65,29 +65,33 @@ git pr-create-auto       # ✨ PR automatique
 
 ### **🔥 Workflow Ultra-Rapide**
 ```bash
-# 1. Développement normal
-git checkout -b feature/ma-feature
+# 1. Démarrer une nouvelle feature
+git feature-start ma-super-feature
+
+# 2. Développement...
 # ... coding ...
 
-# 2. Une seule commande pour tout !
-git add .
+# 3. Commit avec rebase automatique + IA
+git commit-auto        # ou: git ca (alias court)
+
+# 4. Continuer le développement...
+git commit-auto        # Rebase + IA à chaque fois
+
+# 5. Finaliser et créer PR
 git pr-create-auto
 
-# ✅ Résultat:
-# - Analyse IA du code
-# - Commit conventionnel généré
-# - Rebase automatique sur develop
-# - Push sécurisé
-# - PR créée avec titre/description IA
+# ✅ Résultat: Workflow complet automatisé !
 ```
 
 ### **🛠️ Commandes Disponibles**
 
 | Commande | Description | Usage |
 |----------|-------------|--------|
-| `git cz-auto` | Commit automatique | `git add . && git cz-auto` |
-| `git pr-auto` | PR avec rebase | `git pr-auto --base develop` |
-| `git pr-create-auto` | **Workflow complet** | `git pr-create-auto` |
+| `git feature-start <nom>` | Créer nouvelle feature | `git feature-start auth-system` |
+| `git commit-auto` | Commit + rebase + IA | `git commit-auto` (auto-stage) |
+| `git ca` | Alias court | `git ca` (même chose) |
+| `git feature-finish` | Finaliser feature | `git feature-finish` |
+| `git pr-create-auto` | **Créer PR auto** | `git pr-create-auto` |
 
 ### **⚙️ Options Avancées**
 

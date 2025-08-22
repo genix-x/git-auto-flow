@@ -90,17 +90,35 @@ fi
 # Ajout des alias Git Auto-Flow
 cat >> ~/.gitconfig << EOF
 
-# Git Auto-Flow - Aliases ajoutés automatiquement
+# Git Auto-Flow - Aliases ajoutés automatiquement  
 [alias]
-    # Automation avec IA
-    cz-auto = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-cz-auto-v2.py"
-    pr-auto = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-auto.py"
-    pr-create-auto = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-create-auto.py"
+    # 🚀 WORKFLOW PRINCIPAL avec IA
+    feature-start = "!f() { \
+        echo '🚀 Démarrage feature: '\$1; \
+        git checkout develop && \
+        git pull origin develop && \
+        git checkout -b feature/\$1 && \
+        git push -u origin feature/\$1 && \
+        echo '✅ Feature branch créée: feature/'\$1; \
+    }; f"
     
-    # Aliases shell (si disponibles)
-    cz-auto-sh = "!cd \$(git rev-parse --show-toplevel) && ${INSTALL_DIR}/bin/git-cz-auto.sh"
-    pr-auto-sh = "!cd \$(git rev-parse --show-toplevel) && ${INSTALL_DIR}/bin/git-pr-auto.sh"
-    pr-create-auto-sh = "!cd \$(git rev-parse --show-toplevel) && ${INSTALL_DIR}/bin/git-pr-create-auto.sh"
+    # Commit avec rebase + IA (remplace commit-safe)
+    commit-auto = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-commit-auto.py"
+    
+    # Alias courts 
+    ca = "!git commit-auto"
+    
+    # Finaliser feature (avant PR)  
+    feature-finish = "!f() { \
+        echo '🔄 Finalisation de la feature...'; \
+        git fetch origin develop && \
+        git rebase origin/develop && \
+        git push --force-with-lease origin \$(git branch --show-current) && \
+        echo '✅ Feature prête pour PR vers develop'; \
+    }; f"
+    
+    # PR automation
+    pr-create-auto = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-create-auto.py"
 
 EOF
 
@@ -143,15 +161,17 @@ fi
 echo ""
 echo -e "${GREEN}🎉 Installation terminée!${NC}"
 echo ""
-echo -e "${BLUE}📋 Alias disponibles:${NC}"
-echo -e "   ${GREEN}git cz-auto${NC}          # Commit automatique avec IA"
-echo -e "   ${GREEN}git pr-auto${NC}          # PR automatique avec IA"
-echo -e "   ${GREEN}git pr-create-auto${NC}   # Workflow complet: rebase + PR"
+echo -e "${BLUE}📋 Workflow complet disponible:${NC}"
+echo -e "   ${GREEN}git feature-start <nom>${NC}   # Démarrer nouvelle feature"
+echo -e "   ${GREEN}git commit-auto${NC}            # Commit avec rebase + IA"  
+echo -e "   ${GREEN}git ca${NC}                     # Alias court pour commit-auto"
+echo -e "   ${GREEN}git feature-finish${NC}         # Finaliser avant PR"
+echo -e "   ${GREEN}git pr-create-auto${NC}         # Créer PR automatique"
 echo ""
 echo -e "${BLUE}🔧 Configuration:${NC}"
 echo -e "   1. Éditez: ${YELLOW}${INSTALL_DIR}/.env${NC}"
 echo -e "   2. Ajoutez vos clés API (Gemini + Groq)"
-echo -e "   3. Testez: ${GREEN}git cz-auto${NC} dans un repo Git"
+echo -e "   3. Testez: ${GREEN}git commit-auto${NC} dans un repo Git"
 echo ""
 echo -e "${BLUE}📚 Documentation complète:${NC}"
 echo -e "   ${YELLOW}${INSTALL_DIR}/README.md${NC}"
