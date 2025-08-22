@@ -52,11 +52,11 @@ Le script va :
 - **Gemini**: https://makersuite.google.com/app/apikey (gratuit)
 - **Groq**: https://console.groq.com/keys (gratuit, 1000 calls/mois)
 
-### **✨ Utilisation immédiate**
+### **✨ Workflow ultra-court**
 ```bash
 git feature-start ma-feature  # Nouvelle feature
-git ca                        # Commit automatique IA
-git pr-create-auto           # PR automatique
+git ca                        # Commit auto
+git pr                        # PR auto
 ```
 
 ## 📖 Guide d'utilisation
@@ -83,13 +83,12 @@ git pr-create-auto
 
 ### **🛠️ Commandes Disponibles**
 
-| Commande | Description | Usage |
-|----------|-------------|--------|
-| `git feature-start <nom>` | Créer nouvelle feature | `git feature-start auth-system` |
-| `git commit-auto` | Commit + rebase + IA | `git commit-auto` (auto-stage) |
-| `git ca` | Alias court | `git ca` (même chose) |
-| `git feature-finish` | Finaliser feature | `git feature-finish` |
-| `git pr-create-auto` | **Créer PR auto** | `git pr-create-auto` |
+| Commande | Alias | Description | Usage |
+|----------|-------|-------------|--------|
+| `git feature-start <nom>` | - | Créer nouvelle feature | `git feature-start auth-system` |
+| `git commit-auto` | `git ca` | Commit + rebase + IA | `git ca` (recommandé) |
+| `git pr-create-auto` | `git pr` | **Créer PR auto** | `git pr` (recommandé) |
+| `git feature-finish` | - | Finaliser feature | `git feature-finish` |
 
 ### **⚙️ Options Avancées**
 
