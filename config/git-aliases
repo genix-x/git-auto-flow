@@ -1,0 +1,109 @@
+# Git Aliases pour Semantic Release + Workflow Amélioré
+# Installation: git config --global include.path $(pwd)/.gitalias
+
+[alias]
+    # ═════════════════════════════════════════════════════════════════
+    # 🚀 WORKFLOW PRINCIPAL
+    # ═════════════════════════════════════════════════════════════════
+    
+    # Démarrer une feature (workflow complet)
+    feature-start = "!f() { \
+        echo '🚀 Démarrage feature: '$1; \
+        git checkout develop && \
+        git pull origin develop && \
+        git checkout -b feature/$1 && \
+        git push -u origin feature/$1 && \
+        echo '✅ Feature branch créée: feature/'$1; \
+    }; f"
+    
+    # Commit avec rebase automatique (sécurisé)
+    commit-safe = "!f() { \
+        echo '🔄 Rebase sur develop...'; \
+        git fetch origin develop; \
+        if git rebase origin/develop; then \
+            echo '📝 Commit interactif...'; \
+            pnpm commit; \
+        else \
+            echo '⚠️  Conflits détectés ! Résolvez-les puis lancez: git rebase --continue && pnpm commit'; \
+        fi \
+    }; f"
+    
+    # Alias court pour rebase + commit (legacy)
+    rc = "!git commit-safe"
+    
+    # Finaliser une feature (avant PR)
+    feature-finish = "!f() { \
+        echo '🔄 Finalisation de la feature...'; \
+        git fetch origin develop && \
+        git rebase origin/develop && \
+        git push --force-with-lease origin $(git branch --show-current) && \
+        echo '✅ Feature prête pour PR vers develop'; \
+    }; f"
+    
+    # ═════════════════════════════════════════════════════════════════
+    # 🔧 UTILITAIRES WORKFLOW
+    # ═════════════════════════════════════════════════════════════════
+    
+    # Branches principales
+    dev = "!git checkout develop && git pull origin develop"
+    main = "!git checkout main && git pull origin main"
+    
+    # Statut de la branch par rapport à develop/main
+    status-dev = "!git fetch origin && echo '📊 Status vs develop:' && git log --oneline origin/develop..HEAD"
+    status-main = "!git fetch origin && echo '📊 Status vs main:' && git log --oneline origin/main..HEAD"
+    
+    # Vérifier si la branch est à jour
+    check-behind = "!f() { \
+        git fetch origin && \
+        BEHIND=$(git rev-list --count HEAD..origin/develop); \
+        if [ $BEHIND -gt 0 ]; then \
+            echo '⚠️  Branch en retard de '$BEHIND' commits sur develop'; \
+            echo '🔄 Lancez: git rebase origin/develop'; \
+            return 1; \
+        else \
+            echo '✅ Branch à jour avec develop'; \
+        fi \
+    }; f"
+    
+    # ═════════════════════════════════════════════════════════════════
+    # 📝 COMMITS (Legacy - préférer pnpm commit)
+    # ═════════════════════════════════════════════════════════════════
+    
+    # Commits conventionnels rapides
+    cf = "!f() { git commit -m \"feat: $1\"; }; f"
+    cx = "!f() { git commit -m \"fix: $1\"; }; f"  
+    cd = "!f() { git commit -m \"docs: $1\"; }; f"
+    cs = "!f() { git commit -m \"style: $1\"; }; f"
+    cr = "!f() { git commit -m \"refactor: $1\"; }; f"
+    cp = "!f() { git commit -m \"perf: $1\"; }; f"
+    ct = "!f() { git commit -m \"test: $1\"; }; f"
+    cb = "!f() { git commit -m \"build: $1\"; }; f"
+    ci = "!f() { git commit -m \"ci: $1\"; }; f"
+    cc = "!f() { git commit -m \"chore: $1\"; }; f"
+    
+    # Breaking changes
+    cfb = "!f() { git commit -m \"feat!: $1\"; }; f"
+    cxb = "!f() { git commit -m \"fix!: $1\"; }; f"
+    
+    # ═════════════════════════════════════════════════════════════════
+    # 🔍 NAVIGATION & DEBUG
+    # ═════════════════════════════════════════════════════════════════
+    
+    # Logs améliorés
+    lg = log --oneline --decorate --graph --all -10
+    lgf = log --oneline --decorate --graph --all
+    last = "log -1 HEAD --stat"
+    
+    # Status
+    st = status -sb
+    unstage = "reset HEAD --"
+    
+    # Utilitaires
+    pushup = "!git push -u origin $(git branch --show-current)"
+    
+    # ═════════════════════════════════════════════════════════════════
+    # 🚀 SEMANTIC RELEASE
+    # ═════════════════════════════════════════════════════════════════
+    
+    release-dry = "!pnpm semantic-release:dry-run"
+    release = "!pnpm semantic-release"
