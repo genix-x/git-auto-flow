@@ -187,6 +187,57 @@ sudo apt install gh      # Ubuntu
 gh auth login
 ```
 
+## 🎯 Workflow Complet
+
+### 📊 **Schéma du Git Flow**
+
+```
+feature/auth-system ─────┐
+feature/user-profile ────┤
+feature/dashboard ───────┤
+feature/api-integration ─┴──► develop ──┐                (PR #1)
+                                        │
+                                        ├──► main ──► 🚀 v0.2.0
+                                        │
+feature/notifications ───┐              │
+feature/search-filters ──┤              │
+feature/dark-mode ───────┤              │
+feature/mobile-ui ───────┴──► develop ──┤                (PR #2)
+                                        │
+                                        ├──► main ──► 🚀 v0.3.0
+                                        │
+feature/performance ─────┐              │
+feature/analytics ───────┤              │
+feature/admin-panel ─────┴──► develop ──┤                (PR #3)
+                                        │
+                                        ├──► main ──► 🚀 v0.4.0
+
+
+🔄 Cycle de Release :
+   1️⃣ Features (5) ──► develop ──► main ──► 🚀 v0.2.0
+   2️⃣ Features (4) ──► develop ──► main ──► 🚀 v0.3.0  
+   3️⃣ Features (3) ──► develop ──► main ──► 🚀 v0.4.0
+```
+
+### ⚡ **Workflow en Action**
+
+```bash
+# Développeur A 
+git feature-start auth-system    # 🧹 Nettoie + crée branche
+git ca                          # 📝 Commit IA 
+git pr                          # 🔄 PR vers develop
+
+# Développeur B (en parallèle)
+git feature-start user-profile  # 🧹 Nettoie + crée branche  
+git ca                          # 📝 Commit IA
+git pr                          # 🔄 PR vers develop
+
+# Release Manager
+git checkout develop
+git pr --base main              # 🚀 Release PR develop → main
+# Merge = auto-release v0.2.0 !
+```
+
 ## 🎉 Avantages
 
 - **🤖 Zéro réflexion** : L'IA analyse et génère tout
