@@ -45,8 +45,9 @@ git clone https://github.com/genix-x/git-auto-flow.git && cd git-auto-flow && ./
 Le script va :
 - ✅ Demander vos clés API (Gemini + Groq) - **optionnel**
 - ✅ Installer les dépendances Python automatiquement  
-- ✅ Configurer tous les alias Git
+- ✅ Configurer tous les alias Git avec **nettoyage automatique**
 - ✅ Créer la branche `develop` si nécessaire
+- ✅ Activer l'auto-suppression des branches après merge
 
 ### **🔗 Obtenir les clés API (optionnel)**
 - **Gemini**: https://makersuite.google.com/app/apikey (gratuit)
@@ -70,13 +71,16 @@ git feature-start ma-super-feature
 # ... coding ...
 
 # 3. Commit avec rebase automatique + IA
-git commit-auto        # ou: git ca (alias court)
+git ca                 # (git commit-auto en long)
 
 # 4. Continuer le développement...
-git commit-auto        # Rebase + IA à chaque fois
+git ca                 # Rebase + IA à chaque fois
 
 # 5. Finaliser et créer PR
-git pr-create-auto
+git pr                 # (git pr-create-auto en long)
+
+# ✨ Le nettoyage est automatique ! 
+# git feature-start nettoie déjà tout (local + remote)
 
 # ✅ Résultat: Workflow complet automatisé !
 ```
@@ -85,10 +89,20 @@ git pr-create-auto
 
 | Commande | Alias | Description | Usage |
 |----------|-------|-------------|--------|
-| `git feature-start <nom>` | - | Créer nouvelle feature | `git feature-start auth-system` |
+| `git feature-start <nom>` | - | **Créer nouvelle feature + nettoyage auto** | `git feature-start auth-system` |
 | `git commit-auto` | `git ca` | Commit + rebase + IA | `git ca` (recommandé) |
 | `git pr-create-auto` | `git pr` | **Créer PR auto** | `git pr` (recommandé) |
 | `git feature-finish` | - | Finaliser feature | `git feature-finish` |
+
+### **🧹 Nettoyage Automatique**
+
+**`git feature-start` fait automatiquement :**
+- ✅ **Fetch + prune** : Synchronise avec origin  
+- ✅ **Supprime branches locales** mergées dans `main` ou `develop`
+- ✅ **Supprime branches remote** mergées sur GitHub
+- ✅ **Créé nouvelle feature** depuis `develop` propre
+
+**Résultat :** Workspace 100% clean à chaque nouvelle feature ! 🎯
 
 ### **⚙️ Options Avancées**
 

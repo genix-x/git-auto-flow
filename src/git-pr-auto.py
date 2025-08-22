@@ -64,6 +64,20 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop") -> str:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         pr_url = result.stdout.strip()
         print(f"✅ PR créée avec succès: {pr_url}")
+        
+        # Activer l'auto-delete des branches après merge
+        try:
+            print("🗑️  Activation auto-suppression branches...")
+            delete_cmd = [
+                'gh', 'api', 'repos/:owner/:repo',
+                '--method', 'PATCH',
+                '--field', 'delete_branch_on_merge=true'
+            ]
+            subprocess.run(delete_cmd, capture_output=True, check=True)
+            print("✅ Auto-suppression activée sur le repo")
+        except subprocess.CalledProcessError:
+            print("⚠️  Auto-suppression échouée (permissions?) - ignoré")
+        
         return pr_url
         
     except subprocess.CalledProcessError as e:

@@ -76,6 +76,12 @@ git config --global alias.pr "!git pr-create-auto"
 
 git config --global alias.feature-start "!f() { 
     echo '🚀 Feature: '\$1; 
+    echo '🧹 Nettoyage des branches mergées...'; 
+    git fetch --prune origin 2>/dev/null || true; 
+    git branch --merged main 2>/dev/null | grep 'feature/' | xargs -n 1 git branch -d 2>/dev/null || true; 
+    git branch --merged develop 2>/dev/null | grep 'feature/' | xargs -n 1 git branch -d 2>/dev/null || true; 
+    git branch -r --merged main 2>/dev/null | grep 'origin/feature/' | sed 's/origin\///' | xargs -n 1 git push origin --delete 2>/dev/null || true; 
+    git branch -r --merged develop 2>/dev/null | grep 'origin/feature/' | sed 's/origin\///' | xargs -n 1 git push origin --delete 2>/dev/null || true; 
     git checkout develop 2>/dev/null || git checkout -b develop; 
     git pull origin develop 2>/dev/null || true; 
     git checkout -b feature/\$1 && 
@@ -96,6 +102,17 @@ git config --global alias.clean-features "!git branch --merged main | grep 'feat
 if ! git show-ref --verify --quiet refs/heads/develop; then
     git checkout -b develop 2>/dev/null || git checkout develop
     git push -u origin develop 2>/dev/null || echo "⚠️ Push develop: configurez origin"
+fi
+
+# 6. Configuration auto-delete branches (GitHub)
+if command -v gh &> /dev/null; then
+    echo -e "${BLUE}🗑️  Configuration auto-suppression branches...${NC}"
+    if gh api repos/:owner/:repo --method PATCH --field delete_branch_on_merge=true >/dev/null 2>&1; then
+        echo -e "${GREEN}✅ Auto-suppression branches activée${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Auto-suppression échouée (permissions GitHub?)${NC}"
+        echo -e "${YELLOW}💡 Activez manuellement: Repo Settings > Pull Requests > Auto-delete${NC}"
+    fi
 fi
 
 echo ""
