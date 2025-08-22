@@ -121,8 +121,8 @@ cat >> ~/.gitconfig << EOF
     # PR automation
     pr-create-auto = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-create-auto.py"
     
-    # Release automation (develop -> main avec auto-merge)
-    release = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-release-auto.py"
+    # Deploy automation (develop -> main avec auto-merge)
+    deploy = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-release-auto.py"
     
     # Nettoyage des branches  
     cleanup-branches = "!f() { \
@@ -351,7 +351,7 @@ echo -e "   4️⃣  ${GREEN}git pr-create-auto${NC}            # Crée PR avec 
 echo ""
 echo -e "${YELLOW}📋 Gestion des releases:${NC}"
 echo -e "   5️⃣  Merge PR → ${GREEN}develop${NC}         # (branche auto-supprimée)"
-echo -e "   6️⃣  ${GREEN}git release${NC}                 # 🚀 Release AUTO: develop→main + auto-merge"
+echo -e "   6️⃣  ${GREEN}git deploy${NC}                  # 🚀 Deploy AUTO: develop→main + auto-merge"
 echo -e "   7️⃣  Auto-merge → ${GREEN}main${NC} = 🏷️ ${YELLOW}v0.1.0 Tag + Release automatique !${NC}"
 echo ""
 echo -e "${YELLOW}🧹 Maintenance:${NC}"
