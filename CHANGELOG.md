@@ -1,3 +1,11 @@
+# [0.2.0](https://github.com/genix-x/git-auto-flow/compare/v0.1.0...v0.2.0) (2025-08-22)
+
+
+### Features
+
+* **git:** add automated git workflow with improved installation\n\nImproved installation process: ([60279e5](https://github.com/genix-x/git-auto-flow/commit/60279e5cb40d5ef286d416e3aac177c7f9dc7b4e))
+* **git:** add git alias for pr creation\n\nadd a new git alias 'pr' which is shorthand for 'pr-create-auto' ([666828c](https://github.com/genix-x/git-auto-flow/commit/666828c5ae2bc9cb81deaffb83fc0fbbac79ec8d))
+
 # 1.0.0 (2025-08-22)
 
 
