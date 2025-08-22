@@ -47,6 +47,7 @@ Le script va :
 - ✅ Installer les dépendances Python automatiquement  
 - ✅ Configurer tous les alias Git
 - ✅ Créer la branche `develop` si nécessaire
+- ✅ Activer l'auto-suppression des branches après merge
 
 ### **🔗 Obtenir les clés API (optionnel)**
 - **Gemini**: https://makersuite.google.com/app/apikey (gratuit)
@@ -70,13 +71,16 @@ git feature-start ma-super-feature
 # ... coding ...
 
 # 3. Commit avec rebase automatique + IA
-git commit-auto        # ou: git ca (alias court)
+git ca                 # (git commit-auto en long)
 
 # 4. Continuer le développement...
-git commit-auto        # Rebase + IA à chaque fois
+git ca                 # Rebase + IA à chaque fois
 
 # 5. Finaliser et créer PR
-git pr-create-auto
+git pr                 # (git pr-create-auto en long)
+
+# 6. Nettoyer après merge
+git clean-features     # Supprime branches mergées localement
 
 # ✅ Résultat: Workflow complet automatisé !
 ```
