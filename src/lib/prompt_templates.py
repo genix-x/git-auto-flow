@@ -33,30 +33,31 @@ COMMITS INCLUS:
         diff_text = diff[:4000] if diff else ""
 
         return f"""
-Analyse les changements pour une RELEASE (develop -> main) et génère UNIQUEMENT un JSON valide.
+Analyze the changes for a RELEASE (develop -> main) and generate ONLY valid JSON.
 
-FICHIERS MODIFIÉS:
+MODIFIED FILES:
 {files}
 {commits_text}
 DIFF:
 {diff_text}
 
-Génère un JSON avec cette structure exacte:
+Generate JSON with this exact structure:
 {{
-    "title": "Release: Description courte des changements",
+    "title": "Release: Short description of changes",
     "body": "## 🚀 Release Notes\\n\\n### ✨ New Features\\n- Feature 1\\n\\n### 🐛 Bug Fixes\\n- Fix 1\\n\\n### 📝 Documentation\\n- Doc update\\n\\n### 🔧 Other Changes\\n- Other changes",
-    "labels": ["release"]
+    "labels": []
 }}
 
 Instructions:
-- Titre: Format "Release: Description courte" (PAS de numéro de version)
-- Body: Release notes structure avec emojis et sections
-- Résumer TOUTES les features/fixes importants de cette release
-- Être factuel et professionnel
-- Grouper par type de changement
-- Labels: toujours inclure "release"
+- Title: Format "Release: Short description" (NO version number)
+- Body: Professional English release notes with emoji sections
+- Summarize ALL important features/fixes in this release
+- Be factual and professional in ENGLISH
+- Group by change type (Features, Bug Fixes, Documentation, Other Changes)
+- Labels: empty array
+- WRITE EVERYTHING IN ENGLISH
 
-RETOURNER UNIQUEMENT LE JSON, PAS D'EXPLICATION:
+RETURN ONLY THE JSON, NO EXPLANATION:
 """
 
     @staticmethod
