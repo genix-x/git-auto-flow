@@ -14,6 +14,14 @@
 * **git:** add auto-delete branch feature after merge\n\nAdd functionality to automatically delete merged branches. ([b8ff6cd](https://github.com/genix-x/git-auto-flow/commit/b8ff6cd497e9e8e0b84b184874400af85501cbf6))
 * **git:** add automatic cleanup after merging features\n\nImproved git workflow automation with automatic cleanup: ([5311b08](https://github.com/genix-x/git-auto-flow/commit/5311b08a060d943810b0c2edb92ef8d19418f7f9))
 
+# [0.3.0](https://github.com/genix-x/git-auto-flow/compare/v0.2.0...v0.3.0) (2025-08-22)
+
+
+### Features
+
+* **git:** add auto-delete branch feature after merge\n\nAdd functionality to automatically delete merged branches. ([b8ff6cd](https://github.com/genix-x/git-auto-flow/commit/b8ff6cd497e9e8e0b84b184874400af85501cbf6))
+* **git:** add automatic cleanup after merging features\n\nImproved git workflow automation with automatic cleanup: ([5311b08](https://github.com/genix-x/git-auto-flow/commit/5311b08a060d943810b0c2edb92ef8d19418f7f9))
+
 # [0.2.0](https://github.com/genix-x/git-auto-flow/compare/v0.1.0...v0.2.0) (2025-08-22)
 
 
