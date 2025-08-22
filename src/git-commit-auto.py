@@ -82,9 +82,20 @@ def main():
         sys.exit(1)
     
     try:
-        # 1. Rebase automatique sur develop
-        print("🔄 Rebase sur develop...")
-        if GitUtils.rebase_on_target("develop"):
+        # 1. Rebase automatique sur develop (ou main si pas de develop)
+        base_branch = "develop"
+        
+        # Vérifier si develop existe
+        try:
+            subprocess.run(['git', 'show-ref', '--verify', '--quiet', 'refs/heads/develop'], 
+                         check=True, capture_output=True)
+        except subprocess.CalledProcessError:
+            # develop n'existe pas, utiliser main
+            base_branch = "main"
+            print("ℹ️  Branche develop non trouvée, utilisation de main")
+        
+        print(f"🔄 Rebase sur {base_branch}...")
+        if GitUtils.rebase_on_target(base_branch):
             print("✅ Rebase réussi")
         else:
             print("⚠️  Conflits détectés ! Résolvez-les puis relancez la commande")
