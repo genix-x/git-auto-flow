@@ -60,6 +60,9 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop") -> str:
     if pr_data.get('draft', False):
         cmd.append('--draft')
     
+    # Auto-suppression de la branche après merge
+    cmd.append('--delete-branch')
+    
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         pr_url = result.stdout.strip()
