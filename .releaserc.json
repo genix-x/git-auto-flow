@@ -6,6 +6,8 @@
       "@semantic-release/commit-analyzer",
       {
         "preset": "angular",
+        "mergePattern": "^Merge pull request #(\\d+) from (.*)$",
+        "mergeCorrespondence": ["id", "source"],
         "releaseRules": [
           { "type": "feat", "release": "minor" },
           { "type": "fix", "release": "patch" },
@@ -22,7 +24,14 @@
         ]
       }
     ],
-    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "angular",
+        "mergePattern": "^Merge pull request #(\\d+) from (.*)$",
+        "mergeCorrespondence": ["id", "source"]
+      }
+    ],
     [
       "@semantic-release/changelog",
       {
