@@ -29,13 +29,18 @@ class AIProvider:
         self.groq_available = bool(self.groq_key)
         
         if not (self.gemini_available or self.groq_available):
+            env_path = os.path.join(os.path.dirname(__file__), '../../.env')
             raise ValueError(
-                "❌ Aucune clé API disponible!\n"
-                "💡 Configurez au moins une des APIs:\n"
-                "   GEMINI_API_KEY=ta_cle_gemini\n"
-                "   GROQ_API_KEY=ta_cle_groq\n"
-                "🔗 Gemini: https://makersuite.google.com/app/apikey\n"
-                "🔗 Groq: https://console.groq.com/keys"
+                "❌ Aucune clé API configurée!\n\n"
+                "💡 Configurez vos clés API en éditant le fichier .env:\n"
+                f"   📄 {env_path}\n\n"
+                "🔑 Clés disponibles:\n"
+                "   GEMINI_API_KEY=votre_cle_gemini\n"
+                "   GROQ_API_KEY=votre_cle_groq\n\n"
+                "🔗 Obtenir les clés:\n"
+                "   • Gemini: https://makersuite.google.com/app/apikey\n"
+                "   • Groq: https://console.groq.com/keys\n\n"
+                "⚡ Ou relancez: ./install-alias.sh pour configuration interactive"
             )
     
     def _get_gemini_client(self):

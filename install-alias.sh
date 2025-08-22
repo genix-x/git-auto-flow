@@ -199,7 +199,36 @@ fi
 # Revenir sur develop pour setup
 git checkout develop >/dev/null 2>&1 || true
 
-# 5. Configuration des clés API
+# 5. Installation semantic-release (si Node.js disponible)
+if command -v npm &> /dev/null || command -v pnpm &> /dev/null || command -v yarn &> /dev/null; then
+    echo ""
+    echo -e "${BLUE}📦 Installation semantic-release...${NC}"
+    
+    # Utiliser pnpm si disponible, sinon npm
+    if command -v pnpm &> /dev/null; then
+        PACKAGE_MANAGER="pnpm"
+    elif command -v yarn &> /dev/null; then
+        PACKAGE_MANAGER="yarn"
+    else
+        PACKAGE_MANAGER="npm"
+    fi
+    
+    echo -e "${YELLOW}📦 Utilisation de ${PACKAGE_MANAGER}...${NC}"
+    
+    # Installation des dépendances semantic-release
+    if $PACKAGE_MANAGER install >/dev/null 2>&1; then
+        echo -e "${GREEN}✅ Semantic-release installé${NC}"
+        echo -e "${YELLOW}💡 Releases automatiques activées sur push vers main${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Installation semantic-release échouée${NC}"
+        echo -e "${YELLOW}💡 Les releases devront être créées manuellement${NC}"
+    fi
+else
+    echo -e "${YELLOW}⚠️  Node.js non trouvé - semantic-release désactivé${NC}"
+    echo -e "${YELLOW}💡 Installez Node.js pour les releases automatiques${NC}"
+fi
+
+# 6. Configuration interactive des clés API  
 echo ""
 echo -e "${BLUE}🔑 Configuration des clés API...${NC}"
 
@@ -209,20 +238,49 @@ if [ ! -f "${INSTALL_DIR}/.env" ]; then
     echo "# Git Auto-Flow - Configuration des API" > "${INSTALL_DIR}/.env"
 fi
 
-echo -e "${YELLOW}💡 Configuration des clés API requises:${NC}"
+# Configuration interactive
+echo -e "${YELLOW}💡 Configurons vos clés API (optionnel):${NC}"
 echo ""
-echo -e "${BLUE}1. Gemini API (Google AI Studio):${NC}"
-echo -e "   🔗 https://makersuite.google.com/app/apikey"
-echo -e "   Ajoutez: ${GREEN}GEMINI_API_KEY=votre_cle_gemini${NC}"
-echo ""
-echo -e "${BLUE}2. Groq API (Fallback gratuit):${NC}"
-echo -e "   🔗 https://console.groq.com/keys"
-echo -e "   Ajoutez: ${GREEN}GROQ_API_KEY=votre_cle_groq${NC}"
-echo ""
-echo -e "${BLUE}📝 Éditez le fichier de configuration:${NC}"
-echo -e "   ${YELLOW}${INSTALL_DIR}/.env${NC}"
 
-# 6. Test de l'installation
+# Gemini API
+echo -e "${BLUE}🤖 Gemini API (Google AI Studio):${NC}"
+echo -e "   🔗 ${YELLOW}https://makersuite.google.com/app/apikey${NC}"
+read -p "Entrez votre clé Gemini API (ou ENTER pour ignorer): " GEMINI_KEY
+
+# Groq API  
+echo ""
+echo -e "${BLUE}⚡ Groq API (Fallback gratuit):${NC}"
+echo -e "   🔗 ${YELLOW}https://console.groq.com/keys${NC}"
+read -p "Entrez votre clé Groq API (ou ENTER pour ignorer): " GROQ_KEY
+
+# Écriture dans .env
+{
+    echo "# Git Auto-Flow - Configuration des API"
+    echo "# Généré automatiquement le $(date)"
+    echo ""
+    if [ ! -z "$GEMINI_KEY" ]; then
+        echo "GEMINI_API_KEY=${GEMINI_KEY}"
+    else
+        echo "# GEMINI_API_KEY=votre_cle_gemini"
+        echo "# Obtenez votre clé: https://makersuite.google.com/app/apikey"
+    fi
+    echo ""
+    if [ ! -z "$GROQ_KEY" ]; then
+        echo "GROQ_API_KEY=${GROQ_KEY}"  
+    else
+        echo "# GROQ_API_KEY=votre_cle_groq"
+        echo "# Obtenez votre clé: https://console.groq.com/keys"
+    fi
+} > "${INSTALL_DIR}/.env"
+
+if [ ! -z "$GEMINI_KEY" ] || [ ! -z "$GROQ_KEY" ]; then
+    echo -e "${GREEN}✅ Clés API configurées${NC}"
+else
+    echo -e "${YELLOW}⚠️  Aucune clé API configurée${NC}"
+    echo -e "${YELLOW}💡 Les scripts afficheront des messages d'erreur appropriés${NC}"
+fi
+
+# 7. Test de l'installation
 echo ""
 echo -e "${BLUE}🧪 Test de l'installation...${NC}"
 
@@ -232,7 +290,7 @@ else
     echo -e "${YELLOW}⚠️  Test partiel - configurez les clés API${NC}"
 fi
 
-# 7. Instructions finales
+# 8. Instructions finales
 echo ""
 echo -e "${GREEN}🎉 Installation terminée!${NC}"
 echo ""
