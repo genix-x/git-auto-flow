@@ -113,7 +113,7 @@ class GitUtils:
             raise RuntimeError(f"Erreur lors de la récupération de la branche courante: {e}")
     
     @staticmethod
-    def get_commit_messages(base_branch: str = "develop", limit: int = 10) -> str:
+    def get_commit_messages(base_branch: str = "develop", limit: int = 10) -> list:
         """
         Récupère les messages de commit de la branche courante vs base_branch
         
@@ -122,7 +122,7 @@ class GitUtils:
             limit: Nombre maximum de commits à récupérer
             
         Returns:
-            str: Les messages de commit (un par ligne)
+            list: Liste des messages de commit
         """
         try:
             result = subprocess.run(
@@ -131,7 +131,9 @@ class GitUtils:
                 text=True,
                 check=True
             )
-            return result.stdout
+            # Retourner une liste de commits, pas une string
+            commits = result.stdout.strip().split('\n') if result.stdout.strip() else []
+            return [commit for commit in commits if commit.strip()]
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Erreur lors de la récupération des commits: {e}")
     
