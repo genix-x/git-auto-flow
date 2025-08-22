@@ -35,9 +35,9 @@ def check_gh_cli():
         sys.exit(1)
 
 
-def auto_merge_pr(pr_url: str, merge_method: str = "merge") -> bool:
+def merge_pr_immediately(pr_url: str, merge_method: str = "merge") -> bool:
     """
-    Auto-merge la PR créée
+    Merge immédiatement la PR créée
     
     Args:
         pr_url: URL de la PR
@@ -50,32 +50,31 @@ def auto_merge_pr(pr_url: str, merge_method: str = "merge") -> bool:
         # Extract PR number from URL
         pr_number = pr_url.split('/')[-1]
         
-        print(f"🔄 Auto-merge de la PR #{pr_number}...")
+        print(f"🔄 Merge immédiat de la PR #{pr_number}...")
         
-        # Enable auto-merge
+        # Merge immediately (no --auto flag)
         cmd = [
             'gh', 'pr', 'merge', pr_number,
-            f'--{merge_method}',
-            '--auto'
+            f'--{merge_method}'
         ]
         
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        print("✅ Auto-merge activé! La PR sera mergée automatiquement.")
+        print("✅ PR mergée avec succès!")
         return True
         
     except subprocess.CalledProcessError as e:
-        print(f"⚠️  Auto-merge échoué: {e.stderr}")
+        print(f"❌ Merge échoué: {e.stderr}")
         print("💡 Vous pouvez merger manuellement depuis GitHub")
         return False
 
 
-def run_gh_pr_create_release(pr_data: dict, auto_merge: bool = True) -> str:
+def run_gh_pr_create_release(pr_data: dict, immediate_merge: bool = True) -> str:
     """
-    Execute gh pr create pour une release avec auto-merge
+    Execute gh pr create pour une release avec merge immédiat
     
     Args:
         pr_data: Dict contenant title, body, labels, etc.
-        auto_merge: Si True, active l'auto-merge
+        immediate_merge: Si True, merge immédiatement la PR
         
     Returns:
         str: L'URL de la PR créée
@@ -88,8 +87,8 @@ def run_gh_pr_create_release(pr_data: dict, auto_merge: bool = True) -> str:
         print(f"   Labels: {', '.join(pr_data['labels'])}")
     print(f"\n{pr_data['body']}")
     
-    if auto_merge:
-        print("\n🔄 Auto-merge: ACTIVÉ (mergera automatiquement)")
+    if immediate_merge:
+        print("\n🔄 Merge immédiat: ACTIVÉ (mergera automatiquement après création)")
     
     # Demande confirmation
     response = input("\n✅ Créer cette PR de release? (y/N): ").strip().lower()
@@ -106,21 +105,16 @@ def run_gh_pr_create_release(pr_data: dict, auto_merge: bool = True) -> str:
         '--body', pr_data['body']
     ]
     
-    # Ajoute les labels
-    if pr_data.get('labels'):
-        valid_labels = ['release', 'enhancement', 'feature']
-        for label in pr_data['labels']:
-            if label in valid_labels:
-                cmd.extend(['--label', label])
+    # Labels supprimés pour éviter les erreurs
     
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         pr_url = result.stdout.strip()
         print(f"✅ PR de release créée: {pr_url}")
         
-        # Auto-merge si demandé
-        if auto_merge:
-            auto_merge_pr(pr_url, "merge")
+        # Merge immédiat si demandé
+        if immediate_merge:
+            merge_pr_immediately(pr_url, "merge")
         
         return pr_url
         
@@ -207,23 +201,20 @@ def main():
         # Génère une PR spécialement pour une release
         pr_data = ai.analyze_for_release(diff, files, commits)
         
-        # Ajoute le label release
-        if 'labels' not in pr_data:
-            pr_data['labels'] = []
-        if 'release' not in pr_data['labels']:
-            pr_data['labels'].append('release')
+        # Supprime les labels pour éviter les erreurs
+        pr_data['labels'] = []
         
         # Étape 4: Création de la PR avec auto-merge
         print("\n🚀 Étape 4: Création de la PR de release...")
         
-        auto_merge = not args.no_auto_merge
-        pr_url = run_gh_pr_create_release(pr_data, auto_merge)
+        immediate_merge = not args.no_auto_merge  
+        pr_url = run_gh_pr_create_release(pr_data, immediate_merge)
         
         if pr_url:
             print(f"\n🎉 Release en cours! PR: {pr_url}")
-            if auto_merge:
-                print("⏳ La PR sera mergée automatiquement.")
-                print("🏷️  Une nouvelle version sera créée après le merge!")
+            if immediate_merge:
+                print("🎉 La PR a été mergée automatiquement!")
+                print("🏷️  Une nouvelle version sera créée par semantic-release!")
             else:
                 print("💡 Mergez manuellement pour déclencher la release")
         

@@ -207,6 +207,11 @@ if command -v gh &> /dev/null; then
           --method PATCH \
           --field delete_branch_on_merge=true \
           >/dev/null 2>&1 && echo -e "${GREEN}✅ Auto-suppression branches activée${NC}" || echo -e "${YELLOW}⚠️  Auto-suppression échouée${NC}"
+        
+        # Création du label 'release' pour les PRs de release
+        echo -e "${YELLOW}🏷️  Création du label 'release'...${NC}"
+        gh label create release --color "0052CC" --description "Release PR develop->main" \
+          >/dev/null 2>&1 && echo -e "${GREEN}✅ Label 'release' créé${NC}" || echo -e "${YELLOW}⚠️  Label 'release' existe déjà ou erreur${NC}"
     else
         echo -e "${YELLOW}⚠️  GitHub CLI non connecté - lancez: gh auth login${NC}"
         echo -e "${YELLOW}💡 Protection manuelle requise sur GitHub.com${NC}"
