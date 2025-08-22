@@ -98,45 +98,69 @@ def main():
         
         # Rebase seulement si on n'est PAS sur la branche de base
         if current_branch != base_branch:
-            # Vérifie s'il y a des changements stagés
-            has_staged = GitUtils.has_staged_changes()
+            # Vérifie d'abord si un rebase est vraiment nécessaire
+            print(f"🔍 Vérification si rebase nécessaire sur {base_branch}...")
             
-            if has_staged:
-                print("📦 Sauvegarde des changements stagés...")
-                try:
-                    subprocess.run(['git', 'stash', 'push', '--staged', '-m', 'Auto-stash for rebase'], 
-                                 check=True, capture_output=True)
-                    print("✅ Changements sauvegardés")
-                except subprocess.CalledProcessError as e:
-                    print(f"❌ Erreur lors de la sauvegarde: {e}")
-                    sys.exit(1)
-            
-            print(f"🔄 Rebase {current_branch} sur {base_branch}...")
-            if GitUtils.rebase_on_target(base_branch):
-                print("✅ Rebase réussi")
+            try:
+                # Fetch pour avoir les dernières infos
+                subprocess.run(['git', 'fetch', 'origin', base_branch], 
+                             capture_output=True, check=True)
                 
-                # Restore les changements stagés si nécessaire
-                if has_staged:
-                    print("📦 Restauration des changements...")
-                    try:
-                        subprocess.run(['git', 'stash', 'pop'], check=True, capture_output=True)
-                        print("✅ Changements restaurés")
-                    except subprocess.CalledProcessError as e:
-                        print(f"❌ Erreur lors de la restauration: {e}")
-                        print("💡 Vérifiez avec 'git stash list' et 'git stash pop' manuellement")
+                # Check si la branche est déjà à jour
+                behind_check = subprocess.run(
+                    ['git', 'rev-list', '--count', f'HEAD..origin/{base_branch}'],
+                    capture_output=True, text=True, check=True
+                )
+                behind_count = int(behind_check.stdout.strip())
+                
+                if behind_count == 0:
+                    print(f"✅ Branche déjà à jour avec {base_branch}")
+                else:
+                    print(f"🔄 Branche en retard de {behind_count} commits, rebase nécessaire...")
+                    
+                    # Vérifie s'il y a des changements stagés
+                    has_staged = GitUtils.has_staged_changes()
+                    
+                    if has_staged:
+                        print("📦 Sauvegarde des changements stagés...")
+                        try:
+                            subprocess.run(['git', 'stash', 'push', '--staged', '-m', 'Auto-stash for rebase'], 
+                                         check=True, capture_output=True)
+                            print("✅ Changements sauvegardés")
+                        except subprocess.CalledProcessError as e:
+                            print(f"❌ Erreur lors de la sauvegarde: {e}")
+                            sys.exit(1)
+                    
+                    print(f"🔄 Rebase {current_branch} sur {base_branch}...")
+                    if GitUtils.rebase_on_target(base_branch):
+                        print("✅ Rebase réussi")
+                        
+                        # Restore les changements stagés si nécessaire
+                        if has_staged:
+                            print("📦 Restauration des changements...")
+                            try:
+                                subprocess.run(['git', 'stash', 'pop'], check=True, capture_output=True)
+                                print("✅ Changements restaurés")
+                            except subprocess.CalledProcessError as e:
+                                print(f"❌ Erreur lors de la restauration: {e}")
+                                print("💡 Vérifiez avec 'git stash list' et 'git stash pop' manuellement")
+                                sys.exit(1)
+                    else:
+                        # Si le rebase échoue, on essaie de restaurer les changements
+                        if has_staged:
+                            print("🔄 Tentative de restauration des changements après échec...")
+                            try:
+                                subprocess.run(['git', 'stash', 'pop'], check=True, capture_output=True)
+                                print("✅ Changements restaurés")
+                            except subprocess.CalledProcessError:
+                                print("⚠️  Changements en stash - utilisez 'git stash pop' après résolution")
+                        
+                        print("⚠️  Conflits détectés ! Résolvez-les puis relancez la commande")
                         sys.exit(1)
-            else:
-                # Si le rebase échoue, on essaie de restaurer les changements
-                if has_staged:
-                    print("🔄 Tentative de restauration des changements après échec...")
-                    try:
-                        subprocess.run(['git', 'stash', 'pop'], check=True, capture_output=True)
-                        print("✅ Changements restaurés")
-                    except subprocess.CalledProcessError:
-                        print("⚠️  Changements en stash - utilisez 'git stash pop' après résolution")
-                
-                print("⚠️  Conflits détectés ! Résolvez-les puis relancez la commande")
-                sys.exit(1)
+                        
+            except subprocess.CalledProcessError as e:
+                print(f"❌ Erreur lors de la vérification de {base_branch}: {e}")
+                print(f"ℹ️  Continuons sans rebase...")
         else:
             print(f"ℹ️  Déjà sur {base_branch}, pas de rebase nécessaire")
         
