@@ -6,8 +6,9 @@ Bibliothèque commune pour les appels à l'API Gemini
 import os
 import json
 import google.generativeai as genai
-from typing import Dict
+from typing import Dict, List, Optional
 from dotenv import load_dotenv
+from prompt_templates import PromptTemplates
 
 
 class GeminiClient:
@@ -141,6 +142,30 @@ RÉPONSE = JSON SEULEMENT:
                 content = content[:-3]
             content = content.strip()
             
+            return json.loads(content)
+            
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Erreur JSON: {e}\\nContenu analysé: {content}")
+        except Exception as e:
+            raise RuntimeError(f"Erreur lors de l'analyse avec Gemini: {e}")
+    
+    def analyze_for_release(self, diff: str, files: str, commits: Optional[List[str]] = None) -> Dict:
+        """
+        Analyse les changements pour générer une PR de release develop -> main
+        
+        Args:
+            diff: Le git diff complet develop -> main
+            files: La liste des fichiers modifiés
+            commits: Liste des messages de commits
+            
+        Returns:
+            Dict contenant les données de la PR de release
+        """
+        prompt = PromptTemplates.get_release_prompt(files, commits, diff)
+        
+        try:
+            response = self.model.generate_content(prompt)
+            content = PromptTemplates.clean_json_response(response.text)
             return json.loads(content)
             
         except json.JSONDecodeError as e:

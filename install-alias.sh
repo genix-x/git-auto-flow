@@ -107,6 +107,7 @@ cat >> ~/.gitconfig << EOF
     
     # Alias courts 
     ca = "!git commit-auto"
+    pr = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-auto.py"
     
     # Finaliser feature (avant PR)  
     feature-finish = "!f() { \
@@ -119,6 +120,9 @@ cat >> ~/.gitconfig << EOF
     
     # PR automation
     pr-create-auto = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-create-auto.py"
+    
+    # Deploy automation (develop -> main avec auto-merge)
+    deploy = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-release-auto.py"
     
     # Nettoyage des branches  
     cleanup-branches = "!f() { \
@@ -203,6 +207,11 @@ if command -v gh &> /dev/null; then
           --method PATCH \
           --field delete_branch_on_merge=true \
           >/dev/null 2>&1 && echo -e "${GREEN}✅ Auto-suppression branches activée${NC}" || echo -e "${YELLOW}⚠️  Auto-suppression échouée${NC}"
+        
+        # Création du label 'release' pour les PRs de release
+        echo -e "${YELLOW}🏷️  Création du label 'release'...${NC}"
+        gh label create release --color "0052CC" --description "Release PR develop->main" \
+          >/dev/null 2>&1 && echo -e "${GREEN}✅ Label 'release' créé${NC}" || echo -e "${YELLOW}⚠️  Label 'release' existe déjà ou erreur${NC}"
     else
         echo -e "${YELLOW}⚠️  GitHub CLI non connecté - lancez: gh auth login${NC}"
         echo -e "${YELLOW}💡 Protection manuelle requise sur GitHub.com${NC}"
@@ -347,8 +356,8 @@ echo -e "   4️⃣  ${GREEN}git pr-create-auto${NC}            # Crée PR avec 
 echo ""
 echo -e "${YELLOW}📋 Gestion des releases:${NC}"
 echo -e "   5️⃣  Merge PR → ${GREEN}develop${NC}         # (branche auto-supprimée)"
-echo -e "   6️⃣  ${GREEN}gh pr create --base main --head develop${NC}  # Release PR"
-echo -e "   7️⃣  Merge → ${GREEN}main${NC} = 🚀 ${YELLOW}v0.1.0 Tag + Release automatique !${NC}"
+echo -e "   6️⃣  ${GREEN}git deploy${NC}                  # 🚀 Deploy AUTO: develop→main + auto-merge"
+echo -e "   7️⃣  Auto-merge → ${GREEN}main${NC} = 🏷️ ${YELLOW}v0.1.0 Tag + Release automatique !${NC}"
 echo ""
 echo -e "${YELLOW}🧹 Maintenance:${NC}"
 echo -e "   🔧  ${GREEN}git cleanup-branches${NC}          # Nettoie branches locales mergées"

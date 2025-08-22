@@ -5,8 +5,9 @@ Client Groq pour l'automation Git (fallback de Gemini)
 
 import os
 import json
-from typing import Dict
+from typing import Dict, List, Optional
 from groq import Groq
+from prompt_templates import PromptTemplates
 
 
 class GroqClient:
@@ -142,6 +143,38 @@ RÉPONSE = JSON SEULEMENT:
                 content = content[:-3]
             content = content.strip()
             
+            return json.loads(content)
+            
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Erreur JSON Groq: {e}\\nContenu analysé: {content}")
+        except Exception as e:
+            raise RuntimeError(f"Erreur lors de l'analyse avec Groq: {e}")
+    
+    def analyze_for_release(self, diff: str, files: str, commits: Optional[List[str]] = None) -> Dict:
+        """
+        Analyse les changements pour générer une PR de release develop -> main
+        
+        Args:
+            diff: Le git diff complet develop -> main
+            files: La liste des fichiers modifiés
+            commits: Liste des messages de commits
+            
+        Returns:
+            Dict contenant les données de la PR de release
+        """
+        prompt = PromptTemplates.get_release_prompt(files, commits, diff)
+        
+        try:
+            completion = self.client.chat.completions.create(
+                messages=[{
+                    "role": "user",
+                    "content": prompt,
+                }],
+                model="llama3-8b-8192",
+                temperature=0.1,
+            )
+            
+            content = PromptTemplates.clean_json_response(completion.choices[0].message.content)
             return json.loads(content)
             
         except json.JSONDecodeError as e:
