@@ -16,22 +16,35 @@ class GeminiClient:
     
     def __init__(self):
         """Initialise le client Gemini avec la clé API"""
-        # Charge le fichier .env
-        load_dotenv()
+        # Charge le fichier .env depuis le système global
+        self._load_env_from_git_root()
         
         # Vérifie la clé API
         self.api_key = os.getenv('GEMINI_API_KEY')
         if not self.api_key:
+            env_path = os.path.expanduser('~/.env.gitautoflow')
             raise ValueError(
                 "❌ GEMINI_API_KEY non définie\n"
                 "💡 Solutions:\n"
-                "   1. Ajouter GEMINI_API_KEY=ta_cle dans le fichier .env\n"
+                f"   1. Ajouter GEMINI_API_KEY=ta_cle dans le fichier {env_path}\n"
                 "   2. Export GEMINI_API_KEY='ta_cle_ici'"
             )
         
         # Configure Gemini
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel('gemini-1.5-flash')
+    
+    def _load_env_from_git_root(self):
+        """Charge le fichier .env depuis le home directory"""
+        env_file = os.path.expanduser('~/.env.gitautoflow')
+        if os.path.exists(env_file):
+            load_dotenv(env_file)
+            return
+        
+        # Fallback sur le fichier local si le global n'existe pas
+        local_env = os.path.join(os.path.dirname(__file__), '../../.env')
+        if os.path.exists(local_env):
+            load_dotenv(local_env)
     
     def analyze_for_commit(self, diff: str, files: str) -> Dict:
         """
