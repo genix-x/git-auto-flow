@@ -31,7 +31,16 @@ def run_git_commit(commit_data: dict) -> None:
     if commit_data.get('breaking', False):
         commit_msg += "!"
         
-    commit_msg += f": {commit_data['description']}"
+    # Gère le cas où Gemini utilise un autre champ que 'description'
+    description = commit_data.get('description', '')
+    if not description:
+        # Cherche d'autres champs possibles
+        for key, value in commit_data.items():
+            if key not in ['type', 'scope', 'body', 'breaking', 'issues'] and isinstance(value, str):
+                description = value
+                break
+    
+    commit_msg += f": {description}"
     
     # Prépare le body complet
     body_parts = []
