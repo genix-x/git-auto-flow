@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/genix-x/git-auto-flow/compare/v0.4.0...v0.4.1) (2025-08-23)
+
+
+### Bug Fixes
+
+* **gitleaks:** improve gitleaks integration\n\nonly scan staged files with gitleaks ([7a73469](https://github.com/genix-x/git-auto-flow/commit/7a7346939ac6361dde8d4e5a805f9057d778facf))
+
 # [0.4.0](https://github.com/genix-x/git-auto-flow/compare/v0.3.1...v0.4.0) (2025-08-23)
 
 
