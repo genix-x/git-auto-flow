@@ -40,10 +40,12 @@ def run_gitleaks_scan() -> bool:
             gitleaks_cmd = 'gitleaks'
         
         # Lance gitleaks sur les fichiers stagés
+        # Gitleaks n'a pas de --staged, on scanne le repo entier
         result = subprocess.run([
             gitleaks_cmd, 'detect', 
-            '--staged',
             '--no-git',
+            '--source', '.',
+            '--verbose',
             '--exit-code', '1'
         ], capture_output=True, text=True, cwd=script_dir)
         
@@ -52,6 +54,9 @@ def run_gitleaks_scan() -> bool:
         elif result.returncode == 1:
             print("🚨 SECRETS DÉTECTÉS:")
             print(result.stdout)
+            if result.stderr:
+                print("Détails supplémentaires:")
+                print(result.stderr)
             return False  # Secrets trouvés
         else:
             print(f"⚠️  Erreur gitleaks: {result.stderr}")
