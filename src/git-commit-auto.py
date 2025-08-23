@@ -77,6 +77,17 @@ def run_git_commit(commit_data: dict) -> None:
         subprocess.run(['git', 'commit', '-m', full_msg], check=True)
         print("✅ Commit effectué avec succès!")
         
+        # Push automatique vers la branche distante
+        try:
+            current_branch = subprocess.run(['git', 'branch', '--show-current'], 
+                                          capture_output=True, text=True, check=True).stdout.strip()
+            print(f"📤 Push vers origin/{current_branch}...")
+            subprocess.run(['git', 'push', 'origin', current_branch], check=True)
+            print("✅ Push effectué avec succès!")
+        except subprocess.CalledProcessError as e:
+            print(f"⚠️  Push échoué: {e}")
+            print("💡 La branche locale a été commitée mais pas pushée")
+        
     except subprocess.CalledProcessError as e:
         print(f"❌ Erreur lors du commit: {e}")
         sys.exit(1)
