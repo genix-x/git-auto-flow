@@ -13,8 +13,8 @@ class AIProvider:
     
     def __init__(self):
         """Initialise le gestionnaire multi-IA"""
-        # Charge le fichier .env
-        load_dotenv()
+        # Charge le fichier .env depuis le système global
+        self._load_env_from_git_root()
         
         # Stockage des clients
         self.gemini_client = None
@@ -29,7 +29,7 @@ class AIProvider:
         self.groq_available = bool(self.groq_key)
         
         if not (self.gemini_available or self.groq_available):
-            env_path = os.path.join(os.path.dirname(__file__), '../../.env')
+            env_path = os.path.expanduser('~/.env.gitautoflow')
             raise ValueError(
                 "❌ Aucune clé API configurée!\n\n"
                 "💡 Configurez vos clés API en éditant le fichier .env:\n"
@@ -40,8 +40,20 @@ class AIProvider:
                 "🔗 Obtenir les clés:\n"
                 "   • Gemini: https://makersuite.google.com/app/apikey\n"
                 "   • Groq: https://console.groq.com/keys\n\n"
-                "⚡ Ou relancez: ./install-alias.sh pour configuration interactive"
+                "⚡ Ou relancez: ./install.sh pour configuration interactive"
             )
+    
+    def _load_env_from_git_root(self):
+        """Charge le fichier .env depuis le home directory"""
+        env_file = os.path.expanduser('~/.env.gitautoflow')
+        if os.path.exists(env_file):
+            load_dotenv(env_file)
+            return
+        
+        # Fallback sur le fichier local si le global n'existe pas
+        local_env = os.path.join(os.path.dirname(__file__), '../../.env')
+        if os.path.exists(local_env):
+            load_dotenv(local_env)
     
     def _get_gemini_client(self):
         """Initialise le client Gemini si pas encore fait"""
