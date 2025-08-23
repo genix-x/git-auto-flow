@@ -15,11 +15,13 @@ Simplifiez votre workflow Git avec des commits conventionnels et des PRs génér
 - **Groq** (fallback) - API gratuite de secours
 - Basculement automatique en cas de quota dépassé
 
-✅ **Commit Automation**
+✅ **Commit Automation + Sécurité**
+- 🔒 **Scan automatique des secrets** avec Gitleaks avant chaque commit
 - Analyse automatique du `git diff` avec IA
 - Messages conventionnels (Angular standard)
 - Support scopes, breaking changes, issues
 - Confirmation interactive
+- **Protection totale** : Bloque automatiquement les commits contenant des clés API, mots de passe, tokens
 
 ✅ **PR Automation**
 - Titre et description générés par IA
@@ -43,6 +45,7 @@ git clone https://github.com/genix-x/git-auto-flow.git && cd git-auto-flow && ./
 **C'est tout ! 🎉**
 
 Le script va :
+- ✅ **Installer Gitleaks** (sécurité anti-secrets) via brew ou téléchargement
 - ✅ Demander vos clés API (Gemini + Groq) - **optionnel**
 - ✅ Installer les dépendances Python automatiquement  
 - ✅ Configurer tous les alias Git avec **nettoyage automatique**
@@ -139,6 +142,54 @@ git-auto-flow/
 │   └── git-pr-create-auto.sh
 └── config/
     └── git-aliases           # Aliases Git traditionnels
+```
+
+## 🔒 Sécurité Intégrée
+
+### **Protection Anti-Secrets avec Gitleaks**
+
+**Chaque commit est automatiquement scanné** pour détecter :
+- 🔑 **Clés API** (AWS, Google, GitHub, etc.)
+- 🔐 **Mots de passe** en dur dans le code
+- 🎫 **Tokens** d'authentification
+- 📧 **Adresses email privées**
+- 🛡️ **Certificats SSL** et clés privées
+
+### **🚨 Exemple de Protection en Action**
+
+```bash
+# Vous ajoutez accidentellement une clé API
+echo "API_KEY=sk-1234567890abcdef" > config.js
+git add config.js
+
+# Git Auto-Flow vous protège automatiquement !
+git ca
+
+🔒 Scan sécurité des secrets...
+🚨 SECRETS DÉTECTÉS:
+Finding:     sk-1234567890abcdef
+Secret:      sk-1234567890abcdef
+RuleID:      generic-api-key
+Entropy:     3.5
+File:        config.js
+Line:        1
+Fingerprint: config.js:generic-api-key:1
+
+❌ Scan sécurité échoué - commit bloqué pour votre protection!
+```
+
+**✅ Résultat :** Votre secret ne sera JAMAIS commité ! 
+
+### **💡 Comment Corriger**
+
+1. **Supprimez le secret** du fichier
+2. **Utilisez les variables d'environnement** à la place
+3. **Recommitez** - le scan passera ✅
+
+```bash
+# Correction sécurisée
+echo "API_KEY=process.env.MY_API_KEY" > config.js
+git ca  # ✅ Scan réussi, commit autorisé !
 ```
 
 ## 🤖 Intelligence Artificielle
@@ -240,15 +291,16 @@ git pr --base main              # 🚀 Release PR develop → main
 
 ## 🎉 Avantages
 
+- **🔒 Sécurité Ultime** : Scan automatique des secrets - ZÉRO risque de fuite !
 - **🤖 Zéro réflexion** : L'IA analyse et génère tout
 - **⚡ Ultra-rapide** : 1 commande = workflow complet  
-- **🔒 Sécurisé** : Rebase + push intelligent
+- **🛡️ Protection Totale** : Rebase + push intelligent + détection secrets
 - **🎯 Standards** : Commits/PRs conventionnels garantis
 - **🔄 Robuste** : Fallback multi-IA automatique
 - **👥 Équipe** : Package réutilisable sur tous projets
 
 ---
 
-**🚀 Git Auto-Flow - Plus jamais de commits mal formatés !** ✨
+**🚀 Git Auto-Flow - Plus jamais de commits mal formatés ou de secrets exposés !** 🔒✨
 
 *Développé avec ❤️ par [Genix Team](https://github.com/genix-x)*
