@@ -1,3 +1,18 @@
+# [0.4.0](https://github.com/genix-x/git-auto-flow/compare/v0.3.1...v0.4.0) (2025-08-23)
+
+
+### Bug Fixes
+
+* **git-commit-auto:** handle cases where gemini uses a field other than 'description'\n\nImproved commit message generation to handle various field names used by Gemini. ([836d728](https://github.com/genix-x/git-auto-flow/commit/836d728997257a14e2170476963cfbeb2176837e))
+* **install:** remove gitleaks from package.json and add branch cleanup to feature-start ([3d72189](https://github.com/genix-x/git-auto-flow/commit/3d721899ea9902d07eed943c29408d616cd3c67d))
+* **security:** improve gitleaks integration\n\nimprove gitleaks scan accuracy and output ([27f7d48](https://github.com/genix-x/git-auto-flow/commit/27f7d489458b8dd87cd6d9e536d378dd041da8ae))
+
+
+### Features
+
+* **security:** add gitleaks integration for secret scanning\n\nIntegrate Gitleaks to scan commits for secrets before pushing ([5dc6bd6](https://github.com/genix-x/git-auto-flow/commit/5dc6bd60ad213869df231b95ec9bdd2fa5b1a13c))
+* **security:** add gitleaks secret scanning to prevent credential commits ([b78816d](https://github.com/genix-x/git-auto-flow/commit/b78816d399eec82886373a6d7b285ebf8faee040))
+
 ## [0.3.1](https://github.com/genix-x/git-auto-flow/compare/v0.3.0...v0.3.1) (2025-08-23)
 
 # [0.3.0](https://github.com/genix-x/git-auto-flow/compare/v0.2.0...v0.3.0) (2025-08-22)
