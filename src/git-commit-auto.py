@@ -39,15 +39,13 @@ def run_gitleaks_scan() -> bool:
                 return True  # Continue sans scan si pas installé
             gitleaks_cmd = 'gitleaks'
         
-        # Lance gitleaks sur les fichiers stagés
-        # Gitleaks n'a pas de --staged, on scanne le repo entier
+        # Lance gitleaks sur les fichiers stagés uniquement
         result = subprocess.run([
             gitleaks_cmd, 'detect', 
-            '--no-git',
-            '--source', '.',
+            '--staged',
             '--verbose',
             '--exit-code', '1'
-        ], capture_output=True, text=True, cwd=script_dir)
+        ], capture_output=True, text=True, cwd=os.getcwd())
         
         if result.returncode == 0:
             return True  # Aucun secret détecté
