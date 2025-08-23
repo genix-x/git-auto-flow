@@ -87,55 +87,43 @@ if [ -f ~/.gitconfig ]; then
     echo -e "${GREEN}✅ Sauvegarde de ~/.gitconfig créée${NC}"
 fi
 
-# Ajout des alias Git Auto-Flow
-cat >> ~/.gitconfig << EOF
+# Vérifier et supprimer les anciens alias Git Auto-Flow s'ils existent
+if grep -q "# Git Auto-Flow" ~/.gitconfig 2>/dev/null; then
+    echo -e "${YELLOW}⚠️  Suppression des anciens alias Git Auto-Flow...${NC}"
+    # Créer une copie temporaire sans les alias Git Auto-Flow
+    grep -v "# Git Auto-Flow" ~/.gitconfig > ~/.gitconfig.tmp 2>/dev/null || touch ~/.gitconfig.tmp
+    # Supprimer aussi les lignes entre "# Git Auto-Flow" et la prochaine section
+    sed '/# Git Auto-Flow/,/^$/d' ~/.gitconfig > ~/.gitconfig.tmp 2>/dev/null || touch ~/.gitconfig.tmp
+    mv ~/.gitconfig.tmp ~/.gitconfig
+    echo -e "${GREEN}✅ Anciens alias supprimés${NC}"
+fi
 
-# Git Auto-Flow - Aliases ajoutés automatiquement  
-[alias]
-    # 🚀 WORKFLOW PRINCIPAL avec IA
-    feature-start = "!f() { \
-        echo '🚀 Démarrage feature: '\$1; \
-        git checkout develop && \
-        git pull origin develop && \
-        git checkout -b feature/\$1 && \
-        git push -u origin feature/\$1 && \
-        echo '✅ Feature branch créée: feature/'\$1; \
-    }; f"
-    
-    # Commit avec rebase + IA (remplace commit-safe)
-    commit-auto = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-commit-auto.py"
-    
-    # Alias courts 
-    ca = "!git commit-auto"
-    pr = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-auto.py"
-    
-    # Finaliser feature (avant PR)  
-    feature-finish = "!f() { \
-        echo '🔄 Finalisation de la feature...'; \
-        git fetch origin develop && \
-        git rebase origin/develop && \
-        git push --force-with-lease origin \$(git branch --show-current) && \
-        echo '✅ Feature prête pour PR vers develop'; \
-    }; f"
-    
-    # PR automation
-    pr-create-auto = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-create-auto.py"
-    
-    # Deploy automation (develop -> main avec auto-merge)
-    deploy = "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-release-auto.py"
-    
-    # Nettoyage des branches  
-    cleanup-branches = "!f() { \
-        echo '🧹 Nettoyage des branches locales...'; \
-        git fetch --prune origin; \
-        git branch --merged develop | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; \
-        git branch --merged main | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; \
-        echo '✅ Branches mergées supprimées'; \
-    }; f"
+# Configuration sécurisée des alias via git config
+echo -e "${BLUE}🔧 Configuration des alias Git Auto-Flow...${NC}"
 
-EOF
+# 🚀 WORKFLOW PRINCIPAL avec IA
+git config --global alias.feature-start "!f() { echo '🚀 Démarrage feature: '\$1; git checkout develop && git pull origin develop && git checkout -b feature/\$1 && git push -u origin feature/\$1 && echo '✅ Feature branch créée: feature/\$1'; }; f"
 
-echo -e "${GREEN}✅ Alias Git Auto-Flow ajoutés à ~/.gitconfig${NC}"
+# Commit avec rebase + IA
+git config --global alias.commit-auto "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-commit-auto.py"
+
+# Alias courts
+git config --global alias.ca "!git commit-auto"
+git config --global alias.pr "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-auto.py"
+
+# Finaliser feature (avant PR)
+git config --global alias.feature-finish "!f() { echo '🔄 Finalisation de la feature...'; git fetch origin develop && git rebase origin/develop && git push --force-with-lease origin \$(git branch --show-current) && echo '✅ Feature prête pour PR vers develop'; }; f"
+
+# PR automation
+git config --global alias.pr-create-auto "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-create-auto.py"
+
+# Deploy automation
+git config --global alias.deploy "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-release-auto.py"
+
+# Nettoyage des branches
+git config --global alias.cleanup-branches "!f() { echo '🧹 Nettoyage des branches locales...'; git fetch --prune origin; git branch --merged develop | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; git branch --merged main | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; echo '✅ Branches mergées supprimées'; }; f"
+
+echo -e "${GREEN}✅ Alias Git Auto-Flow configurés proprement${NC}"
 
 # 4. Configuration du repository Git Flow
 echo ""
