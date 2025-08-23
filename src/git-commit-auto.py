@@ -6,6 +6,7 @@ Remplace git commit-safe mais avec IA au lieu de commitizen
 
 import sys
 import subprocess
+import os
 from pathlib import Path
 
 # Ajout du dossier lib au path pour les imports
@@ -13,6 +14,52 @@ sys.path.insert(0, str(Path(__file__).parent / 'lib'))
 
 from ai_provider import AIProvider
 from git_utils import GitUtils
+
+
+def run_gitleaks_scan() -> bool:
+    """
+    Execute gitleaks pour scanner les fichiers stagés
+    
+    Returns:
+        bool: True si aucun secret détecté, False sinon
+    """
+    try:
+        # Trouve le chemin vers gitleaks
+        script_dir = Path(__file__).parent.parent
+        
+        # Priorité 1: gitleaks local dans bin/
+        local_gitleaks = script_dir / 'bin' / 'gitleaks'
+        if local_gitleaks.exists():
+            gitleaks_cmd = str(local_gitleaks)
+        else:
+            # Priorité 2: gitleaks global
+            result = subprocess.run(['which', 'gitleaks'], capture_output=True)
+            if result.returncode != 0:
+                print("⚠️  gitleaks non trouvé - scan de sécurité ignoré")
+                return True  # Continue sans scan si pas installé
+            gitleaks_cmd = 'gitleaks'
+        
+        # Lance gitleaks sur les fichiers stagés
+        result = subprocess.run([
+            gitleaks_cmd, 'detect', 
+            '--staged',
+            '--no-git',
+            '--exit-code', '1'
+        ], capture_output=True, text=True, cwd=script_dir)
+        
+        if result.returncode == 0:
+            return True  # Aucun secret détecté
+        elif result.returncode == 1:
+            print("🚨 SECRETS DÉTECTÉS:")
+            print(result.stdout)
+            return False  # Secrets trouvés
+        else:
+            print(f"⚠️  Erreur gitleaks: {result.stderr}")
+            return True  # Continue en cas d'erreur technique
+            
+    except Exception as e:
+        print(f"⚠️  Erreur scan sécurité: {e}")
+        return True  # Continue en cas d'erreur
 
 
 def run_git_commit(commit_data: dict) -> None:
@@ -203,15 +250,22 @@ def main():
         ai = AIProvider()
         print(ai.get_status())
         
-        # 4. Récupère les changements
+        # 4. Scan sécurité avec gitleaks
+        print("🔒 Scan sécurité des secrets...")
+        if not run_gitleaks_scan():
+            print("❌ Scan sécurité échoué - commit bloqué pour votre protection!")
+            sys.exit(1)
+        print("✅ Aucun secret détecté")
+        
+        # 5. Récupère les changements
         print("🔍 Analyse des changements...")
         diff = GitUtils.get_staged_diff()
         files = GitUtils.get_staged_files()
         
-        # 5. Analyse avec IA (fallback automatique)
+        # 6. Analyse avec IA (fallback automatique)
         commit_data = ai.analyze_for_commit(diff, files)
         
-        # 6. Execute le commit
+        # 7. Execute le commit
         run_git_commit(commit_data)
         
     except ValueError as e:
