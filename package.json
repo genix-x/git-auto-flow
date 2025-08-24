@@ -1,6 +1,6 @@
 {
   "name": "git-auto-flow",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Git automation with multi-AI support (Gemini + Groq) - Team-ready package for conventional commits and PR automation",
   "main": "src/index.js",
   "scripts": {

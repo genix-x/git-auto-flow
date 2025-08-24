@@ -1,3 +1,10 @@
+## [0.4.2](https://github.com/genix-x/git-auto-flow/compare/v0.4.1...v0.4.2) (2025-08-24)
+
+
+### Bug Fixes
+
+* replace --staged with --log-opts for gitleaks to avoid scanning full history ([2321de1](https://github.com/genix-x/git-auto-flow/commit/2321de1cbac4bb7457b971c1a1bee675e9277030))
+
 ## [0.4.1](https://github.com/genix-x/git-auto-flow/compare/v0.4.0...v0.4.1) (2025-08-23)
 
 
