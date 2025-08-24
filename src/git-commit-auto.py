@@ -39,10 +39,10 @@ def run_gitleaks_scan() -> bool:
                 return True  # Continue sans scan si pas installé
             gitleaks_cmd = 'gitleaks'
         
-        # Lance gitleaks sur les fichiers stagés uniquement
+        # Lance gitleaks sur les commits récents uniquement (évite de scanner tout l'historique)
         result = subprocess.run([
             gitleaks_cmd, 'detect', 
-            '--staged',
+            '--log-opts=--since=1.hour.ago',
             '--verbose',
             '--exit-code', '1'
         ], capture_output=True, text=True, cwd=os.getcwd())
