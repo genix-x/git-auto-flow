@@ -17,12 +17,9 @@ from git_utils import GitUtils
 from debug_logger import debug_command, set_global_debug_mode
 
 
-def run_gitleaks_scan() -> bool:
+def run_gitleaks_scan_all_modified() -> bool:
     """
-    Execute gitleaks pour scanner les fichiers stagés
-    
-    Args:
-        debug_mode: Si True, affiche les commandes exécutées
+    Scan sécurité de TOUS les fichiers modifiés (stagés, non-stagés, untracked)
     
     Returns:
         bool: True si aucun secret détecté, False sinon
@@ -30,32 +27,51 @@ def run_gitleaks_scan() -> bool:
     try:
         # Trouve le chemin vers gitleaks
         script_dir = Path(__file__).parent.parent
-        
-        # Priorité 1: gitleaks local dans bin/
         local_gitleaks = script_dir / 'bin' / 'gitleaks'
         if local_gitleaks.exists():
             gitleaks_cmd = str(local_gitleaks)
         else:
-            # Priorité 2: gitleaks global
             result = subprocess.run(['which', 'gitleaks'], capture_output=True)
             if result.returncode != 0:
                 print("⚠️  gitleaks non trouvé - scan de sécurité ignoré")
-                return True  # Continue sans scan si pas installé
+                return True
             gitleaks_cmd = 'gitleaks'
         
-        # Récupère la liste des fichiers stagés
-        staged_files_cmd = ['git', 'diff', '--cached', '--name-only']
-        debug_command(staged_files_cmd, "get staged files for gitleaks")
+        # Récupère TOUS les fichiers modifiés
+        all_files = []
         
-        staged_result = subprocess.run(staged_files_cmd, capture_output=True, text=True, check=True)
-        staged_files = [f.strip() for f in staged_result.stdout.strip().split('\n') if f.strip()]
+        # 1. Fichiers stagés
+        staged_cmd = ['git', 'diff', '--cached', '--name-only']
+        debug_command(staged_cmd, "get staged files")
+        staged_result = subprocess.run(staged_cmd, capture_output=True, text=True, check=False)
+        if staged_result.returncode == 0:
+            all_files.extend([f.strip() for f in staged_result.stdout.strip().split('\n') if f.strip()])
         
-        if not staged_files:
-            print("⚠️  Aucun fichier stagé à scanner")
+        # 2. Fichiers modifiés non-stagés
+        unstaged_cmd = ['git', 'diff', '--name-only']
+        debug_command(unstaged_cmd, "get unstaged files") 
+        unstaged_result = subprocess.run(unstaged_cmd, capture_output=True, text=True, check=False)
+        if unstaged_result.returncode == 0:
+            all_files.extend([f.strip() for f in unstaged_result.stdout.strip().split('\n') if f.strip()])
+        
+        # 3. Fichiers untracked
+        untracked_cmd = ['git', 'ls-files', '--others', '--exclude-standard']
+        debug_command(untracked_cmd, "get untracked files")
+        untracked_result = subprocess.run(untracked_cmd, capture_output=True, text=True, check=False)
+        if untracked_result.returncode == 0:
+            all_files.extend([f.strip() for f in untracked_result.stdout.strip().split('\n') if f.strip()])
+        
+        # Supprime les doublons
+        unique_files = list(set(all_files))
+        
+        if not unique_files:
+            print("ℹ️  Aucun fichier modifié à scanner")
             return True
         
-        # Scanner chaque fichier stagé avec gitleaks
-        for file_path in staged_files:
+        print(f"🔍 Scan GitLeaks sur {len(unique_files)} fichier(s) modifié(s)...")
+        
+        # Scanner chaque fichier
+        for file_path in unique_files:
             if not os.path.exists(file_path):
                 continue  # Fichier supprimé, ignoré
                 
@@ -67,9 +83,8 @@ def run_gitleaks_scan() -> bool:
                 '--exit-code', '1'
             ]
             
-            debug_command(gitleaks_command, f"gitleaks scan {file_path}")
-            
-            result = subprocess.run(gitleaks_command, capture_output=True, text=True, cwd=os.getcwd())
+            debug_command(gitleaks_command, f"scan {file_path}")
+            result = subprocess.run(gitleaks_command, capture_output=True, text=True)
             
             if result.returncode == 1:
                 print(f"🚨 SECRETS DÉTECTÉS dans {file_path}:")
@@ -77,16 +92,16 @@ def run_gitleaks_scan() -> bool:
                 if result.stderr:
                     print("Détails supplémentaires:")
                     print(result.stderr)
-                return False  # Secrets trouvés
+                return False  # Arrêt immédiat si secret détecté
             elif result.returncode != 0:
                 print(f"⚠️  Erreur gitleaks sur {file_path}: {result.stderr}")
                 # Continue le scan des autres fichiers
         
-        return True  # Aucun secret détecté dans tous les fichiers
+        return True  # Aucun secret détecté
             
     except Exception as e:
         print(f"⚠️  Erreur scan sécurité: {e}")
-        return True  # Continue en cas d'erreur
+        return True
 
 
 def run_git_commit(commit_data: dict) -> None:
@@ -301,35 +316,33 @@ def main():
         else:
             print(f"ℹ️  Déjà sur {base_branch}, pas de rebase nécessaire")
         
-        # 2. Vérifie qu'il y a des changements stagés OU auto-stage tout
+        # 2. Scan sécurité UNIQUE de tous les fichiers modifiés
+        print("🔒 Scan sécurité des fichiers modifiés...")
+        if not run_gitleaks_scan_all_modified():
+            print("❌ Secrets détectés - commit bloqué pour votre protection!")
+            sys.exit(1)
+        print("✅ Aucun secret détecté")
+        
+        # 3. Stage automatique (maintenant sécurisé car pré-scanné)
         if not GitUtils.has_staged_changes():
-            print("📁 Aucun changement stagé - staging automatique...")
+            print("📁 Staging automatique des fichiers sécurisés...")
             try:
                 add_cmd = ['git', 'add', '.']
-                if debug_mode:
-                    print(f"🐛 DEBUG: Exécution de: {' '.join(add_cmd)}")
-                    
-                subprocess.run(add_cmd, check=True)
+                debug_command(add_cmd, "staging verified clean files")
+                subprocess.run(add_cmd, check=False)
                 print("✅ Fichiers stagés automatiquement")
             except subprocess.CalledProcessError as e:
                 print(f"❌ Erreur lors du staging: {e}")
                 sys.exit(1)
         
-        # Vérifie à nouveau
+        # Vérifie qu'il y a des changements à commiter
         if not GitUtils.has_staged_changes():
             print("❌ Aucun changement à commiter")
             sys.exit(1)
         
-        # 3. Initialise le gestionnaire multi-IA
+        # 4. Initialise le gestionnaire multi-IA
         ai = AIProvider()
         print(ai.get_status())
-        
-        # 4. Scan sécurité avec gitleaks
-        print("🔒 Scan sécurité des secrets...")
-        if not run_gitleaks_scan():
-            print("❌ Scan sécurité échoué - commit bloqué pour votre protection!")
-            sys.exit(1)
-        print("✅ Aucun secret détecté")
         
         # 5. Récupère les changements
         print("🔍 Analyse des changements...")
