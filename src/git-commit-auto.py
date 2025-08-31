@@ -83,6 +83,11 @@ def run_git_commit(commit_data: dict) -> None:
         debug_mode: Si True, affiche les commandes exécutées
     """
     # Construit le message de commit
+    if 'type' not in commit_data:
+        print(f"❌ Erreur: Réponse IA invalide - champ 'type' manquant")
+        print(f"📋 Réponse reçue: {commit_data}")
+        return
+    
     commit_msg = commit_data['type']
     
     if commit_data.get('scope'):
@@ -114,16 +119,16 @@ def run_git_commit(commit_data: dict) -> None:
         for issue in commit_data['issues']:
             body_parts.append(f"Closes #{issue}")
     
-    body = '\\n\\n'.join(body_parts) if body_parts else ''
+    body = '\n\n'.join(body_parts) if body_parts else ''
     
     # Affiche le commit proposé
     print("📝 Commit proposé:")
     print(f"   {commit_msg}")
     if body:
-        print(f"\\n{body}")
+        print(f"\n{body}")
     
     # Demande confirmation
-    response = input("\\n✅ Confirmer ce commit? (y/N): ").strip().lower()
+    response = input("\n✅ Confirmer ce commit? (y/N): ").strip().lower()
     if response not in ['y', 'yes', 'o', 'oui']:
         print("❌ Commit annulé")
         return
@@ -132,7 +137,7 @@ def run_git_commit(commit_data: dict) -> None:
     try:
         full_msg = commit_msg
         if body:
-            full_msg += f"\\n\\n{body}"
+            full_msg += f"\n\n{body}"
         
         commit_command = ['git', 'commit', '-m', full_msg]
         debug_command(['git', 'commit', '-m', repr(full_msg)], "commit")
