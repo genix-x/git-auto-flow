@@ -14,11 +14,15 @@ sys.path.insert(0, str(Path(__file__).parent / 'lib'))
 
 from ai_provider import AIProvider
 from git_utils import GitUtils
+from debug_logger import debug_command, set_global_debug_mode
 
 
 def run_gitleaks_scan() -> bool:
     """
     Execute gitleaks pour scanner les fichiers stagés
+    
+    Args:
+        debug_mode: Si True, affiche les commandes exécutées
     
     Returns:
         bool: True si aucun secret détecté, False sinon
@@ -39,13 +43,18 @@ def run_gitleaks_scan() -> bool:
                 return True  # Continue sans scan si pas installé
             gitleaks_cmd = 'gitleaks'
         
-        # Lance gitleaks sur les commits récents uniquement (évite de scanner tout l'historique)
-        result = subprocess.run([
+        # Commande gitleaks à exécuter
+        gitleaks_command = [
             gitleaks_cmd, 'detect', 
             '--log-opts=--since=1.hour.ago',
             '--verbose',
             '--exit-code', '1'
-        ], capture_output=True, text=True, cwd=os.getcwd())
+        ]
+        
+        debug_command(gitleaks_command, "gitleaks scan")
+        
+        # Lance gitleaks sur les commits récents uniquement (évite de scanner tout l'historique)
+        result = subprocess.run(gitleaks_command, capture_output=True, text=True, cwd=os.getcwd())
         
         if result.returncode == 0:
             return True  # Aucun secret détecté
@@ -71,6 +80,7 @@ def run_git_commit(commit_data: dict) -> None:
     
     Args:
         commit_data: Dict contenant type, scope, description, body, etc.
+        debug_mode: Si True, affiche les commandes exécutées
     """
     # Construit le message de commit
     commit_msg = commit_data['type']
@@ -123,16 +133,26 @@ def run_git_commit(commit_data: dict) -> None:
         full_msg = commit_msg
         if body:
             full_msg += f"\\n\\n{body}"
+        
+        commit_command = ['git', 'commit', '-m', full_msg]
+        debug_command(['git', 'commit', '-m', repr(full_msg)], "commit")
             
-        subprocess.run(['git', 'commit', '-m', full_msg], check=True)
+        subprocess.run(commit_command, check=True)
         print("✅ Commit effectué avec succès!")
         
         # Push automatique vers la branche distante
         try:
-            current_branch = subprocess.run(['git', 'branch', '--show-current'], 
+            current_branch_cmd = ['git', 'branch', '--show-current']
+            debug_command(current_branch_cmd, "get current branch")
+            
+            current_branch = subprocess.run(current_branch_cmd, 
                                           capture_output=True, text=True, check=True).stdout.strip()
             print(f"📤 Push vers origin/{current_branch}...")
-            subprocess.run(['git', 'push', 'origin', current_branch], check=True)
+            
+            push_command = ['git', 'push', 'origin', current_branch]
+            debug_command(push_command, "push branch")
+                
+            subprocess.run(push_command, check=True)
             print("✅ Push effectué avec succès!")
         except subprocess.CalledProcessError as e:
             print(f"⚠️  Push échoué: {e}")
@@ -146,6 +166,14 @@ def run_git_commit(commit_data: dict) -> None:
 def main():
     """Fonction principale - Rebase + Commit avec IA"""
     
+    # Détection du mode debug
+    debug_mode = '--debug' in sys.argv
+    if debug_mode:
+        sys.argv.remove('--debug')  # Retire l'argument pour éviter qu'il interfère avec d'autres traitement
+    
+    # Configuration du logger global
+    set_global_debug_mode(debug_mode)
+    
     # Vérifie qu'on est dans un repo git
     if not GitUtils.is_git_repository():
         print("❌ Pas dans un repository Git")
@@ -153,14 +181,20 @@ def main():
     
     try:
         # 1. Rebase automatique (seulement si pas sur branche de base)
-        current_branch = subprocess.run(['git', 'branch', '--show-current'], 
+        current_branch_cmd = ['git', 'branch', '--show-current']
+        debug_command(current_branch_cmd, "get current branch")
+            
+        current_branch = subprocess.run(current_branch_cmd, 
                                       capture_output=True, text=True, check=True).stdout.strip()
         
         # Déterminer la branche de base
         base_branch = "develop"
         try:
-            subprocess.run(['git', 'show-ref', '--verify', '--quiet', 'refs/heads/develop'], 
-                         check=True, capture_output=True)
+            show_ref_cmd = ['git', 'show-ref', '--verify', '--quiet', 'refs/heads/develop']
+            if debug_mode:
+                print(f"🐛 DEBUG: Exécution de: {' '.join(show_ref_cmd)}")
+                
+            subprocess.run(show_ref_cmd, check=True, capture_output=True)
         except subprocess.CalledProcessError:
             # develop n'existe pas, utiliser main
             base_branch = "main"
@@ -173,14 +207,18 @@ def main():
             
             try:
                 # Fetch pour avoir les dernières infos
-                subprocess.run(['git', 'fetch', 'origin', base_branch], 
-                             capture_output=True, check=True)
+                fetch_cmd = ['git', 'fetch', 'origin', base_branch]
+                if debug_mode:
+                    print(f"🐛 DEBUG: Exécution de: {' '.join(fetch_cmd)}")
+                    
+                subprocess.run(fetch_cmd, capture_output=True, check=True)
                 
                 # Check si la branche est déjà à jour
-                behind_check = subprocess.run(
-                    ['git', 'rev-list', '--count', f'HEAD..origin/{base_branch}'],
-                    capture_output=True, text=True, check=True
-                )
+                rev_list_cmd = ['git', 'rev-list', '--count', f'HEAD..origin/{base_branch}']
+                if debug_mode:
+                    print(f"🐛 DEBUG: Exécution de: {' '.join(rev_list_cmd)}")
+                    
+                behind_check = subprocess.run(rev_list_cmd, capture_output=True, text=True, check=True)
                 behind_count = int(behind_check.stdout.strip())
                 
                 if behind_count == 0:
@@ -194,8 +232,11 @@ def main():
                     if has_staged:
                         print("📦 Sauvegarde des changements stagés...")
                         try:
-                            subprocess.run(['git', 'stash', 'push', '--staged', '-m', 'Auto-stash for rebase'], 
-                                         check=True, capture_output=True)
+                            stash_cmd = ['git', 'stash', 'push', '--staged', '-m', 'Auto-stash for rebase']
+                            if debug_mode:
+                                print(f"🐛 DEBUG: Exécution de: {' '.join(stash_cmd)}")
+                                
+                            subprocess.run(stash_cmd, check=True, capture_output=True)
                             print("✅ Changements sauvegardés")
                         except subprocess.CalledProcessError as e:
                             print(f"❌ Erreur lors de la sauvegarde: {e}")
@@ -209,7 +250,10 @@ def main():
                         if has_staged:
                             print("📦 Restauration des changements...")
                             try:
-                                subprocess.run(['git', 'stash', 'pop'], check=True, capture_output=True)
+                                stash_pop_cmd = ['git', 'stash', 'pop']
+                                debug_command(stash_pop_cmd, "restore staged changes after rebase")
+                                    
+                                subprocess.run(stash_pop_cmd, check=True, capture_output=True)
                                 print("✅ Changements restaurés")
                             except subprocess.CalledProcessError as e:
                                 print(f"❌ Erreur lors de la restauration: {e}")
@@ -220,7 +264,10 @@ def main():
                         if has_staged:
                             print("🔄 Tentative de restauration des changements après échec...")
                             try:
-                                subprocess.run(['git', 'stash', 'pop'], check=True, capture_output=True)
+                                stash_pop_cmd = ['git', 'stash', 'pop']
+                                debug_command(stash_pop_cmd, "restore changes after rebase failure")
+                                    
+                                subprocess.run(stash_pop_cmd, check=True, capture_output=True)
                                 print("✅ Changements restaurés")
                             except subprocess.CalledProcessError:
                                 print("⚠️  Changements en stash - utilisez 'git stash pop' après résolution")
@@ -238,7 +285,11 @@ def main():
         if not GitUtils.has_staged_changes():
             print("📁 Aucun changement stagé - staging automatique...")
             try:
-                subprocess.run(['git', 'add', '.'], check=True)
+                add_cmd = ['git', 'add', '.']
+                if debug_mode:
+                    print(f"🐛 DEBUG: Exécution de: {' '.join(add_cmd)}")
+                    
+                subprocess.run(add_cmd, check=True)
                 print("✅ Fichiers stagés automatiquement")
             except subprocess.CalledProcessError as e:
                 print(f"❌ Erreur lors du staging: {e}")
