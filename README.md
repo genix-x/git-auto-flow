@@ -120,6 +120,39 @@ git pr-auto --base main
 git pr-create-auto --base main --draft
 ```
 
+### **🐛 Mode Debug**
+
+Pour diagnostiquer les problèmes ou voir les commandes exécutées en temps réel :
+
+```bash
+# Commit avec debug (voir toutes les commandes git/gitleaks)
+git ca --debug
+git commit-auto --debug
+
+# PR avec debug (voir commandes gh, git)
+git pr --debug
+git pr-auto --debug
+
+# Release avec debug (voir tout le processus)
+python3 src/git-release-auto.py --debug
+```
+
+**Exemples de sortie debug :**
+```bash
+🐛 Mode DEBUG activé
+🐛 DEBUG (gitleaks scan): gitleaks detect --log-opts=--since=1.hour.ago --verbose --exit-code 1
+🐛 DEBUG (get current branch): git branch --show-current
+🐛 DEBUG (commit): git commit -m 'feat(api): add user authentication'
+🐛 DEBUG (push branch): git push origin feature/auth
+🐛 DEBUG (create PR): gh pr create --base develop --title "..." --body "..."
+```
+
+**Quand utiliser le debug :**
+- ❌ Erreurs de gitleaks ou permissions
+- ❌ Problèmes de rebase ou conflits
+- ❌ Échecs de création PR
+- 🔍 Comprendre le workflow interne
+
 ## 🏗️ Architecture
 
 ```

@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent / 'lib'))
 
 from ai_provider import AIProvider
 from git_utils import GitUtils
+from debug_logger import debug_command, set_global_debug_mode
 
 
 def run_gh_pr_create(pr_data: dict, base_branch: str = "develop") -> str:
@@ -22,6 +23,7 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop") -> str:
     Args:
         pr_data: Dict contenant title, body, labels, etc.
         base_branch: La branche cible pour la PR
+        debug_mode: Si True, affiche les commandes exécutées
         
     Returns:
         str: L'URL de la PR créée
@@ -61,6 +63,8 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop") -> str:
         cmd.append('--draft')
     
     try:
+        debug_command(cmd, "create PR")
+            
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         pr_url = result.stdout.strip()
         print(f"✅ PR créée avec succès: {pr_url}")
@@ -73,6 +77,8 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop") -> str:
                 '--method', 'PATCH',
                 '--field', 'delete_branch_on_merge=true'
             ]
+            debug_command(delete_cmd, "enable auto-delete branches")
+                
             subprocess.run(delete_cmd, capture_output=True, check=True)
             print("✅ Auto-suppression activée sur le repo")
         except subprocess.CalledProcessError:
@@ -92,7 +98,10 @@ def check_gh_cli():
     """Vérifie que GitHub CLI est installé et authentifié"""
     try:
         # Vérifie que gh est installé
-        subprocess.run(['gh', '--version'], capture_output=True, check=True)
+        version_cmd = ['gh', '--version']
+        debug_command(version_cmd, "check gh version")
+            
+        subprocess.run(version_cmd, capture_output=True, check=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("❌ GitHub CLI (gh) n'est pas installé")
         print("💡 Installation:")
@@ -103,7 +112,10 @@ def check_gh_cli():
     
     try:
         # Vérifie l'authentification
-        subprocess.run(['gh', 'auth', 'status'], capture_output=True, check=True)
+        auth_cmd = ['gh', 'auth', 'status']
+        debug_command(auth_cmd, "check gh auth")
+            
+        subprocess.run(auth_cmd, capture_output=True, check=True)
     except subprocess.CalledProcessError:
         print("❌ GitHub CLI n'est pas authentifié")
         print("💡 Connectez-vous: gh auth login")
@@ -125,8 +137,16 @@ def main():
         action='store_true',
         help='Créer la PR en mode draft'
     )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Activer le mode debug pour voir les commandes exécutées'
+    )
     
     args = parser.parse_args()
+    
+    # Configuration du logger global
+    set_global_debug_mode(args.debug)
     
     # Vérifie les prérequis
     if not GitUtils.is_git_repository():

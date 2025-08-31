@@ -14,12 +14,16 @@ sys.path.insert(0, str(Path(__file__).parent / 'lib'))
 
 from ai_provider import AIProvider
 from git_utils import GitUtils
+from debug_logger import debug_command, set_global_debug_mode
 
 
 def check_gh_cli():
     """Vérifie que GitHub CLI est installé et authentifié"""
     try:
-        subprocess.run(['gh', '--version'], capture_output=True, check=True)
+        version_cmd = ['gh', '--version']
+        debug_command(version_cmd, "check gh version")
+            
+        subprocess.run(version_cmd, capture_output=True, check=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("❌ GitHub CLI (gh) n'est pas installé")
         print("💡 Installation:")
@@ -28,7 +32,10 @@ def check_gh_cli():
         sys.exit(1)
     
     try:
-        subprocess.run(['gh', 'auth', 'status'], capture_output=True, check=True)
+        auth_cmd = ['gh', 'auth', 'status']
+        debug_command(auth_cmd, "check gh auth")
+            
+        subprocess.run(auth_cmd, capture_output=True, check=True)
     except subprocess.CalledProcessError:
         print("❌ GitHub CLI n'est pas authentifié")
         print("💡 Connectez-vous: gh auth login")
@@ -42,6 +49,7 @@ def merge_pr_immediately(pr_url: str, merge_method: str = "merge") -> bool:
     Args:
         pr_url: URL de la PR
         merge_method: Méthode de merge (merge, squash, rebase)
+        debug_mode: Si True, affiche les commandes exécutées
         
     Returns:
         bool: True si le merge a réussi
@@ -57,6 +65,8 @@ def merge_pr_immediately(pr_url: str, merge_method: str = "merge") -> bool:
             'gh', 'pr', 'merge', pr_number,
             f'--{merge_method}'
         ]
+        
+        debug_command(cmd, "merge PR immediately")
         
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         print("✅ PR mergée avec succès!")
@@ -75,6 +85,7 @@ def run_gh_pr_create_release(pr_data: dict, immediate_merge: bool = True) -> str
     Args:
         pr_data: Dict contenant title, body, labels, etc.
         immediate_merge: Si True, merge immédiatement la PR
+        debug_mode: Si True, affiche les commandes exécutées
         
     Returns:
         str: L'URL de la PR créée
@@ -108,6 +119,8 @@ def run_gh_pr_create_release(pr_data: dict, immediate_merge: bool = True) -> str
     # Labels supprimés pour éviter les erreurs
     
     try:
+        debug_command(cmd, "create release PR")
+            
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         pr_url = result.stdout.strip()
         print(f"✅ PR de release créée: {pr_url}")
@@ -142,8 +155,16 @@ def main():
         default='merge',
         help='Méthode de merge (défaut: merge)'
     )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Activer le mode debug pour voir les commandes exécutées'
+    )
     
     args = parser.parse_args()
+    
+    # Configuration du logger global
+    set_global_debug_mode(args.debug)
     
     print("🚀 Git Release Auto - Processus de Release Automatisé")
     print("=" * 55)

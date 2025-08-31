@@ -58,7 +58,7 @@ class GeminiClient:
             Dict contenant les données du commit (type, scope, description, body, etc.)
         """
         prompt = f"""
-Analyse les changements Git suivants et génère UNIQUEMENT un JSON valide.
+Tu es un générateur de commit conventionnel. Tu DOIS répondre avec UNIQUEMENT le JSON demandé.
 
 FICHIERS MODIFIÉS:
 {files}
@@ -66,28 +66,25 @@ FICHIERS MODIFIÉS:
 DIFFÉRENCES:
 {diff}
 
-IMPORTANT: Tu DOIS répondre EXCLUSIVEMENT avec ce format JSON exact, sans aucun texte avant ou après:
-
+RÉPONSE OBLIGATOIRE - FORMAT EXACT:
 {{
-    "type": "feat",
-    "scope": "automation",
-    "description": "add gemini AI powered commit automation",
-    "body": "Add intelligent commit message generation using Google Gemini API\\n- Auto-analyze git diff and staged files\\n- Generate conventional commit messages\\n- Support for scopes, breaking changes, and issue linking\\n- Interactive confirmation before commit",
+    "type": "fix",
+    "scope": "commit",
+    "description": "correct newline characters in commit messages",
+    "body": "Replace escaped newlines with actual newlines\n- Fix \\\\n display issue in GitHub\n- Improve commit readability",
     "breaking": false,
     "issues": []
 }}
 
-Types possibles: feat, fix, docs, style, refactor, perf, test, chore, ci, build, revert
+TYPES AUTORISÉS: feat, fix, docs, style, refactor, perf, test, chore, ci, build, revert
 
-Règles strictes:
-1. Réponse = JSON SEULEMENT
-2. Pas de markdown, pas de texte explicatif
-3. description en anglais, sans majuscule au début
-4. scope optionnel mais pertinent
-5. body avec détails si nécessaire (avec \\n pour newlines)
+RÈGLES CRITIQUES:
+- UNIQUEMENT JSON - AUCUN TEXTE EXPLICATIF
+- OBLIGATOIRE: type, description
+- description: anglais, sans majuscule début
+- body: optionnel, avec vrais \\n pour retours ligne
 
-JSON SEULEMENT:
-"""
+GÉNÈRE TON JSON:"""
         return self._make_request(prompt)
     
     def analyze_for_pr(self, diff: str, files: str, target_branch: str = "develop") -> Dict:
