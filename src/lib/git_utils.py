@@ -7,6 +7,14 @@ import subprocess
 import sys
 from typing import Tuple
 
+# Import du système de debug centralisé
+try:
+    from debug_logger import debug_command
+except ImportError:
+    # Fallback si debug_logger n'est pas disponible
+    def debug_command(cmd, description=""):
+        pass
+
 
 class GitUtils:
     """Utilitaires Git communs pour les scripts d'automation"""
@@ -20,12 +28,10 @@ class GitUtils:
             str: Le contenu du git diff --cached
         """
         try:
-            result = subprocess.run(
-                ['git', 'diff', '--cached'],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            cmd = ['git', 'diff', '--cached']
+            debug_command(cmd, "get staged diff")
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             return result.stdout
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Erreur lors de la récupération du diff stagé: {e}")
@@ -39,12 +45,10 @@ class GitUtils:
             str: La liste des noms de fichiers stagés (un par ligne)
         """
         try:
-            result = subprocess.run(
-                ['git', 'diff', '--cached', '--name-only'],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            cmd = ['git', 'diff', '--cached', '--name-only']
+            debug_command(cmd, "get staged files")
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             return result.stdout
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Erreur lors de la récupération des fichiers stagés: {e}")
@@ -61,12 +65,10 @@ class GitUtils:
             str: Le contenu du git diff base_branch...HEAD
         """
         try:
-            result = subprocess.run(
-                ['git', 'diff', f'{base_branch}...HEAD'],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            cmd = ['git', 'diff', f'{base_branch}...HEAD']
+            debug_command(cmd, f"get branch diff vs {base_branch}")
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             return result.stdout
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Erreur lors de la récupération du diff de branche: {e}")
@@ -83,12 +85,10 @@ class GitUtils:
             list: Liste des noms de fichiers modifiés
         """
         try:
-            result = subprocess.run(
-                ['git', 'diff', '--name-only', f'{base_branch}...HEAD'],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            cmd = ['git', 'diff', '--name-only', f'{base_branch}...HEAD']
+            debug_command(cmd, f"get branch files vs {base_branch}")
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             # Retourner une liste de fichiers, pas une string
             files = result.stdout.strip().split('\n') if result.stdout.strip() else []
             return [file for file in files if file.strip()]
@@ -104,12 +104,10 @@ class GitUtils:
             str: Le nom de la branche courante
         """
         try:
-            result = subprocess.run(
-                ['git', 'branch', '--show-current'],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+            cmd = ['git', 'branch', '--show-current']
+            debug_command(cmd, "get current branch")
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             return result.stdout.strip()
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Erreur lors de la récupération de la branche courante: {e}")
@@ -236,14 +234,15 @@ class GitUtils:
         """
         try:
             # Fetch pour avoir les dernières infos
-            subprocess.run(['git', 'fetch', 'origin', base_branch], 
-                         capture_output=True, check=True)
+            fetch_cmd = ['git', 'fetch', 'origin', base_branch]
+            debug_command(fetch_cmd, f"fetch {base_branch} for up-to-date check")
+            subprocess.run(fetch_cmd, capture_output=True, check=True)
             
             # Compare les refs
-            result = subprocess.run(
-                ['git', 'rev-list', '--count', f'HEAD..origin/{base_branch}'],
-                capture_output=True, text=True, check=True
-            )
+            rev_list_cmd = ['git', 'rev-list', '--count', f'HEAD..origin/{base_branch}']
+            debug_command(rev_list_cmd, f"check if behind {base_branch}")
+            
+            result = subprocess.run(rev_list_cmd, capture_output=True, text=True, check=True)
             
             behind_count = int(result.stdout.strip())
             return behind_count == 0
@@ -264,7 +263,8 @@ class GitUtils:
             
             if force_with_lease:
                 cmd.append('--force-with-lease')
-                
+            
+            debug_command(cmd, f"push current branch ({current_branch})")
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Erreur lors du push: {e}")
