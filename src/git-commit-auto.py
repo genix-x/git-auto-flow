@@ -43,31 +43,46 @@ def run_gitleaks_scan() -> bool:
                 return True  # Continue sans scan si pas installé
             gitleaks_cmd = 'gitleaks'
         
-        # Commande gitleaks à exécuter
-        gitleaks_command = [
-            gitleaks_cmd, 'detect', 
-            '--log-opts=--since=1.hour.ago',
-            '--verbose',
-            '--exit-code', '1'
-        ]
+        # Récupère la liste des fichiers stagés
+        staged_files_cmd = ['git', 'diff', '--cached', '--name-only']
+        debug_command(staged_files_cmd, "get staged files for gitleaks")
         
-        debug_command(gitleaks_command, "gitleaks scan")
+        staged_result = subprocess.run(staged_files_cmd, capture_output=True, text=True, check=True)
+        staged_files = [f.strip() for f in staged_result.stdout.strip().split('\n') if f.strip()]
         
-        # Lance gitleaks sur les commits récents uniquement (évite de scanner tout l'historique)
-        result = subprocess.run(gitleaks_command, capture_output=True, text=True, cwd=os.getcwd())
+        if not staged_files:
+            print("⚠️  Aucun fichier stagé à scanner")
+            return True
         
-        if result.returncode == 0:
-            return True  # Aucun secret détecté
-        elif result.returncode == 1:
-            print("🚨 SECRETS DÉTECTÉS:")
-            print(result.stdout)
-            if result.stderr:
-                print("Détails supplémentaires:")
-                print(result.stderr)
-            return False  # Secrets trouvés
-        else:
-            print(f"⚠️  Erreur gitleaks: {result.stderr}")
-            return True  # Continue en cas d'erreur technique
+        # Scanner chaque fichier stagé avec gitleaks
+        for file_path in staged_files:
+            if not os.path.exists(file_path):
+                continue  # Fichier supprimé, ignoré
+                
+            gitleaks_command = [
+                gitleaks_cmd, 'detect', 
+                '--no-git',
+                '--source', file_path,
+                '--verbose',
+                '--exit-code', '1'
+            ]
+            
+            debug_command(gitleaks_command, f"gitleaks scan {file_path}")
+            
+            result = subprocess.run(gitleaks_command, capture_output=True, text=True, cwd=os.getcwd())
+            
+            if result.returncode == 1:
+                print(f"🚨 SECRETS DÉTECTÉS dans {file_path}:")
+                print(result.stdout)
+                if result.stderr:
+                    print("Détails supplémentaires:")
+                    print(result.stderr)
+                return False  # Secrets trouvés
+            elif result.returncode != 0:
+                print(f"⚠️  Erreur gitleaks sur {file_path}: {result.stderr}")
+                # Continue le scan des autres fichiers
+        
+        return True  # Aucun secret détecté dans tous les fichiers
             
     except Exception as e:
         print(f"⚠️  Erreur scan sécurité: {e}")
