@@ -1,3 +1,10 @@
+## [0.4.4](https://github.com/genix-x/git-auto-flow/compare/v0.4.3...v0.4.4) (2025-08-31)
+
+
+### Bug Fixes
+
+* **gitleaks:** prevent secrets from being staged ([3299dcd](https://github.com/genix-x/git-auto-flow/commit/3299dcd49c1a5a4ebfe1817fd29f36f782dfc993))
+
 ## [0.4.3](https://github.com/genix-x/git-auto-flow/compare/v0.4.2...v0.4.3) (2025-08-31)
 
 
