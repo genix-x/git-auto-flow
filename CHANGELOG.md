@@ -1,3 +1,12 @@
+## [0.4.3](https://github.com/genix-x/git-auto-flow/compare/v0.4.2...v0.4.3) (2025-08-31)
+
+
+### Bug Fixes
+
+* **commit:** correct newline characters in commit messages ([102fab5](https://github.com/genix-x/git-auto-flow/commit/102fab5fde0eb85f3d87476a74f5fa1afa834105))
+* **git-utils:** add debug mode to git utils\n\nadd debug logging to git commands in git_utils.py ([f82e142](https://github.com/genix-x/git-auto-flow/commit/f82e142fe5523ac0df3ba3511091f1011cd7bbaa))
+* **gitleaks:** improve gitleaks scan accuracy and reporting ([88a856b](https://github.com/genix-x/git-auto-flow/commit/88a856bf8dda76fcf189d8e4f498ee5bea7203d3))
+
 ## [0.4.2](https://github.com/genix-x/git-auto-flow/compare/v0.4.1...v0.4.2) (2025-08-24)
 
 
