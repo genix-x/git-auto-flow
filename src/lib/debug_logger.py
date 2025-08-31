@@ -76,8 +76,9 @@ def get_debug_logger(name: str = "git-auto-flow", debug_mode: bool = False) -> D
 
 def debug_command(command: List[str], description: str = ""):
     """Fonction helper pour débugger une commande (utilise le logger global)"""
-    logger = get_debug_logger()
-    logger.debug_command(command, description)
+    global _debug_logger
+    if _debug_logger is not None:
+        _debug_logger.debug_command(command, description)
 
 
 def set_global_debug_mode(debug_mode: bool):
