@@ -17,6 +17,118 @@ from git_utils import GitUtils
 from debug_logger import debug_command, set_global_debug_mode
 
 
+def get_repo_name() -> str:
+    """Récupère le nom du repository GitHub"""
+    try:
+        cmd = ['git', 'remote', 'get-url', 'origin']
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        url = result.stdout.strip()
+        
+        # Parse GitHub URL (https://github.com/user/repo.git ou git@github.com:user/repo.git)
+        if 'github.com/' in url:
+            repo_part = url.split('github.com/')[-1]
+            if repo_part.endswith('.git'):
+                repo_part = repo_part[:-4]
+            return repo_part
+        return "unknown/unknown"
+    except:
+        return "unknown/unknown"
+
+
+def get_latest_tag() -> str:
+    """Récupère le dernier tag pour calculer la prochaine version"""
+    try:
+        cmd = ['git', 'describe', '--tags', '--abbrev=0']
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        return result.stdout.strip()
+    except:
+        return "v0.0.0"  # Première version si aucun tag
+
+
+def create_github_release(release_data: dict) -> bool:
+    """
+    Crée une GitHub Release avec tag
+    
+    Args:
+        release_data: Dict contenant version, changes, etc.
+        
+    Returns:
+        bool: True si succès
+    """
+    try:
+        version = f"v{release_data['version']}"
+        
+        # 1. Checkout main pour créer le tag
+        print("📂 Checkout main pour la release...")
+        subprocess.run(['git', 'checkout', 'main'], capture_output=True, check=True)
+        
+        # 2. Pull latest main
+        print("📥 Pull main...")
+        subprocess.run(['git', 'pull', 'origin', 'main'], capture_output=True, check=True)
+        
+        # 3. Créer le tag local
+        print(f"🏷️  Création du tag {version}...")
+        tag_cmd = ['git', 'tag', '-a', version, '-m', f'Release {version}']
+        debug_command(tag_cmd, f"create tag {version}")
+        subprocess.run(tag_cmd, check=True)
+        
+        # 4. Push le tag
+        print(f"📤 Push du tag {version}...")
+        push_tag_cmd = ['git', 'push', 'origin', version]
+        debug_command(push_tag_cmd, f"push tag {version}")
+        subprocess.run(push_tag_cmd, check=True)
+        
+        # 5. Générer les release notes depuis les données IA
+        release_notes = generate_release_notes(release_data)
+        
+        # 6. Créer la GitHub Release
+        print(f"🚀 Création de la GitHub Release {version}...")
+        gh_cmd = [
+            'gh', 'release', 'create', version,
+            '--title', f'{version}',
+            '--notes', release_notes
+        ]
+        
+        debug_command(gh_cmd, f"create GitHub release {version}")
+        subprocess.run(gh_cmd, check=True)
+        
+        return True
+        
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Erreur lors de la création de la release: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Erreur inattendue lors de la release: {e}")
+        return False
+
+
+def generate_release_notes(release_data: dict) -> str:
+    """Génère les release notes formatées pour GitHub"""
+    notes = f"## 🚀 Release v{release_data['version']}\n\n"
+    
+    if release_data.get('breaking_changes'):
+        notes += "### ⚠️ BREAKING CHANGES\n"
+        for change in release_data.get('major_changes', []):
+            notes += f"- {change}\n"
+        notes += "\n"
+    
+    if release_data.get('minor_changes'):
+        notes += "### ✨ New Features\n"
+        for change in release_data['minor_changes']:
+            notes += f"- {change}\n"
+        notes += "\n"
+    
+    if release_data.get('patch_changes'):
+        notes += "### 🐛 Bug Fixes & Improvements\n"
+        for change in release_data['patch_changes']:
+            notes += f"- {change}\n"
+        notes += "\n"
+    
+    notes += f"**Full Changelog**: https://github.com/{get_repo_name()}/compare/{get_latest_tag()}...v{release_data['version']}\n"
+    
+    return notes
+
+
 def check_gh_cli():
     """Vérifie que GitHub CLI est installé et authentifié"""
     try:
@@ -219,25 +331,29 @@ def main():
         ai = AIProvider()
         print(ai.get_status())
         
-        # Génère une PR spécialement pour une release
-        pr_data = ai.analyze_for_release(diff, files, commits)
+        # Génère une PR spécialement pour une release + calcul version
+        release_data = ai.analyze_for_release(diff, files, commits)
         
-        # Supprime les labels pour éviter les erreurs
-        pr_data['labels'] = []
+        print(f"🏷️  Version calculée: v{release_data['release']['version']} ({release_data['release']['version_type']})")
         
         # Étape 4: Création de la PR avec auto-merge
         print("\n🚀 Étape 4: Création de la PR de release...")
         
         immediate_merge = not args.no_auto_merge  
-        pr_url = run_gh_pr_create_release(pr_data, immediate_merge)
+        pr_url = run_gh_pr_create_release(release_data['pr'], immediate_merge)
         
-        if pr_url:
-            print(f"\n🎉 Release en cours! PR: {pr_url}")
-            if immediate_merge:
-                print("🎉 La PR a été mergée automatiquement!")
-                print("🏷️  Une nouvelle version sera créée par semantic-release!")
+        if pr_url and immediate_merge:
+            print(f"\n🎉 PR mergée! Création de la release v{release_data['release']['version']}...")
+            
+            # Étape 5: Création automatique de la release
+            if create_github_release(release_data['release']):
+                print(f"🏷️  Release v{release_data['release']['version']} créée avec succès!")
+                print(f"🔗 Voir: https://github.com/{get_repo_name()}/releases/tag/v{release_data['release']['version']}")
             else:
-                print("💡 Mergez manuellement pour déclencher la release")
+                print("⚠️  Erreur lors de la création de la release GitHub")
+        elif pr_url:
+            print(f"\n🎉 PR créée: {pr_url}")
+            print("💡 Mergez manuellement pour déclencher la release")
         
         # Retour à la branche d'origine si possible
         if current_branch and current_branch != 'develop':
