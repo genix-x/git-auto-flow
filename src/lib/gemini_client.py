@@ -161,7 +161,7 @@ RÉPONSE = JSON SEULEMENT:
     
     def analyze_for_release(self, diff: str, files: str, commits: Optional[List[str]] = None) -> Dict:
         """
-        Analyse les changements pour générer une PR de release develop -> main
+        Analyse les changements pour générer une PR de release + calcul de version
         
         Args:
             diff: Le git diff complet develop -> main
@@ -169,9 +169,9 @@ RÉPONSE = JSON SEULEMENT:
             commits: Liste des messages de commits
             
         Returns:
-            Dict contenant les données de la PR de release
+            Dict contenant les données de la PR + version calculée
         """
-        prompt = PromptTemplates.get_release_prompt(files, commits, diff)
+        prompt = self._get_enhanced_release_prompt(files, commits, diff)
         
         try:
             response = self.model.generate_content(prompt)
@@ -182,3 +182,63 @@ RÉPONSE = JSON SEULEMENT:
             raise ValueError(f"Erreur JSON: {e}\\nContenu analysé: {content}")
         except Exception as e:
             raise RuntimeError(f"Erreur lors de l'analyse avec Gemini: {e}")
+    
+    def _get_enhanced_release_prompt(self, files: str, commits: Optional[List[str]] = None, diff: str = "") -> str:
+        """
+        Nouveau prompt qui génère PR + calcul de version automatique
+        """
+        commits_text = ""
+        if commits:
+            commits_text = f"""
+COMMITS INCLUS:
+{chr(10).join(f'• {commit}' for commit in commits)}
+"""
+
+        # Tronquer le diff s'il est trop long
+        diff_text = diff[:4000] if diff else ""
+
+        return f"""
+Analyze the changes for a RELEASE (develop -> main) and generate COMPLETE JSON for PR + VERSION.
+
+MODIFIED FILES:
+{files}
+{commits_text}
+DIFF:
+{diff_text}
+
+Generate JSON with this EXACT structure:
+{{
+    "pr": {{
+        "title": "Release: Short description of changes",
+        "body": "## 🚀 Release Notes\\n\\n### ✨ New Features\\n- Feature 1\\n\\n### 🐛 Bug Fixes\\n- Fix 1\\n\\n### 📝 Documentation\\n- Doc update\\n\\n### 🔧 Other Changes\\n- Other changes",
+        "labels": []
+    }},
+    "release": {{
+        "version": "1.2.0",
+        "version_type": "minor",
+        "breaking_changes": false,
+        "major_changes": [],
+        "minor_changes": [],
+        "patch_changes": []
+    }}
+}}
+
+VERSION CALCULATION RULES (Semantic Versioning):
+- MAJOR (x.0.0): Breaking changes, major refactors, API changes
+- MINOR (0.x.0): New features (feat:), enhancements, new capabilities  
+- PATCH (0.0.x): Bug fixes (fix:), docs, style, test, chore, refactor
+
+ANALYZE COMMITS and determine:
+1. Highest impact change type (major > minor > patch)
+2. List changes by category in release object
+3. Calculate next version based on commit types
+
+IMPORTANT:
+- PR title: "Release: Short description" (NO version number)
+- PR body: Professional English release notes with emoji sections
+- Version: Calculate based on commit analysis (assume current is 0.1.0 if unknown)
+- Breaking changes: Look for "BREAKING CHANGE:" or major refactors
+- Group changes by type in the release object
+
+RETURN ONLY THE JSON, NO EXPLANATION:
+"""
