@@ -1,0 +1,13 @@
+name: Hello World on Specific Labels
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    if: contains(fromJSON('["run-ci","ready"]'), github.event.label.name)
+    steps:
+      - name: Print Hello
+        run: echo "Hello World 🚀 - Label déclencheur: ${{ github.event.label.name }}"
