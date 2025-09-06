@@ -38,11 +38,21 @@ def get_repo_name() -> str:
 def get_latest_tag() -> str:
     """Récupère le dernier tag pour calculer la prochaine version"""
     try:
-        cmd = ['git', 'describe', '--tags', '--abbrev=0']
+        # On s'assure d'avoir les derniers tags de l'origin
+        subprocess.run(['git', 'fetch', 'origin', '--tags'], capture_output=True, text=True)
+        
+        # Liste les tags par version et prend le dernier
+        cmd = ['git', 'tag', '-l', '--sort=-v:refname']
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        return result.stdout.strip()
-    except:
+        tags = result.stdout.strip().split('\n')
+        
+        if tags and tags[0]:
+            return tags[0]
+        else:
+            return "v0.0.0"
+    except Exception:
         return "v0.0.0"  # Première version si aucun tag
+
 
 
 def create_github_release(release_data: dict) -> bool:
@@ -331,8 +341,12 @@ def main():
         ai = AIProvider()
         print(ai.get_status())
         
+        # Récupère le dernier tag pour le calcul de la version
+        latest_tag = get_latest_tag()
+        print(f"INFO: Le dernier tag trouvé est '{latest_tag}'. Il sera utilisé comme base pour la nouvelle version.")
+
         # Génère une PR spécialement pour une release + calcul version
-        release_data = ai.analyze_for_release(diff, files, commits)
+        release_data = ai.analyze_for_release(diff, files, commits, latest_tag=latest_tag)
         
         print(f"🏷️  Version calculée: v{release_data['release']['version']} ({release_data['release']['version_type']})")
         
