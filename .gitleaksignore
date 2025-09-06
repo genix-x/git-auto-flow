@@ -1,2 +1,3 @@
 # Ignore documentation examples that contain fake secrets
 README.md:generic-api-key:162
+README.md:generic-api-key:222
