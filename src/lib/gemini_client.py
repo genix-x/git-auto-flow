@@ -159,7 +159,7 @@ RÉPONSE = JSON SEULEMENT:
         except Exception as e:
             raise RuntimeError(f"Erreur lors de l'analyse avec Gemini: {e}")
     
-    def analyze_for_release(self, diff: str, files: str, commits: Optional[List[str]] = None) -> Dict:
+    def analyze_for_release(self, diff: str, files: str, commits: Optional[List[str]] = None, latest_tag: str = "v0.0.0") -> Dict:
         """
         Analyse les changements pour générer une PR de release + calcul de version
         
@@ -167,11 +167,12 @@ RÉPONSE = JSON SEULEMENT:
             diff: Le git diff complet develop -> main
             files: La liste des fichiers modifiés
             commits: Liste des messages de commits
+            latest_tag: Le dernier tag git pour le calcul de version
             
         Returns:
             Dict contenant les données de la PR + version calculée
         """
-        prompt = self._get_enhanced_release_prompt(files, commits, diff)
+        prompt = self._get_enhanced_release_prompt(files, commits, diff, latest_tag)
         
         try:
             response = self.model.generate_content(prompt)
@@ -183,7 +184,7 @@ RÉPONSE = JSON SEULEMENT:
         except Exception as e:
             raise RuntimeError(f"Erreur lors de l'analyse avec Gemini: {e}")
     
-    def _get_enhanced_release_prompt(self, files: str, commits: Optional[List[str]] = None, diff: str = "") -> str:
+    def _get_enhanced_release_prompt(self, files: str, commits: Optional[List[str]] = None, diff: str = "", latest_tag: str = "v0.0.0") -> str:
         """
         Nouveau prompt qui génère PR + calcul de version automatique
         """
@@ -200,6 +201,8 @@ COMMITS INCLUS:
         return f"""
 Analyze the changes for a RELEASE (develop -> main) and generate COMPLETE JSON for PR + VERSION.
 
+CURRENT VERSION: {latest_tag}
+
 MODIFIED FILES:
 {files}
 {commits_text}
@@ -210,7 +213,7 @@ Generate JSON with this EXACT structure:
 {{
     "pr": {{
         "title": "Release: Short description of changes",
-        "body": "## 🚀 Release Notes\\n\\n### ✨ New Features\\n- Feature 1\\n\\n### 🐛 Bug Fixes\\n- Fix 1\\n\\n### 📝 Documentation\\n- Doc update\\n\\n### 🔧 Other Changes\\n- Other changes",
+        "body": "## 🚀 Release Notes\n\n### ✨ New Features\n- Feature 1\n\n### 🐛 Bug Fixes\n- Fix 1\n\n### 📝 Documentation\n- Doc update\n\n### 🔧 Other Changes\n- Other changes",
         "labels": []
     }},
     "release": {{
@@ -231,12 +234,12 @@ VERSION CALCULATION RULES (Semantic Versioning):
 ANALYZE COMMITS and determine:
 1. Highest impact change type (major > minor > patch)
 2. List changes by category in release object
-3. Calculate next version based on commit types
+3. Calculate next version based on commit types and CURRENT VERSION ({latest_tag})
 
 IMPORTANT:
 - PR title: "Release: Short description" (NO version number)
 - PR body: Professional English release notes with emoji sections
-- Version: Calculate based on commit analysis (assume current is 0.1.0 if unknown)
+- Version: Calculate based on commit analysis and CURRENT VERSION ({latest_tag})
 - Breaking changes: Look for "BREAKING CHANGE:" or major refactors
 - Group changes by type in the release object
 

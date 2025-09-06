@@ -176,7 +176,7 @@ class AIProvider:
             "💡 Vérifiez vos clés API et votre connexion internet"
         )
     
-    def analyze_for_release(self, diff: str, files: str, commits: list = None) -> Dict:
+    def analyze_for_release(self, diff: str, files: str, commits: list = None, latest_tag: str = "v0.0.0") -> Dict:
         """
         Analyse intelligente pour release PR avec fallback automatique
         
@@ -184,6 +184,7 @@ class AIProvider:
             diff: Le git diff complet develop -> main
             files: La liste des fichiers modifiés
             commits: Liste des messages de commits
+            latest_tag: Le dernier tag git pour le calcul de version
             
         Returns:
             Dict contenant les données de la PR de release
@@ -194,7 +195,7 @@ class AIProvider:
                 print("🤖 Génération Release PR avec Gemini...")
                 client = self._get_gemini_client()
                 if client:
-                    return client.analyze_for_release(diff, files, commits)
+                    return client.analyze_for_release(diff, files, commits, latest_tag)
             except Exception as e:
                 print(f"❌ Gemini: {e}")
                 print("🔄 Fallback vers Groq...")
@@ -206,7 +207,7 @@ class AIProvider:
                 print("🚀 Génération Release PR avec Groq (fallback)...")
                 client = self._get_groq_client()
                 if client:
-                    return client.analyze_for_release(diff, files, commits)
+                    return client.analyze_for_release(diff, files, commits, latest_tag)
             except Exception as e:
                 print(f"❌ Groq: {e}")
                 self.groq_available = False
