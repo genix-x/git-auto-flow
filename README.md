@@ -1,8 +1,7 @@
 # 🤖 Git Auto-Flow
+**Automation Git intelligente avec Multi-IA (Gemini + Groq) + Gestion de Projets GitHub**
 
-**Automation Git intelligente avec Multi-IA (Gemini + Groq)**
-
-Simplifiez votre workflow Git avec des commits conventionnels et des PRs générés automatiquement par IA. Compatible avec toute équipe et projet.
+Simplifiez votre workflow Git avec des commits conventionnels, des PRs générés automatiquement par IA, et créez vos projets GitHub complets depuis une réunion. Compatible avec toute équipe et projet.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -10,33 +9,39 @@ Simplifiez votre workflow Git avec des commits conventionnels et des PRs génér
 
 ## 🎯 Fonctionnalités
 
-✅ **Multi-IA avec Fallback Intelligent**
+### ✅ Multi-IA avec Fallback Intelligent
 - **Gemini** (priorité 1) - Gratuit et performant
 - **Groq** (fallback) - API gratuite de secours
 - Basculement automatique en cas de quota dépassé
 
-✅ **Commit Automation + Sécurité**
+### ✅ Commit Automation + Sécurité
 - 🔒 **Scan automatique des secrets** avec Gitleaks avant chaque commit
-- Analyse automatique du `git diff` avec IA
+- Analyse automatique du git diff avec IA
 - Messages conventionnels (Angular standard)
 - Support scopes, breaking changes, issues
 - Confirmation interactive
 - **Protection totale** : Bloque automatiquement les commits contenant des clés API, mots de passe, tokens
 
-✅ **PR Automation**
+### ✅ PR Automation
 - Titre et description générés par IA
 - Rebase automatique avant création
 - Push sécurisé `--force-with-lease`
 - Support mode draft et labels
 
-✅ **Workflow Complet**
+### ✅ 🆕 **Project Management**
+- 🎯 **Création complète de projets GitHub depuis une réunion**
+- 📋 Génération automatique de tickets/issues
+- 🏗️ Configuration de repositories avec branches protégées
+- 📁 Organisation automatique des projets dans votre workspace
+
+### ✅ Workflow Complet
 - Une seule commande: rebase + commit + PR
 - Gestion intelligente des conflits
 - Intégration GitHub CLI
 
 ## 🚀 Installation Ultra-Simple
 
-### **1 commande = Installation complète**
+**1 commande = Installation complète**
 ```bash
 # Cloner + installer en 1 fois
 git clone https://github.com/genix-x/git-auto-flow.git && cd git-auto-flow && ./install.sh
@@ -45,27 +50,43 @@ git clone https://github.com/genix-x/git-auto-flow.git && cd git-auto-flow && ./
 **C'est tout ! 🎉**
 
 Le script va :
-- ✅ **Installer Gitleaks** (sécurité anti-secrets) via brew ou téléchargement
-- ✅ Demander vos clés API (Gemini + Groq) - **optionnel**
-- ✅ Installer les dépendances Python automatiquement  
-- ✅ Configurer tous les alias Git avec **nettoyage automatique**
-- ✅ Créer la branche `develop` si nécessaire
+- ✅ Installer Gitleaks (sécurité anti-secrets) via brew ou téléchargement
+- ✅ Demander vos clés API (Gemini + Groq) - optionnel
+- ✅ Installer les dépendances Python automatiquement
+- ✅ Configurer tous les alias Git avec nettoyage automatique
+- ✅ 🆕 Configurer la gestion de projets GitHub
+- ✅ Créer la branche develop si nécessaire
 - ✅ Activer l'auto-suppression des branches après merge
 
-### **🔗 Obtenir les clés API (optionnel)**
+### 🔗 Obtenir les clés API (optionnel)
 - **Gemini**: https://makersuite.google.com/app/apikey (gratuit)
 - **Groq**: https://console.groq.com/keys (gratuit, 1000 calls/mois)
 
-### **✨ Workflow ultra-court**
+## 🆕 Gestion de Projets - Workflow Réunion
+```bash
+# 🏗️ 1. Configuration initiale (une seule fois)
+git pc                        # Configuration interactive
+
+# 🎯 2. En réunion - Création projet complet
+git project-create mon-app    # (À implémenter - Ticket #2)
+
+# 🚀 3. L'équipe commence immédiatement
+git feature-start login-page
+git ca
+git pr
+```
+
+## ✨ Workflow ultra-court
 ```bash
 git feature-start ma-feature  # Nouvelle feature
 git ca                        # Commit auto
 git pr                        # PR auto
+git pc                        # 🆕 Configuration projet
 ```
 
 ## 📖 Guide d'utilisation
 
-### **🔥 Workflow Ultra-Rapide**
+### 🔥 Workflow Ultra-Rapide
 ```bash
 # 1. Démarrer une nouvelle feature
 git feature-start ma-super-feature
@@ -88,27 +109,54 @@ git pr                 # (git pr-create-auto en long)
 # ✅ Résultat: Workflow complet automatisé !
 ```
 
-### **🛠️ Commandes Disponibles**
+### 🆕 Workflow Réunion → Développement
+```bash
+# 🎯 En réunion
+git pc                        # Config organisation/workspace
+git project-create dashboard  # Création complète (bientôt)
+
+# 🚀 Post-réunion - L'équipe développe
+cd ~/projects/genix/dashboard  # Auto-navigué
+git feature-start auth-system
+git ca                        # Commit IA
+git pr                        # PR automatique
+```
+
+## 🛠️ Commandes Disponibles
 
 | Commande | Alias | Description | Usage |
-|----------|-------|-------------|--------|
-| `git feature-start <nom>` | - | **Créer nouvelle feature + nettoyage auto** | `git feature-start auth-system` |
+|----------|-------|-------------|-------|
+| **🆕 Gestion de Projets** | | | |
+| `git project-config` | `git pc` | 🆕 Configuration interactive projets | `git pc` |
+| `git project-create <nom>` | - | 🆕 Créer projet complet (bientôt) | `git project-create mon-app` |
+| **Workflow Git** | | | |
+| `git feature-start <nom>` | - | Créer nouvelle feature + nettoyage auto | `git feature-start auth-system` |
 | `git commit-auto` | `git ca` | Commit + rebase + IA | `git ca` (recommandé) |
-| `git pr-create-auto` | `git pr` | **Créer PR auto** | `git pr` (recommandé) |
+| `git pr-create-auto` | `git pr` | Créer PR auto | `git pr` (recommandé) |
 | `git feature-finish` | - | Finaliser feature | `git feature-finish` |
 
-### **🧹 Nettoyage Automatique**
+### 🆕 Gestion de Configuration
+```bash
+# Voir la configuration actuelle
+git pc --show
 
-**`git feature-start` fait automatiquement :**
-- ✅ **Fetch + prune** : Synchronise avec origin  
-- ✅ **Supprime branches locales** mergées dans `main` ou `develop`
-- ✅ **Supprime branches remote** mergées sur GitHub
-- ✅ **Créé nouvelle feature** depuis `develop` propre
+# Configuration interactive
+git pc
 
-**Résultat :** Workspace 100% clean à chaque nouvelle feature ! 🎯
+# Configuration silencieuse (pour scripts)
+git pc --org genix-x --workdir ~/projects/genix --template web-app
+```
 
-### **⚙️ Options Avancées**
+### 🧹 Nettoyage Automatique
+`git feature-start` fait automatiquement :
+- ✅ Fetch + prune : Synchronise avec origin
+- ✅ Supprime branches locales mergées dans main ou develop
+- ✅ Supprime branches remote mergées sur GitHub
+- ✅ Créé nouvelle feature depuis develop propre
 
+**Résultat : Workspace 100% clean à chaque nouvelle feature ! 🎯**
+
+### ⚙️ Options Avancées
 ```bash
 # Mode draft
 git pr-auto --draft
@@ -118,10 +166,12 @@ git pr-auto --base main
 
 # Workflow complet avec options
 git pr-create-auto --base main --draft
+
+# 🆕 Configuration avec debug
+git pc --debug
 ```
 
-### **🐛 Mode Debug**
-
+## 🐛 Mode Debug
 Pour diagnostiquer les problèmes ou voir les commandes exécutées en temps réel :
 
 ```bash
@@ -133,12 +183,15 @@ git commit-auto --debug
 git pr --debug
 git pr-auto --debug
 
+# 🆕 Configuration avec debug
+git pc --debug
+
 # Release avec debug (voir tout le processus)
 python3 src/git-release-auto.py --debug
 ```
 
 **Exemples de sortie debug :**
-```bash
+```
 🐛 Mode DEBUG activé
 🐛 DEBUG (gitleaks scan): gitleaks detect --log-opts=--since=1.hour.ago --verbose --exit-code 1
 🐛 DEBUG (get current branch): git branch --show-current
@@ -151,45 +204,19 @@ python3 src/git-release-auto.py --debug
 - ❌ Erreurs de gitleaks ou permissions
 - ❌ Problèmes de rebase ou conflits
 - ❌ Échecs de création PR
-- 🔍 Comprendre le workflow interne
-
-## 🏗️ Architecture
-
-```
-git-auto-flow/
-├── install-alias.sh          # Installation automatique
-├── README.md                 # Cette documentation
-├── requirements.txt          # Dépendances Python
-├── src/                      # Code source
-│   ├── lib/                  # Bibliothèques communes
-│   │   ├── ai_provider.py    # 🤖 Gestionnaire Multi-IA
-│   │   ├── gemini_client.py  # Client Gemini
-│   │   ├── groq_client.py    # Client Groq (fallback)
-│   │   └── git_utils.py      # Utilitaires Git
-│   ├── git-cz-auto-v2.py     # Commit automation
-│   ├── git-pr-auto.py        # PR automation
-│   └── git-pr-create-auto.py # Workflow complet
-├── bin/                      # Scripts shell (optionnels)
-│   ├── git-cz-auto.sh
-│   ├── git-pr-auto.sh
-│   └── git-pr-create-auto.sh
-└── config/
-    └── git-aliases           # Aliases Git traditionnels
-```
+- �� Comprendre le workflow interne
 
 ## 🔒 Sécurité Intégrée
 
-### **Protection Anti-Secrets avec Gitleaks**
+### Protection Anti-Secrets avec Gitleaks
+Chaque commit est automatiquement scanné pour détecter :
+- 🔑 Clés API (AWS, Google, GitHub, etc.)
+- 🔐 Mots de passe en dur dans le code
+- 🎫 Tokens d'authentification
+- 📧 Adresses email privées
+- 🛡️ Certificats SSL et clés privées
 
-**Chaque commit est automatiquement scanné** pour détecter :
-- 🔑 **Clés API** (AWS, Google, GitHub, etc.)
-- 🔐 **Mots de passe** en dur dans le code
-- 🎫 **Tokens** d'authentification
-- 📧 **Adresses email privées**
-- 🛡️ **Certificats SSL** et clés privées
-
-### **🚨 Exemple de Protection en Action**
-
+### 🚨 Exemple de Protection en Action
 ```bash
 # Vous ajoutez accidentellement une clé API
 echo "API_KEY=sk-1234567890abcdef" > config.js
@@ -198,7 +225,7 @@ git add config.js
 # Git Auto-Flow vous protège automatiquement !
 git ca
 
-🔒 Scan sécurité des secrets...
+�� Scan sécurité des secrets...
 🚨 SECRETS DÉTECTÉS:
 Finding:     sk-1234567890abcdef
 Secret:      sk-1234567890abcdef
@@ -211,13 +238,12 @@ Fingerprint: config.js:generic-api-key:1
 ❌ Scan sécurité échoué - commit bloqué pour votre protection!
 ```
 
-**✅ Résultat :** Votre secret ne sera JAMAIS commité ! 
+**✅ Résultat : Votre secret ne sera JAMAIS commité !**
 
-### **💡 Comment Corriger**
-
-1. **Supprimez le secret** du fichier
-2. **Utilisez les variables d'environnement** à la place
-3. **Recommitez** - le scan passera ✅
+### 💡 Comment Corriger
+1. Supprimez le secret du fichier
+2. Utilisez les variables d'environnement à la place
+3. Recommitez - le scan passera ✅
 
 ```bash
 # Correction sécurisée
@@ -227,15 +253,15 @@ git ca  # ✅ Scan réussi, commit autorisé !
 
 ## 🤖 Intelligence Artificielle
 
-### **Multi-IA avec Fallback**
-```python
+### Multi-IA avec Fallback
+```bash
 # Ordre de priorité automatique:
 1. 🚀 Gemini (google-generativeai) - Priorité 1
 2. ⚡ Groq (groq) - Fallback automatique
 3. ❌ Erreur si aucune API disponible
 ```
 
-### **Gestion Intelligente**
+**Gestion Intelligente :**
 - ✅ Détection automatique des quotas dépassés
 - ✅ Basculement transparent vers l'IA de secours
 - ✅ Messages informatifs sur l'IA utilisée
@@ -243,17 +269,17 @@ git ca  # ✅ Scan réussi, commit autorisé !
 
 ## 🚨 Troubleshooting
 
-### **"Aucune IA disponible"**
+### "Aucune IA disponible"
 ```bash
 # Vérifier les clés API
-cat .git-auto-flow/.env
+cat ~/.env.gitautoflow | grep -E "(GEMINI|GROQ)"
 
 # Tester la connectivité
 python3 -c "import google.generativeai as genai; print('Gemini OK')"
 python3 -c "import groq; print('Groq OK')"
 ```
 
-### **"Erreur de rebase"**
+### "Erreur de rebase"
 ```bash
 # Résoudre manuellement
 git status
@@ -261,7 +287,7 @@ git add .                # Après résolution des conflits
 git rebase --continue
 ```
 
-### **"GitHub CLI non trouvé"**
+### "GitHub CLI non trouvé"
 ```bash
 # Installation
 brew install gh          # macOS
@@ -273,8 +299,7 @@ gh auth login
 
 ## 🎯 Workflow Complet
 
-### 📊 **Schéma du Git Flow**
-
+### 📊 Schéma du Git Flow
 ```
 feature/auth-system ─────┐
 feature/user-profile ────┤
@@ -295,16 +320,16 @@ feature/analytics ───────┤              │
 feature/admin-panel ─────┴──► develop ──┤                (PR #3)
                                         │
                                         ├──► main ──► 🚀 v0.4.0
+```
 
-
-🔄 Cycle de Release :
+**🔄 Cycle de Release :**
+```
    1️⃣ Features (5) ──► develop ──► main ──► 🚀 v0.2.0
    2️⃣ Features (4) ──► develop ──► main ──► 🚀 v0.3.0  
    3️⃣ Features (3) ──► develop ──► main ──► 🚀 v0.4.0
 ```
 
-### ⚡ **Workflow en Action**
-
+### ⚡ Workflow en Action
 ```bash
 # Développeur A 
 git feature-start auth-system    # 🧹 Nettoie + crée branche
@@ -322,18 +347,59 @@ git pr --base main              # 🚀 Release PR develop → main
 # Merge = auto-release v0.2.0 !
 ```
 
-## 🎉 Avantages
+## 🏗️ Architecture
+```
+git-auto-flow/
+├── install.sh                # Installation automatique
+├── README.md                 # Cette documentation
+├── requirements.txt          # Dépendances Python
+├── src/                      # Code source
+│   ├── lib/                  # Bibliothèques communes
+│   │   ├── ai_provider.py    # 🤖 Gestionnaire Multi-IA
+│   │   ├── gemini_client.py  # Client Gemini
+│   │   ├── groq_client.py    # Client Groq (fallback)
+│   │   └── git_utils.py      # Utilitaires Git
+│   ├── git-commit-auto.py    # Commit automation
+│   ├── git-pr-auto.py        # PR automation
+│   ├── git-pr-create-auto.py # Workflow complet
+│   ├── git-release-auto.py   # Release automation
+│   └── 🆕 git-project-config.py # Configuration projets
+├── bin/                      # Scripts shell (optionnels)
+└── config/
+    └── git-aliases           # Aliases Git traditionnels
+```
 
-- **🔒 Sécurité Ultime** : Scan automatique des secrets - ZÉRO risque de fuite !
-- **🤖 Zéro réflexion** : L'IA analyse et génère tout
-- **⚡ Ultra-rapide** : 1 commande = workflow complet  
-- **🛡️ Protection Totale** : Rebase + push intelligent + détection secrets
-- **🎯 Standards** : Commits/PRs conventionnels garantis
-- **🔄 Robuste** : Fallback multi-IA automatique
-- **👥 Équipe** : Package réutilisable sur tous projets
+## 🆕 Configuration Projet (.env.gitautoflow étendu)
+```bash
+# APIs existantes
+GEMINI_API_KEY=your_key
+GROQ_API_KEY=your_key
+
+# 🆕 Nouvelle section projets  
+GITHUB_ORG=genix-x
+WORKING_DIR=/Users/vous/projects/genix
+GITHUB_BASE_URL=https://github.com/genix-x/
+DEFAULT_PROJECT_TEMPLATE=web-app
+```
+
+## 🎯 Roadmap
+- ✅ v0.5.0 : Configuration de projets (git pc)
+- 🔄 v0.6.0 : Création automatique de repos (git project-create)
+- 📋 v0.7.0 : Génération de tickets/issues
+- 🏗️ v0.8.0 : Templates de projets avancés
+
+## 🎉 Avantages
+- 🔒 **Sécurité Ultime** : Scan automatique des secrets - ZÉRO risque de fuite !
+- 🤖 **Zéro réflexion** : L'IA analyse et génère tout
+- ⚡ **Ultra-rapide** : 1 commande = workflow complet
+- 🛡️ **Protection Totale** : Rebase + push intelligent + détection secrets
+- 🎯 **Standards** : Commits/PRs conventionnels garantis
+- 🔄 **Robuste** : Fallback multi-IA automatique
+- 👥 **Équipe** : Package réutilisable sur tous projets
+- 🆕 **🎯 Gestion Complète** : De la réunion au code déployé !
 
 ---
 
-**🚀 Git Auto-Flow - Plus jamais de commits mal formatés ou de secrets exposés !** 🔒✨
+**🚀 Git Auto-Flow - Plus jamais de commits mal formatés, de secrets exposés, ou de setup projet fastidieux ! 🔒✨**
 
-*Développé avec ❤️ par [Genix Team](https://github.com/genix-x)*
+*Développé avec ❤️ par Genix Team*

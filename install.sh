@@ -170,6 +170,18 @@ git config --global alias.deploy "!cd \$(git rev-parse --show-toplevel) && pytho
 # Nettoyage des branches
 git config --global alias.cleanup-branches "!f() { echo '🧹 Nettoyage des branches locales...'; git fetch --prune origin; git branch --merged develop | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; git branch --merged main | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; echo '✅ Branches mergées supprimées'; }; f"
 
+
+echo "📋 Configuration des alias pour la gestion de projets..."
+
+# ═════════════════════════════════════════════════════════════════
+# 🎯 GESTION DE PROJETS GITHUB  
+# ═════════════════════════════════════════════════════════════════
+
+# Configuration projets
+git config --global alias.project-config "!cd \$(git rev-parse --show-toplevel 2>/dev/null || pwd) && python3 ${INSTALL_DIR}/src/git-project-config.py"
+git config --global alias.pc "!git project-config"  # Alias court
+
+
 echo -e "${GREEN}✅ Alias Git Auto-Flow configurés proprement${NC}"
 
 # 4. Configuration du repository Git Flow
