@@ -217,7 +217,55 @@ class AIProvider:
             "❌ Aucune IA disponible!\n"
             "💡 Vérifiez vos clés API et votre connexion internet"
         )
+
     
+    def generate_tickets(self, content: str, context: str = "") -> dict:
+        """
+        Génère des tickets/issues depuis un compte-rendu
+        """
+        prompt = f"""
+Analysez ce compte-rendu et générez 2 tickets prioritaires.
+
+COMPTE-RENDU:
+{{content}}
+
+CONTEXTE: {{context}}
+
+Retournez UNIQUEMENT un JSON valide:
+{{
+    "tickets": [
+        {{
+            "title": "Titre court",
+            "description": "Description + critères d'acceptation", 
+            "priority": "high|medium|low",
+            "labels": ["enhancement", "feature"],
+            "estimate": "1-3 jours"
+        }}
+    ]
+}}
+"""
+        
+        try:
+            # Réutilisons la logique de analyze_for_commit
+            if self.gemini_client:
+                response = self.gemini_client.generate_content(prompt)
+                content = response.text.strip()
+            elif self.groq_client:
+                response = self.groq_client.chat.completions.create(
+                    model="llama3-8b-8192",
+                    messages=[{{"role": "user", "content": prompt}}]
+                )
+                content = response.choices[0].message.content.strip()
+            else:
+                raise RuntimeError("Aucune API disponible")
+                
+            # Parse JSON
+            import json
+            return json.loads(content)
+            
+        except Exception as e:
+            raise RuntimeError(f"Erreur génération tickets: {{e}}")
+
     def get_status(self) -> str:
         """Retourne le statut des APIs disponibles"""
         status = []
