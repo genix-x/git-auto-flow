@@ -123,6 +123,9 @@ def create_github_repo(project_name, org=None, force=False, private=True):
         if not auto_commit_and_pr(project_path, force_mode=True):
             raise Exception("Échec du commit automatique et de la création de la PR.")
 
+        if not finish_readme_feature(project_path):
+            raise Exception("Échec de la terminaison de la feature README.")
+
         if not auto_deploy_release(project_path, force_mode=True):
             raise Exception("Échec du déploiement de la release initiale.")
         
@@ -147,6 +150,7 @@ import os
 
 def run_command(command, cwd=None, check=True):
     """Helper to run a command and log output/errors."""
+    print(f"Executing command: {' '.join(command)} in directory: {cwd or '.'}") # Added for debugging
     try:
         result = subprocess.run(
             command,
@@ -205,10 +209,18 @@ def setup_develop_branch(project_path):
                 run_command(['git', 'checkout', 'develop'], cwd=project_path)
             else:
                 raise
+        
+        info("Ajout d'un commit initial vide pour pouvoir push la branche develop")
+        run_command(['git', 'commit', '--allow-empty', '-m', 'Initial commit on develop'], cwd=project_path, check=False)
 
         run_command(['git', 'push', '-u', 'origin', 'develop'], cwd=project_path)
+
+        # Create and push main branch for git-flow
+        info("Création de la branche main pour git-flow...")
+        run_command(['git', 'branch', 'main', 'develop'], cwd=project_path, check=False)
+        run_command(['git', 'push', '-u', 'origin', 'main'], cwd=project_path)
         
-        success("✅ Branche develop créée et pushée")
+        success("✅ Branche develop et main créées et pushées")
         return True
         
     except Exception as e:
@@ -219,6 +231,9 @@ def create_readme_feature(project_path, project_name):
     """Crée une feature branch readme avec fichier README.md"""
     try:
         info("Création feature readme")
+        
+        info("Initialisation de git-flow")
+        run_command(['git', 'flow', 'init', '-d'], cwd=project_path)
         
         run_command(['git', 'flow', 'feature', 'start', 'readme'], cwd=project_path)
         
@@ -261,8 +276,6 @@ def auto_deploy_release(project_path, force_mode=True):
         info("Déploiement automatique v0.1.0")
         
         cmd = ['git', 'deploy']
-        if force_mode:
-            cmd.append('--force')
         
         run_command(cmd, cwd=project_path)
         
@@ -346,6 +359,17 @@ def main():
 
     # Lancement du processus
     create_github_repo(project_name, org=org, force=force, private=private)
+
+def finish_readme_feature(project_path):
+    """Termine la feature branch readme et la merge dans develop"""
+    try:
+        info("Terminaison de la feature readme...")
+        run_command(['git', 'flow', 'feature', 'finish', 'readme'], cwd=project_path)
+        success("✅ Feature readme terminée et mergée dans develop.")
+        return True
+    except Exception as e:
+        error(f"Erreur lors de la terminaison de la feature readme: {e}")
+        return False
 
 if __name__ == "__main__":
     main()

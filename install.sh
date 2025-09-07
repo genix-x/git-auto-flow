@@ -67,12 +67,50 @@ echo ""
 # 2. Installation des dépendances Python
 echo -e "${BLUE}📦 Installation des dépendances Python...${NC}"
 
-if [ -f "${INSTALL_DIR}/requirements.txt" ]; then
-    pip3 install -r "${INSTALL_DIR}/requirements.txt" --break-system-packages 2>/dev/null || pip3 install -r "${INSTALL_DIR}/requirements.txt"
-    echo -e "${GREEN}✅ Dépendances Python installées${NC}"
+# Fonction d'installation intelligente
+install_python_deps() {
+    local packages="google-generativeai python-dotenv groq"
+    
+    # Méthode 1: pipx (recommandée pour les outils)
+    if command -v pipx &> /dev/null; then
+        echo -e "${GREEN}🔧 Utilisation de pipx (méthode recommandée)...${NC}"
+        for package in $packages; do
+            pipx install $package --quiet 2>/dev/null || true
+        done
+        return 0
+    fi
+    
+    # Méthode 2: pip --user (sûre)
+    if pip3 install --user $packages --quiet 2>/dev/null; then
+        echo -e "${GREEN}✅ Installation --user réussie${NC}"
+        return 0
+    fi
+    
+    # Méthode 3: break-system-packages (derniers recours)
+    if pip3 install --break-system-packages $packages --quiet 2>/dev/null; then
+        echo -e "${YELLOW}⚡ Installation avec --break-system-packages${NC}"
+        return 0
+    fi
+    
+    # Méthode 4: requirements.txt si présent
+    if [ -f "${INSTALL_DIR}/requirements.txt" ]; then
+        if pip3 install --user -r "${INSTALL_DIR}/requirements.txt" --quiet 2>/dev/null; then
+            echo -e "${GREEN}✅ Installation via requirements.txt réussie${NC}"
+            return 0
+        fi
+    fi
+    
+    echo -e "${RED}❌ Impossible d'installer les dépendances Python${NC}"
+    echo -e "${YELLOW}💡 Installation manuelle:${NC}"
+    echo -e "   brew install pipx && pipx install google-generativeai python-dotenv groq"
+    return 1
+}
+
+# Appel de la fonction
+if install_python_deps; then
+    echo -e "${GREEN}✅ Dépendances Python configurées${NC}"
 else
-    echo -e "${YELLOW}⚠️  requirements.txt non trouvé, installation manuelle...${NC}"
-    pip3 install google-generativeai python-dotenv groq --break-system-packages 2>/dev/null || pip3 install google-generativeai python-dotenv groq
+    echo -e "${YELLOW}⚠️  Continuez avec installation manuelle si nécessaire${NC}"
 fi
 
 echo ""
