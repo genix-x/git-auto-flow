@@ -12,9 +12,8 @@ NC='\033[0m' # No Color
 
 # Variables
 INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CURRENT_USER=$(whoami)
 
-echo -e "${BLUE}🚀 Git Auto-Flow - Installation${NC}"
+echo -e "${BLUE}🚀 Git Auto-Flow - Installation Globale${NC}"
 echo -e "${BLUE}=================================${NC}"
 echo -e "📍 Répertoire d'installation: ${INSTALL_DIR}"
 echo ""
@@ -121,241 +120,71 @@ if [ -f ~/.gitconfig ]; then
     echo -e "${GREEN}✅ Sauvegarde de ~/.gitconfig créée${NC}"
 fi
 
-# Vérifier et supprimer les anciens alias Git Auto-Flow s'ils existent
-if grep -q "# Git Auto-Flow" ~/.gitconfig 2>/dev/null; then
-    echo -e "${YELLOW}⚠️  Suppression des anciens alias Git Auto-Flow...${NC}"
-    # Créer une copie temporaire sans les alias Git Auto-Flow
-    grep -v "# Git Auto-Flow" ~/.gitconfig > ~/.gitconfig.tmp 2>/dev/null || touch ~/.gitconfig.tmp
-    # Supprimer aussi les lignes entre "# Git Auto-Flow" et la prochaine section
-    sed '/# Git Auto-Flow/,/^$/d' ~/.gitconfig > ~/.gitconfig.tmp 2>/dev/null || touch ~/.gitconfig.tmp
-    mv ~/.gitconfig.tmp ~/.gitconfig
-    echo -e "${GREEN}✅ Anciens alias supprimés${NC}"
-fi
-
 # Configuration sécurisée des alias via git config
 echo -e "${BLUE}🔧 Configuration des alias Git Auto-Flow...${NC}"
 
-# 🚀 WORKFLOW PRINCIPAL avec IA
-git config --global alias.feature-start "!f() { 
-    echo '🚀 Feature: '\$1; 
-    echo '🧹 Nettoyage des branches mergées...'; 
-    git fetch --prune origin 2>/dev/null || true; 
-    git branch --merged main 2>/dev/null | grep 'feature/' | xargs -n 1 git branch -d 2>/dev/null || true; 
-    git branch --merged develop 2>/dev/null | grep 'feature/' | xargs -n 1 git branch -d 2>/dev/null || true; 
-    git branch -r --merged main 2>/dev/null | grep 'origin/feature/' | sed 's/origin\\///' | xargs -n 1 git push origin --delete 2>/dev/null || true; 
-    git branch -r --merged develop 2>/dev/null | grep 'origin/feature/' | sed 's/origin\\///' | xargs -n 1 git push origin --delete 2>/dev/null || true; 
-    git checkout develop 2>/dev/null || git checkout -b develop; 
-    git pull origin develop 2>/dev/null || true; 
-    git checkout -b feature/\$1 && 
-    git push -u origin feature/\$1 2>/dev/null || true; 
-    echo '✅ Feature créée: feature/'\$1; 
-}; f"
-
-# Commit avec rebase + IA
+# WORKFLOW
+git config --global alias.feature-start "!f() { echo '🚀 Feature: '\$1; echo '🧹 Nettoyage des branches mergées...'; git fetch --prune origin 2>/dev/null || true; git branch --merged main 2>/dev/null | grep 'feature/' | xargs -n 1 git branch -d 2>/dev/null || true; git branch --merged develop 2>/dev/null | grep 'feature/' | xargs -n 1 git branch -d 2>/dev/null || true; git branch -r --merged main 2>/dev/null | grep 'origin/feature/' | sed 's/origin\\///' | xargs -n 1 git push origin --delete 2>/dev/null || true; git branch -r --merged develop 2>/dev/null | grep 'origin/feature/' | sed 's/origin\\///' | xargs -n 1 git push origin --delete 2>/dev/null || true; git checkout develop 2>/dev/null || git checkout -b develop; git pull origin develop 2>/dev/null || true; git checkout -b feature/\$1 && git push -u origin feature/\$1 2>/dev/null || true; echo '✅ Feature créée: feature/'\$1; }; f"
 git config --global alias.commit-auto "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-commit-auto.py"
-
-# Alias courts
 git config --global alias.ca "!git commit-auto"
 git config --global alias.pr "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-auto.py"
-
-# Finaliser feature (avant PR)
 git config --global alias.feature-finish "!f() { echo '🔄 Finalisation de la feature...'; git fetch origin develop && git rebase origin/develop && git push --force-with-lease origin \$(git branch --show-current) && echo '✅ Feature prête pour PR vers develop'; }; f"
-
-# PR automation
 git config --global alias.pr-create-auto "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-create-auto.py"
-
-# Deploy automation
 git config --global alias.deploy "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-release-auto.py"
-
-# Nettoyage des branches
 git config --global alias.cleanup-branches "!f() { echo '🧹 Nettoyage des branches locales...'; git fetch --prune origin; git branch --merged develop | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; git branch --merged main | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; echo '✅ Branches mergées supprimées'; }; f"
 
-
-echo "📋 Configuration des alias pour la gestion de projets..."
-
-# ═════════════════════════════════════════════════════════════════
-# 🎯 GESTION DE PROJETS GITHUB  
-# ═════════════════════════════════════════════════════════════════
-
-# Configuration projets
+# PROJECT MANAGEMENT
 git config --global alias.project-config "!cd \$(git rev-parse --show-toplevel 2>/dev/null || pwd) && python3 ${INSTALL_DIR}/src/git-project-config.py"
-git config --global alias.pc "!git project-config"  # Alias court
-
-# Création repository GitHub
+git config --global alias.pc "!git project-config"
 git config --global alias.repo-create "!cd \$(git rev-parse --show-toplevel 2>/dev/null || pwd) && python3 ${INSTALL_DIR}/src/git-repo-create.py"
-
-
-# Création automatique de tickets/issues depuis compte-rendu
 git config --global alias.create-tickets "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-create-tickets.py"
 
 echo -e "${GREEN}✅ Alias Git Auto-Flow configurés proprement${NC}"
 
-# 4. Configuration du repository Git Flow
-echo ""
-echo -e "${BLUE}🌿 Configuration Git Flow (develop/main)...${NC}"
-
-# Vérifier qu'on est dans un repo Git
-if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    echo -e "${RED}❌ Pas dans un repository Git${NC}"
-    echo -e "${YELLOW}💡 Lancez cette commande depuis un repo Git${NC}"
-    exit 1
-fi
-
-# Créer branche develop si elle n'existe pas
-if ! git show-ref --verify --quiet refs/heads/develop; then
-    echo -e "${YELLOW}📝 Création de la branche develop...${NC}"
-    
-    # S'assurer qu'on est sur main
-    if git show-ref --verify --quiet refs/heads/main; then
-        git checkout main >/dev/null 2>&1 || true
-        git pull origin main >/dev/null 2>&1 || echo -e "${YELLOW}⚠️  Pull main ignoré (pas de remote ou conflit)${NC}"
-    fi
-    
-    # Créer develop depuis main (ou HEAD si main n'existe pas)
-    git checkout -b develop >/dev/null 2>&1
-    echo -e "${GREEN}✅ Branche develop créée localement${NC}"
-    
-    # Push develop vers origin si possible
-    if git remote get-url origin >/dev/null 2>&1; then
-        if git push -u origin develop >/dev/null 2>&1; then
-            echo -e "${GREEN}✅ Branche develop pushée vers origin${NC}"
+# 5. Installation semantic-release (conditionnelle)
+if [ -f "package.json" ]; then
+    if command -v npm &> /dev/null || command -v pnpm &> /dev/null || command -v yarn &> /dev/null; then
+        echo ""
+        echo -e "${BLUE}📦 Installation semantic-release (détecté package.json)...${NC}"
+        
+        if command -v pnpm &> /dev/null; then
+            PACKAGE_MANAGER="pnpm"
+        elif command -v yarn &> /dev/null; then
+            PACKAGE_MANAGER="yarn"
         else
-            echo -e "${YELLOW}⚠️  Push develop échoué (configurez origin d'abord)${NC}"
-        fi
-    else
-        echo -e "${YELLOW}⚠️  Pas de remote origin configuré${NC}"
-    fi
-else
-    echo -e "${GREEN}✅ Branche develop existe déjà${NC}"
-fi
-
-# Configurer branch protection via GitHub CLI si disponible
-if command -v gh &> /dev/null; then
-    echo -e "${BLUE}🛡️  Configuration protection develop...${NC}"
-    
-    # Vérifier qu'on est connecté à GitHub
-    if gh auth status >/dev/null 2>&1; then
-        # Protection develop (require PR + up-to-date)
-        gh api repos/:owner/:repo/branches/develop/protection \
-          --method PUT \
-          --field required_status_checks='{"strict":true,"contexts":[]}' \
-          --field enforce_admins=true \
-          --field required_pull_request_reviews='{"required_approving_review_count":1,"dismiss_stale_reviews":true}' \
-          --field restrictions=null \
-          >/dev/null 2>&1 && echo -e "${GREEN}✅ Protection develop activée${NC}" || echo -e "${YELLOW}⚠️  Protection develop échouée (permissions?)${NC}"
-        
-        # Protection main (require PR + up-to-date)  
-        if git show-ref --verify --quiet refs/heads/main; then
-            gh api repos/:owner/:repo/branches/main/protection \
-              --method PUT \
-              --field required_status_checks='{"strict":true,"contexts":[]}' \
-              --field enforce_admins=true \
-              --field required_pull_request_reviews='{"required_approving_review_count":1,"dismiss_stale_reviews":true}' \
-              --field restrictions=null \
-              >/dev/null 2>&1 && echo -e "${GREEN}✅ Protection main activée${NC}" || echo -e "${YELLOW}⚠️  Protection main échouée${NC}"
+            PACKAGE_MANAGER="npm"
         fi
         
-        # Configuration auto-suppression des branches après merge
-        gh api repos/:owner/:repo \
-          --method PATCH \
-          --field delete_branch_on_merge=true \
-          >/dev/null 2>&1 && echo -e "${GREEN}✅ Auto-suppression branches activée${NC}" || echo -e "${YELLOW}⚠️  Auto-suppression échouée${NC}"
+        echo -e "${YELLOW}📦 Utilisation de ${PACKAGE_MANAGER}...${NC}"
         
-        # Création du label 'release' pour les PRs de release
-        echo -e "${YELLOW}🏷️  Création du label 'release'...${NC}"
-        gh label create release --color "0052CC" --description "Release PR develop->main" \
-          >/dev/null 2>&1 && echo -e "${GREEN}✅ Label 'release' créé${NC}" || echo -e "${YELLOW}⚠️  Label 'release' existe déjà ou erreur${NC}"
-    else
-        echo -e "${YELLOW}⚠️  GitHub CLI non connecté - lancez: gh auth login${NC}"
-        echo -e "${YELLOW}💡 Protection manuelle requise sur GitHub.com${NC}"
-    fi
-else
-    echo -e "${YELLOW}⚠️  GitHub CLI non trouvé - protection manuelle requise${NC}"
-fi
-
-# Revenir sur develop pour setup
-git checkout develop >/dev/null 2>&1 || true
-
-# Créer tag initial v0.0.0 pour semantic-release (si pas déjà créé)
-if ! git tag -l | grep -q "^v0\.0\.0$"; then
-    echo -e "${YELLOW}🏷️  Création du tag initial v0.0.0 pour versioning...${NC}"
-    if git tag v0.0.0 >/dev/null 2>&1; then
-        echo -e "${GREEN}✅ Tag v0.0.0 créé localement${NC}"
-        
-        # Push le tag vers origin si possible
-        if git remote get-url origin >/dev/null 2>&1; then
-            if git push origin v0.0.0 >/dev/null 2>&1; then
-                echo -e "${GREEN}✅ Tag v0.0.0 pushé vers origin${NC}"
-                echo -e "${YELLOW}💡 Semantic-release démarrera à v0.1.0${NC}"
-            else
-                echo -e "${YELLOW}⚠️  Push tag échoué - pushez manuellement: git push origin v0.0.0${NC}"
-            fi
+        if $PACKAGE_MANAGER install >/dev/null 2>&1; then
+            echo -e "${GREEN}✅ Dépendances Node.js installées${NC}"
         else
-            echo -e "${YELLOW}⚠️  Tag créé localement uniquement${NC}"
+            echo -e "${YELLOW}⚠️  Installation des dépendances Node.js échouée${NC}"
         fi
     else
-        echo -e "${YELLOW}⚠️  Création du tag échouée${NC}"
+        echo -e "${YELLOW}⚠️  package.json trouvé, mais ni npm, pnpm ou yarn. Installation semantic-release ignorée.${NC}"
     fi
-else
-    echo -e "${GREEN}✅ Tag v0.0.0 existe déjà${NC}"
-fi
-
-# 5. Installation semantic-release (si Node.js disponible)
-if command -v npm &> /dev/null || command -v pnpm &> /dev/null || command -v yarn &> /dev/null; then
-    echo ""
-    echo -e "${BLUE}📦 Installation semantic-release...${NC}"
-    
-    # Utiliser pnpm si disponible, sinon npm
-    if command -v pnpm &> /dev/null; then
-        PACKAGE_MANAGER="pnpm"
-    elif command -v yarn &> /dev/null; then
-        PACKAGE_MANAGER="yarn"
-    else
-        PACKAGE_MANAGER="npm"
-    fi
-    
-    echo -e "${YELLOW}📦 Utilisation de ${PACKAGE_MANAGER}...${NC}"
-    
-    # Installation des dépendances semantic-release
-    if $PACKAGE_MANAGER install >/dev/null 2>&1; then
-        echo -e "${GREEN}✅ Semantic-release installé${NC}"
-        echo -e "${YELLOW}💡 Releases automatiques activées sur push vers main${NC}"
-    else
-        echo -e "${YELLOW}⚠️  Installation semantic-release échouée${NC}"
-        echo -e "${YELLOW}💡 Les releases devront être créées manuellement${NC}"
-    fi
-else
-    echo -e "${YELLOW}⚠️  Node.js non trouvé - semantic-release désactivé${NC}"
-    echo -e "${YELLOW}💡 Installez Node.js pour les releases automatiques${NC}"
 fi
 
 # 6. Configuration interactive des clés API  
 echo ""
 echo -e "${BLUE}🔑 Configuration des clés API...${NC}"
 
-# Vérifier si le fichier global existe déjà
 GLOBAL_ENV_FILE="$HOME/.env.gitautoflow"
 if [ -f "$GLOBAL_ENV_FILE" ]; then
     echo -e "${GREEN}✅ Configuration API trouvée: $GLOBAL_ENV_FILE${NC}"
-    echo -e "${YELLOW}💡 Clés API déjà configurées - installation continue...${NC}"
-    echo ""
 else
-    # Configuration interactive seulement si le fichier n'existe pas
     echo -e "${YELLOW}💡 Configurons vos clés API (optionnel):${NC}"
     echo ""
-
-    # Gemini API
     echo -e "${BLUE}🤖 Gemini API (Google AI Studio):${NC}"
     echo -e "   🔗 ${YELLOW}https://makersuite.google.com/app/apikey${NC}"
     read -p "Entrez votre clé Gemini API (ou ENTER pour ignorer): " GEMINI_KEY
-
-    # Groq API  
     echo ""
     echo -e "${BLUE}⚡ Groq API (Fallback gratuit):${NC}"
     echo -e "   🔗 ${YELLOW}https://console.groq.com/keys${NC}"
     read -p "Entrez votre clé Groq API (ou ENTER pour ignorer): " GROQ_KEY
 
-    # Écriture dans le fichier global
     {
         echo "# Git Auto-Flow - Configuration des API"
         echo "# Généré automatiquement le $(date)"
@@ -368,78 +197,25 @@ else
     echo ""
 fi
 
-
-# Vérification finale de la configuration
-if [ -f "$GLOBAL_ENV_FILE" ]; then
-    # Vérifier si au moins une clé est configurée dans le fichier
-    if grep -q "GEMINI_API_KEY=.\+" "$GLOBAL_ENV_FILE" || grep -q "GROQ_API_KEY=.\+" "$GLOBAL_ENV_FILE"; then
-        echo -e "${GREEN}✅ Clés API configurées${NC}"
-    else
-        echo -e "${YELLOW}⚠️  Fichier .env.gitautoflow existe mais aucune clé valide trouvée${NC}"
-    fi
-else
-    echo -e "${YELLOW}⚠️  Aucune clé API configurée${NC}"
-    echo -e "${YELLOW}💡 Les scripts afficheront des messages d'erreur appropriés${NC}"
-fi
-
-# 7. Test de l'installation
+# 7. Instructions finales
 echo ""
-echo -e "${BLUE}🧪 Test de l'installation...${NC}"
-
-if git cz-auto --help >/dev/null 2>&1 || python3 "${INSTALL_DIR}/src/git-cz-auto-v2.py" --help >/dev/null 2>&1; then
-    echo -e "${GREEN}✅ Installation réussie!${NC}"
-else
-    echo -e "${YELLOW}⚠️  Test partiel - configurez les clés API${NC}"
-fi
-
-# 8. Instructions finales
-echo ""
-echo -e "${GREEN}🎉 Installation terminée!${NC}"
-echo ""
-echo -e "${BLUE}📋 Git Flow complet configuré:${NC}"
-echo -e "   ${GREEN}🌿 develop${NC} (intégration) ← ${GREEN}🚀 feature/*${NC}"
-echo -e "   ${GREEN}🎯 main${NC} (production) ← ${GREEN}🌿 develop${NC} (release)"
-echo ""
-echo -e "${BLUE}🚀 WORKFLOW COMPLET - Git Auto-Flow:${NC}"
-echo ""
-echo -e "${YELLOW}📋 Développement d'une feature:${NC}"
-echo -e "   1️⃣  ${GREEN}git feature-start ma-feature${NC}  # Crée feature/ma-feature depuis develop"
-echo -e "   2️⃣  ${GREEN}git commit-auto${NC} (ou ${GREEN}git ca${NC})    # Commit avec IA + rebase auto"  
-echo -e "   3️⃣  ${GREEN}git feature-finish${NC}            # Finalise feature (rebase + push)"
-echo -e "   4️⃣  ${GREEN}git pr-create-auto${NC}            # Crée PR avec analyse IA complète"
-echo ""
-echo -e "${YELLOW}📋 Gestion des releases:${NC}"
-echo -e "   5️⃣  Merge PR → ${GREEN}develop${NC}         # (branche auto-supprimée)"
-echo -e "   6️⃣  ${GREEN}git deploy${NC}                  # 🚀 Deploy AUTO: develop→main + auto-merge"
-echo -e "   7️⃣  Auto-merge → ${GREEN}main${NC} = 🏷️ ${YELLOW}v0.1.0 Tag + Release automatique !${NC}"
-echo ""
-echo -e "${YELLOW}🧹 Maintenance:${NC}"
-echo -e "   🔧  ${GREEN}git cleanup-branches${NC}          # Nettoie branches locales mergées"
-echo -e "${YELLOW}🎫 Gestion de project:${NC}"
-echo -e "   📋  ${GREEN}git pc${NC}                       # Configuration projet GitHub"  
-echo -e "   🎫  ${GREEN}git create-tickets fichier.md${NC}  # Crée issues depuis compte-rendu"
+echo -e "${GREEN}🎉 Installation globale terminée!${NC}"
 
 echo ""
-echo -e "${YELLOW}🤖 APIs supportées:${NC}"
-if [ ! -z "$GEMINI_KEY" ]; then
-    echo -e "   ✅  ${GREEN}Gemini${NC} (Google AI) - Configuré"
-else
-    echo -e "   ⚠️   ${YELLOW}Gemini${NC} (Google AI) - À configurer"
-fi
-if [ ! -z "$GROQ_KEY" ]; then
-    echo -e "   ✅  ${GREEN}Groq${NC} (Fallback) - Configuré"  
-else
-    echo -e "   ⚠️   ${YELLOW}Groq${NC} (Fallback) - À configurer"
-fi
+echo -e "${YELLOW}Pour créer un nouveau projet GitHub complet :${NC}"
+echo -e "   ${GREEN}git repo-create mon-projet${NC}     # Projet privé avec workflow complet"
+echo -e "   ${GREEN}git repo-create api --public${NC}   # Projet public"
+echo -e "   ${GREEN}git pc${NC}                        # (Re)lancer la configuration"
+
 echo ""
-echo -e "${YELLOW}🎯 Résultat: Workflow Git 100% automatisé avec IA !${NC}"
-echo ""
-echo -e "${BLUE}🔧 Configuration:${NC}"
-echo -e "   1. Éditez: ${YELLOW}$HOME/.env.gitautoflow${NC}"
-echo -e "   2. Ajoutez vos clés API (Gemini + Groq)"
-echo -e "   3. Testez: ${GREEN}git commit-auto${NC} dans un repo Git"
+echo -e "${YELLOW}Dans un repo existant :${NC}"
+echo -e "   ${GREEN}git feature-start ma-feature${NC}  # Nouvelle feature"
+echo -e "   ${GREEN}git ca${NC}                       # Commit IA"
+echo -e "   ${GREEN}git pr${NC}                       # PR automatique"
+
 echo ""
 echo -e "${BLUE}📚 Documentation complète:${NC}"
 echo -e "   ${YELLOW}${INSTALL_DIR}/README.md${NC}"
+
 echo ""
 echo -e "${GREEN}✨ Git Auto-Flow est prêt à l'emploi!${NC}"
