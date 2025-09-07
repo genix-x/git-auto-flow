@@ -217,7 +217,80 @@ class AIProvider:
             "❌ Aucune IA disponible!\n"
             "💡 Vérifiez vos clés API et votre connexion internet"
         )
+
+    def generate_response(self, prompt: str) -> Dict:
+        """
+        Génère une réponse JSON générique avec fallback automatique
+        """
+        # Tentative 1: Gemini (priorité 1)
+        if self.gemini_available:
+            try:
+                print("🤖 Analyse avec Gemini...")
+                client = self._get_gemini_client()
+                if client:
+                    return client.generate_json_response(prompt)
+            except Exception as e:
+                print(f"❌ Gemini: {e}")
+                print("🔄 Fallback vers Groq...")
+                self.gemini_available = False
+        
+        # Tentative 2: Groq (fallback)
+        if self.groq_available:
+            try:
+                print("🚀 Analyse avec Groq (fallback)...")
+                client = self._get_groq_client()
+                if client:
+                    return client.generate_json_response(prompt)
+            except Exception as e:
+                print(f"❌ Groq: {e}")
+                self.groq_available = False
+        
+        # Aucune IA disponible
+        raise RuntimeError(
+            "❌ Aucune IA disponible!\n"
+            "💡 Vérifiez vos clés API et votre connexion internet"
+        )
     
+    def generate_tickets(self, content: str, context: str = "") -> dict:
+        """
+        Génère des tickets/issues depuis un compte-rendu avec IA
+        """
+        prompt = f'''
+Analyse ce compte-rendu de projet et extrait les tickets/tâches à créer comme issues GitHub.
+
+COMPTE-RENDU:
+{content}
+
+CONTEXTE ADDITIONNEL:
+{context}
+
+Tu dois répondre UNIQUEMENT avec un JSON valide dans ce format exact:
+{{
+  "tickets": [
+    {{
+      "title": "Titre concis et actionnable",
+      "description": "Description détaillée avec critères d'acceptance",
+      "labels": ["enhancement", "priority-high"],
+      "priority": "high",
+      "estimate": "3"
+    }}
+  ]
+}}
+
+RÈGLES STRICTES:
+- Maximum 5 tickets les plus prioritaires
+- Titres courts et clairs (50 chars max)
+- Descriptions avec bullet points et critères d'acceptance
+- Labels GitHub standards: bug, enhancement, documentation, good first issue, etc.
+- Priority: high, medium, low
+- Estimate: nombre de jours (1-5)
+- Format JSON strict, pas de markdown autour
+'''
+        try:
+            return self.generate_response(prompt)
+        except Exception as e:
+            raise RuntimeError(f"Erreur génération tickets: {e}")
+
     def get_status(self) -> str:
         """Retourne le statut des APIs disponibles"""
         status = []
