@@ -11,7 +11,11 @@ from pathlib import Path
 # Import du logger centralisé
 sys.path.append(str(Path(__file__).parent.parent))
 from utils.logger import logger, info, success, error, warning, header, console
-from git_project_config import load_current_config as load_config
+import importlib.util
+spec = importlib.util.spec_from_file_location("git_project_config", Path(__file__).parent / "git-project-config.py")
+git_project_config = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(git_project_config)
+load_config = git_project_config.load_current_config
 
 def confirm(message):
     """Demande confirmation à l'utilisateur"""

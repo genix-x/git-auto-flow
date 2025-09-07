@@ -181,6 +181,9 @@ echo "📋 Configuration des alias pour la gestion de projets..."
 git config --global alias.project-config "!cd \$(git rev-parse --show-toplevel 2>/dev/null || pwd) && python3 ${INSTALL_DIR}/src/git-project-config.py"
 git config --global alias.pc "!git project-config"  # Alias court
 
+# Création repository GitHub
+git config --global alias.repo-create "!cd \$(git rev-parse --show-toplevel 2>/dev/null || pwd) && python3 ${INSTALL_DIR}/src/git-repo-create.py"
+
 
 # Création automatique de tickets/issues depuis compte-rendu
 git config --global alias.create-tickets "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-create-tickets.py"
