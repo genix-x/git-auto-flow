@@ -182,6 +182,9 @@ git config --global alias.project-config "!cd \$(git rev-parse --show-toplevel 2
 git config --global alias.pc "!git project-config"  # Alias court
 
 
+# Création automatique de tickets/issues depuis compte-rendu
+git config --global alias.create-tickets "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-create-tickets.py"
+
 echo -e "${GREEN}✅ Alias Git Auto-Flow configurés proprement${NC}"
 
 # 4. Configuration du repository Git Flow
@@ -409,6 +412,10 @@ echo -e "   7️⃣  Auto-merge → ${GREEN}main${NC} = 🏷️ ${YELLOW}v0.1.0 
 echo ""
 echo -e "${YELLOW}🧹 Maintenance:${NC}"
 echo -e "   🔧  ${GREEN}git cleanup-branches${NC}          # Nettoie branches locales mergées"
+echo -e "${YELLOW}🎫 Gestion de project:${NC}"
+echo -e "   📋  ${GREEN}git pc${NC}                       # Configuration projet GitHub"  
+echo -e "   🎫  ${GREEN}git create-tickets fichier.md${NC}  # Crée issues depuis compte-rendu"
+
 echo ""
 echo -e "${YELLOW}🤖 APIs supportées:${NC}"
 if [ ! -z "$GEMINI_KEY" ]; then

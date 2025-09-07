@@ -89,7 +89,7 @@ RÉPONSE OBLIGATOIRE: JSON STRICT - AUCUN TEXTE EXPLICATIF
 Format JSON obligatoire (exemple):
 {{
     "title": "feat(automation): add AI scripts for git automation",
-    "body": "## Summary\\n\\nAdd intelligent automation scripts for Git commits and PR creation using AI.\\n\\n## Changes\\n\\n- Add automated commit message generation\\n- Add automated PR creation\\n- Add shared libraries for reusable functions\\n- Add shell wrappers for easy execution\\n\\n## Test plan\\n\\n- [x] Scripts tested with real repositories\\n- [x] Error handling validated\\n- [x] API key configuration working",
+    "body": "## Summary\n\nAdd intelligent automation scripts for Git commits and PR creation using AI.\n\n## Changes\n\n- Add automated commit message generation\n- Add automated PR creation\n- Add shared libraries for reusable functions\n- Add shell wrappers for easy execution\n\n## Test plan\n\n- [x] Scripts tested with real repositories\n- [x] Error handling validated\n- [x] API key configuration working",
     "labels": ["enhancement"],
     "draft": false
 }}
@@ -103,6 +103,12 @@ RÈGLES CRITIQUES:
 
 RÉPONSE = JSON SEULEMENT:
 """
+        return self._make_request(prompt)
+    
+    def generate_json_response(self, prompt: str) -> Dict:
+        """
+        Génère une réponse JSON générique depuis un prompt
+        """
         return self._make_request(prompt)
     
     def _make_request(self, prompt: str) -> Dict:
