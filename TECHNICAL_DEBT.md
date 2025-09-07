@@ -93,4 +93,27 @@ Migrer `git-project-config.py`
 
 ---
 
+
+## 📦 Release Management & Documentation
+
+### Synchronisation automatique du CHANGELOG.md
+**Problème :** Le fichier CHANGELOG.md se duplique et n'est pas mis à jour avec les vraies releases GitHub
+**Situation actuelle :** 
+- ✅ `git release` génère parfaitement les GitHub Releases 
+- ❌ CHANGELOG.md contient des doublons et versions incohérentes
+- ❌ Pas de synchro entre le beau contenu des releases GitHub et le CHANGELOG.md
+
+**Solutions à implémenter :**
+- [ ] **Réutiliser l'API release existante** pour générer le CHANGELOG.md
+- [ ] Nettoyer et reformater le CHANGELOG.md actuel (supprimer doublons)
+- [ ] Après chaque `git release`, auto-update du CHANGELOG.md avec le contenu de la release GitHub
+- [ ] Format cohérent : reprendre exactement le même contenu que les releases GitHub
+- [ ] Validation : une seule source de vérité = GitHub Releases → CHANGELOG.md
+**Priorité :** P1 (le CHANGELOG.md actuel est cassé/dupliqué)
+
+**Note :** Ne pas refaire d'API, juste réutiliser ce qui marche déjà ! 🎯
+
+---
+
+
 *Dernière mise à jour : 2024-12-28*
