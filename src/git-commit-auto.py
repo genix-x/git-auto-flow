@@ -345,21 +345,20 @@ def main():
 
         # 3. Stage automatique (maintenant sécurisé car pré-scanné)
         print("\n🔄 Étape 3: Staging des fichiers...")
-        if not GitUtils.has_staged_changes():
-            print("📁 Staging automatique des fichiers sécurisés...")
-            try:
-                add_cmd = ['git', 'add', '.']
-                debug_command(add_cmd, "staging verified clean files")
-                subprocess.run(add_cmd, check=False)
-                print("✅ Fichiers stagés automatiquement")
-            except subprocess.CalledProcessError as e:
-                print(f"❌ Erreur lors du staging: {e}")
-                sys.exit(1)
+        print("📁 git add . automatique...")
 
-        # Vérifie qu'il y a des changements à commiter
+        try:
+            subprocess.run(['git', 'add', '.'], check=True, capture_output=True)
+            print("✅ Fichiers stagés avec succès")
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Erreur git add: {e}")
+            sys.exit(1)
+
+        # Vérifie qu'il y a maintenant des changements à commiter
         if not GitUtils.has_staged_changes():
             print("❌ Aucun changement à commiter")
             sys.exit(1)
+
 
         # 4. Initialise le gestionnaire multi-IA
         print("\n🔄 Étape 4: Initialisation IA...")
