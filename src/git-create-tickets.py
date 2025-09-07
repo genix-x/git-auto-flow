@@ -47,63 +47,18 @@ class GitCreateTickets:
 
     def parse_meeting_notes(self, content):
         """Parse le compte-rendu avec IA pour extraire les tickets"""
-        
-        prompt = f"""
-Analyse ce compte-rendu de projet et extrait les tickets/tâches à créer comme issues GitHub.
-
-COMPTE-RENDU:
-{content}
-
-Tu dois répondre UNIQUEMENT avec un JSON valide dans ce format exact:
-{{
-  "tickets": [
-    {{
-      "title": "Titre concis et actionnable",
-      "description": "Description détaillée avec critères d'acceptance",
-      "labels": ["enhancement", "priority-high"],
-      "priority": "high",
-      "estimate": "3"
-    }}
-  ]
-}}
-
-RÈGLES STRICTES:
-- Maximum 5 tickets les plus prioritaires
-- Titres courts et clairs (50 chars max)
-- Descriptions avec bullet points et critères d'acceptance
-- Labels GitHub standards: bug, enhancement, documentation, good first issue, etc.
-- Priority: high, medium, low
-- Estimate: nombre de jours (1-5)
-- Format JSON strict, pas de markdown autour
-"""
-
         try:
-            print(f"🤖 {self.ai.get_status()}")
+            print(f" {self.ai.get_status()}")
             
-            # Utilise l'AIProvider existant ! 
-            response = self.ai.generate_response(prompt)
-            
-            # Parse JSON (comme dans git-commit-auto)
-            json_start = response.find('{')
-            json_end = response.rfind('}') + 1
-            
-            if json_start == -1 or json_end == 0:
-                print("❌ Réponse IA invalide (pas de JSON)")
-                return []
-                
-            json_str = response[json_start:json_end]
-            tickets_data = json.loads(json_str)
+            # Utilise l'AIProvider qui gère tout !
+            tickets_data = self.ai.generate_tickets(content)
             
             if 'tickets' not in tickets_data:
                 print("❌ Format JSON invalide (pas de champ 'tickets')")
                 return []
                 
-            return tickets_data['tickets']
+            return tickets_data.get('tickets', [])
 
-        except json.JSONDecodeError as e:
-            print(f"❌ Erreur parsing JSON: {e}")
-            print(f"📋 Réponse reçue: {response[:200]}...")
-            return []
         except Exception as e:
             print(f"❌ Erreur IA: {e}")
             return []

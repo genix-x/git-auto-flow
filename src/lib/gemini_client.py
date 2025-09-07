@@ -113,7 +113,7 @@ RÉPONSE OBLIGATOIRE: JSON STRICT - AUCUN TEXTE EXPLICATIF
 Format JSON obligatoire (exemple):
 {{
     "title": "feat(automation): add gemini AI scripts for git automation",
-    "body": "## Summary\\n\\nAdd intelligent automation scripts for Git commits and PR creation using Gemini AI.\\n\\n## Changes\\n\\n- Add git-cz-auto-v2.py for automatic commit message generation\\n- Add git-pr-auto.py for automatic PR creation\\n- Add shared lib with GeminiClient and GitUtils\\n- Add shell wrappers for easy execution\\n\\n## Test plan\\n\\n- [x] Scripts tested with real repositories\\n- [x] Error handling validated\\n- [x] API key configuration working\\n\\n🤖 Generated with [Claude Code](https://claude.ai/code)",
+    "body": "## Summary\n\nAdd intelligent automation scripts for Git commits and PR creation using Gemini AI.\n\n## Changes\n\n- Add git-cz-auto-v2.py for automatic commit message generation\n- Add git-pr-auto.py for automatic PR creation\n- Add shared lib with GeminiClient and GitUtils\n- Add shell wrappers for easy execution\n\n## Test plan\n\n- [x] Scripts tested with real repositories\n- [x] Error handling validated\n- [x] API key configuration working\n\n🤖 Generated with [Claude Code](https://claude.ai/code)",
     "labels": ["enhancement"],
     "draft": false
 }}
@@ -127,6 +127,12 @@ RÈGLES CRITIQUES:
 
 RÉPONSE = JSON SEULEMENT:
 """
+        return self._make_request(prompt)
+    
+    def generate_json_response(self, prompt: str) -> Dict:
+        """
+        Génère une réponse JSON générique depuis un prompt
+        """
         return self._make_request(prompt)
     
     def _make_request(self, prompt: str) -> Dict:

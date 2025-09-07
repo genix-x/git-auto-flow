@@ -218,53 +218,78 @@ class AIProvider:
             "💡 Vérifiez vos clés API et votre connexion internet"
         )
 
+    def generate_response(self, prompt: str) -> Dict:
+        """
+        Génère une réponse JSON générique avec fallback automatique
+        """
+        # Tentative 1: Gemini (priorité 1)
+        if self.gemini_available:
+            try:
+                print("🤖 Analyse avec Gemini...")
+                client = self._get_gemini_client()
+                if client:
+                    return client.generate_json_response(prompt)
+            except Exception as e:
+                print(f"❌ Gemini: {e}")
+                print("🔄 Fallback vers Groq...")
+                self.gemini_available = False
+        
+        # Tentative 2: Groq (fallback)
+        if self.groq_available:
+            try:
+                print("🚀 Analyse avec Groq (fallback)...")
+                client = self._get_groq_client()
+                if client:
+                    return client.generate_json_response(prompt)
+            except Exception as e:
+                print(f"❌ Groq: {e}")
+                self.groq_available = False
+        
+        # Aucune IA disponible
+        raise RuntimeError(
+            "❌ Aucune IA disponible!\n"
+            "💡 Vérifiez vos clés API et votre connexion internet"
+        )
     
     def generate_tickets(self, content: str, context: str = "") -> dict:
         """
-        Génère des tickets/issues depuis un compte-rendu
+        Génère des tickets/issues depuis un compte-rendu avec IA
         """
-        prompt = f"""
-Analysez ce compte-rendu et générez 2 tickets prioritaires.
+        prompt = f'''
+Analyse ce compte-rendu de projet et extrait les tickets/tâches à créer comme issues GitHub.
 
 COMPTE-RENDU:
-{{content}}
+{content}
 
-CONTEXTE: {{context}}
+CONTEXTE ADDITIONNEL:
+{context}
 
-Retournez UNIQUEMENT un JSON valide:
+Tu dois répondre UNIQUEMENT avec un JSON valide dans ce format exact:
 {{
-    "tickets": [
-        {{
-            "title": "Titre court",
-            "description": "Description + critères d'acceptation", 
-            "priority": "high|medium|low",
-            "labels": ["enhancement", "feature"],
-            "estimate": "1-3 jours"
-        }}
-    ]
+  "tickets": [
+    {{
+      "title": "Titre concis et actionnable",
+      "description": "Description détaillée avec critères d'acceptance",
+      "labels": ["enhancement", "priority-high"],
+      "priority": "high",
+      "estimate": "3"
+    }}
+  ]
 }}
-"""
-        
+
+RÈGLES STRICTES:
+- Maximum 5 tickets les plus prioritaires
+- Titres courts et clairs (50 chars max)
+- Descriptions avec bullet points et critères d'acceptance
+- Labels GitHub standards: bug, enhancement, documentation, good first issue, etc.
+- Priority: high, medium, low
+- Estimate: nombre de jours (1-5)
+- Format JSON strict, pas de markdown autour
+'''
         try:
-            # Réutilisons la logique de analyze_for_commit
-            if self.gemini_client:
-                response = self.gemini_client.generate_content(prompt)
-                content = response.text.strip()
-            elif self.groq_client:
-                response = self.groq_client.chat.completions.create(
-                    model="llama3-8b-8192",
-                    messages=[{{"role": "user", "content": prompt}}]
-                )
-                content = response.choices[0].message.content.strip()
-            else:
-                raise RuntimeError("Aucune API disponible")
-                
-            # Parse JSON
-            import json
-            return json.loads(content)
-            
+            return self.generate_response(prompt)
         except Exception as e:
-            raise RuntimeError(f"Erreur génération tickets: {{e}}")
+            raise RuntimeError(f"Erreur génération tickets: {e}")
 
     def get_status(self) -> str:
         """Retourne le statut des APIs disponibles"""
