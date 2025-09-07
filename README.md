@@ -112,20 +112,41 @@ git pr                 # (git pr-create-auto en long)
 # ✅ Résultat: Workflow complet automatisé !
 ```
 
-###  Création de Repository GitHub
+### 🤖 Création de Repository et Setup Automatisé (`git repo-create`)
+La commande `git repo-create` a été suralimentée pour non seulement créer un repository GitHub, mais aussi pour initialiser entièrement votre projet avec un workflow de production prêt à l'emploi.
+
+**Usage**
 ```bash
-# 1. Configurer une fois
-git pc                      # Organisation + workspace
-
-# 2. Créer repository GitHub uniquement
-git repo-create mon-backend
-
-# 3. Ou avec confirmation forcée
-git repo-create mon-frontend --force
-
-# ✅ Résultat : Repository créé sur votre organisation
-#  Lien GitHub affiché + prochaines étapes suggérées
+git repo-create <nom-du-projet> [options]
 ```
+
+**Fonctionnalités Clés**
+- **Visibilité au choix** : Créez des repositories en **privé** (défaut) ou en **public** avec l'option `--public`.
+- **Workflow Complet** : Automatise la création du repo, le clone, la création de la branche `develop`, l'ajout d'un `README.md` dans une branche `feature`, la création d'une PR, et la première release `v0.1.0`.
+- **Mode Non-Interactif** : Utilisez `--force` ou `-f` pour lancer tout le workflow sans poser de questions. Idéal pour les scripts ou pour aller vite.
+
+**Exemples**
+
+1.  **Créer un projet privé de manière interactive :**
+    ```bash
+    git repo-create mon-projet-secret
+    ```
+    Le script vous guidera pour chaque étape (création du repo, lancement du workflow).
+
+2.  **Créer un projet public pour une organisation, sans aucune confirmation :**
+    ```bash
+    git repo-create mon-projet-public --org ma-boite --public --force
+    ```
+    En une seule commande, vous obtenez un projet public, cloné localement, avec la branche `develop`, une première PR mergée et une release `v0.1.0` créée.
+
+**Le Workflow Automatisé en détail :**
+-   `gh repo create` : Crée le repo sur GitHub (privé ou public).
+-   `git clone` : Clone le projet dans votre `WORKING_DIR`.
+-   `git checkout -b develop` : Crée la branche de développement.
+-   `git flow feature start readme` : Crée une feature pour le `README.md`.
+-   `git ca --force` : Commit le `README.md` (alias pour `git commit-auto`).
+-   `git pr-auto` : Crée et merge la Pull Request.
+-   `git deploy --force` : Crée la release `v0.1.0` (alias pour `git-release-auto.py`).
 
 ### 🆕 Workflow Réunion → Développement
 ```bash
