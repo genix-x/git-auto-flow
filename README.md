@@ -67,10 +67,13 @@ Le script va :
 # 🏗️ 1. Configuration initiale (une seule fois)
 git pc                        # Configuration interactive
 
-# 🎯 2. En réunion - Création projet complet
+# 🎯 2. Créer repository GitHub uniquement  
+git repo-create mon-api       # ✅ Disponible maintenant
+
+# 🚧 3. Ou projet complet (bientôt)
 git project-create mon-app    # (À implémenter - Ticket #2)
 
-# 🚀 3. L'équipe commence immédiatement
+# 🚀 4. L'équipe commence immédiatement
 git feature-start login-page
 git ca
 git pr
@@ -109,6 +112,21 @@ git pr                 # (git pr-create-auto en long)
 # ✅ Résultat: Workflow complet automatisé !
 ```
 
+###  Création de Repository GitHub
+```bash
+# 1. Configurer une fois
+git pc                      # Organisation + workspace
+
+# 2. Créer repository GitHub uniquement
+git repo-create mon-backend
+
+# 3. Ou avec confirmation forcée
+git repo-create mon-frontend --force
+
+# ✅ Résultat : Repository créé sur votre organisation
+#  Lien GitHub affiché + prochaines étapes suggérées
+```
+
 ### 🆕 Workflow Réunion → Développement
 ```bash
 # 🎯 En réunion
@@ -127,8 +145,9 @@ git pr                        # PR automatique
 | Commande | Alias | Description | Usage |
 |----------|-------|-------------|-------|
 | **🆕 Gestion de Projets** | | | |
-| `git project-config` | `git pc` | 🆕 Configuration interactive projets | `git pc` |
-| `git project-create <nom>` | - | 🆕 Créer projet complet (bientôt) | `git project-create mon-app` |
+| `git project-config` | `git pc` |  Configuration interactive projets | `git pc` |
+| `git repo-create <nom>` | - |  Créer repository GitHub seul | `git repo-create mon-api` |
+| `git project-create <nom>` | - |  Créer projet complet (bientôt) | `git project-create mon-app` |
 | **Workflow Git** | | | |
 | `git feature-start <nom>` | - | Créer nouvelle feature + nettoyage auto | `git feature-start auth-system` |
 | `git commit-auto` | `git ca` | Commit + rebase + IA | `git ca` (recommandé) |
@@ -363,7 +382,8 @@ git-auto-flow/
 │   ├── git-pr-auto.py        # PR automation
 │   ├── git-pr-create-auto.py # Workflow complet
 │   ├── git-release-auto.py   # Release automation
-│   └── 🆕 git-project-config.py # Configuration projets
+│   ├──  git-project-config.py # Configuration projets
+│   └──  git-repo-create.py    # Création repository GitHub
 ├── bin/                      # Scripts shell (optionnels)
 └── config/
     └── git-aliases           # Aliases Git traditionnels
@@ -384,7 +404,8 @@ DEFAULT_PROJECT_TEMPLATE=web-app
 
 ## 🎯 Roadmap
 - ✅ v0.5.0 : Configuration de projets (git pc)
-- 🔄 v0.6.0 : Création automatique de repos (git project-create)
+- ✅ v0.5.1 : Création repository GitHub (git repo-create)
+- 🔄 v0.6.0 : Création automatique de projets complets (git project-create)
 - 📋 v0.7.0 : Génération de tickets/issues
 - 🏗️ v0.8.0 : Templates de projets avancés
 
