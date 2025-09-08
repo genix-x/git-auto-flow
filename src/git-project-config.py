@@ -32,6 +32,10 @@ def load_current_config() -> dict:
                 if line and not line.startswith('#') and '=' in line:
                     key, value = line.split('=', 1)
                     config[key.strip()] = value.strip()
+
+    # Ajout du répertoire de travail par défaut
+    if 'WORKING_DIR' not in config:
+        config['WORKING_DIR'] = os.environ.get('GIT_WORKING_DIR', os.path.expanduser('~/workspace'))
     
     return config
 

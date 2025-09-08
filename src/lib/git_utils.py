@@ -270,3 +270,26 @@ class GitUtils:
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"Erreur lors du push: {e}")
+        
+
+
+    @staticmethod
+    def is_git_repo() -> bool:
+        """Vérifie si on est dans un repo Git"""
+        try:
+            subprocess.run(['git', 'rev-parse', '--git-dir'], 
+                        capture_output=True, check=True)
+            return True
+        except subprocess.CalledProcessError:
+            return False
+        
+    @staticmethod
+    def has_unstaged_changes() -> bool:
+        """Vérifie s'il y a des changements non stagés"""
+        try:
+            result = subprocess.run(['git', 'diff', '--quiet'], 
+                                   capture_output=True)
+            return result.returncode != 0
+        except subprocess.CalledProcessError:
+            return False
+
