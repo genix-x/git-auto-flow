@@ -200,14 +200,14 @@ def merge_pr_immediately(pr_url: str, merge_method: str = "merge") -> bool:
         return False
 
 
-def run_gh_pr_create_release(pr_data: dict, immediate_merge: bool = True) -> str:
+def run_gh_pr_create_release(pr_data: dict, immediate_merge: bool = True, force_mode: bool = False) -> str:
     """
     Execute gh pr create pour une release avec merge immédiat
     
     Args:
         pr_data: Dict contenant title, body, labels, etc.
         immediate_merge: Si True, merge immédiatement la PR
-        debug_mode: Si True, affiche les commandes exécutées
+        force_mode: Si True, bypass la confirmation
         
     Returns:
         str: L'URL de la PR créée
@@ -224,10 +224,13 @@ def run_gh_pr_create_release(pr_data: dict, immediate_merge: bool = True) -> str
         print("\n🔄 Merge immédiat: ACTIVÉ (mergera automatiquement après création)")
     
     # Demande confirmation
-    response = input("\n✅ Créer cette PR de release? (y/N): ").strip().lower()
-    if response not in ['y', 'yes', 'o', 'oui']:
-        print("❌ Release annulée")
-        return ""
+    if not force_mode:
+        response = input("\n✅ Créer cette PR de release? (y/N): ").strip().lower()
+        if response not in ['y', 'yes', 'o', 'oui']:
+            print("❌ Release annulée")
+            return ""
+    else:
+        print("✅ Confirmation automatique (mode force)")
         
     # Construit la commande gh pr create
     cmd = [
@@ -281,6 +284,12 @@ def main():
         '--debug',
         action='store_true',
         help='Activer le mode debug pour voir les commandes exécutées'
+    )
+    parser.add_argument( # Add --force argument
+        '--force',
+        '-f',
+        action='store_true',
+        help='Mode non-interactif (aucune confirmation)'
     )
     
     args = parser.parse_args()
@@ -354,7 +363,7 @@ def main():
         print("\n🚀 Étape 4: Création de la PR de release...")
         
         immediate_merge = not args.no_auto_merge  
-        pr_url = run_gh_pr_create_release(release_data['pr'], immediate_merge)
+        pr_url = run_gh_pr_create_release(release_data['pr'], immediate_merge, args.force)
         
         if pr_url and immediate_merge:
             print(f"\n🎉 PR mergée! Création de la release v{release_data['release']['version']}...")
