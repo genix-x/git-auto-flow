@@ -276,6 +276,8 @@ def auto_deploy_release(project_path, force_mode=True):
         info("Déploiement automatique v0.1.0")
         
         cmd = ['git', 'deploy']
+        if force_mode: # Re-add the force flag
+            cmd.append('--force')
         
         run_command(cmd, cwd=project_path)
         
@@ -365,6 +367,11 @@ def finish_readme_feature(project_path):
     try:
         info("Terminaison de la feature readme...")
         run_command(['git', 'flow', 'feature', 'finish', 'readme'], cwd=project_path)
+        
+        # Push develop to origin after finishing the feature
+        info("Pushing develop to origin...")
+        run_command(['git', 'push', 'origin', 'develop'], cwd=project_path)
+
         success("✅ Feature readme terminée et mergée dans develop.")
         return True
     except Exception as e:
