@@ -256,37 +256,44 @@ class AIProvider:
         Génère des tickets/issues depuis un compte-rendu avec IA
         """
         prompt = f'''
-Analyse ce compte-rendu de projet et extrait les tickets/tâches à créer comme issues GitHub.
+Analyse ce plan de projet (format YAML/texte) et convertis CHAQUE TÂCHE ('task') en une issue GitHub.
 
-COMPTE-RENDU:
+PLAN DE PROJET:
+```
 {content}
+```
 
 CONTEXTE ADDITIONNEL:
 {context}
 
-Tu dois répondre UNIQUEMENT avec un JSON valide dans ce format exact:
+Tu dois répondre UNIQUEMENT avec un JSON valide dans ce format exact. Inclus TOUTES les tâches du plan.
 {{
   "tickets": [
     {{
-      "title": "Titre concis et actionnable",
-      "description": "Description détaillée avec critères d'acceptance",
-      "labels": ["enhancement", "priority-high"],
-      "priority": "high",
-      "estimate": "3"
+      "position": 1,
+      "title": "Titre concis et actionnable basé sur la description de la tâche",
+      "description": "Description détaillée de la tâche, incluant les fichiers concernés s'ils sont mentionnés.",
+      "labels": ["enhancement", "priority-medium"],
+      "priority": "medium",
+      "estimate": "2",
+      "dependencies": [1, 2]
     }}
   ]
 }}
 
 RÈGLES STRICTES:
-- Maximum 5 tickets les plus prioritaires
-- Titres courts et clairs (50 chars max)
-- Descriptions avec bullet points et critères d'acceptance
-- Labels GitHub standards: bug, enhancement, documentation, good first issue, etc.
-- Priority: high, medium, low
-- Estimate: nombre de jours (1-5)
-- Format JSON strict, pas de markdown autour
+- **Convertis TOUTES les tâches** trouvées dans le plan. Ne pas résumer.
+- Le champ "position" DOIT correspondre au champ "id" de la tâche dans le plan source. C'est crucial pour les dépendances.
+- Le champ "dependencies" DOIT être une liste des "id" des tâches dont cette tâche dépend.
+- Le "title" doit être basé sur la "description" de la tâche dans le plan.
+- La "description" dans le JSON doit être une version plus élaborée de la description de la tâche source.
+- Labels: Choisis parmi: bug, enhancement, documentation, refactor, testing.
+- Priority: high, medium, low.
+- Estimate: nombre de jours (1-5).
+- Le JSON doit être la SEULE chose dans ta réponse. Pas de texte avant ou après. Pas de markdown.
 '''
         try:
+            print("🤖 Analyse avec Gemini...")
             return self.generate_response(prompt)
         except Exception as e:
             raise RuntimeError(f"Erreur génération tickets: {e}")
