@@ -38,6 +38,18 @@ class GitCreateTickets:
         self.repo_full_name = repo_full_name
         self._github_labels_cache = None
         self.validate_requirements()
+        
+        # Initialisation centralisée du token et des headers
+        self.token = os.getenv("GITHUB_TOKEN")
+        if not self.token:
+            result = subprocess.run(['gh', 'auth', 'token'], capture_output=True, text=True)
+            self.token = result.stdout.strip()
+            
+        self.headers = {
+            'Authorization': f'token {self.token}',
+            'Accept': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28'
+        }
 
     def _get_github_labels(self) -> List[str]:
         """Récupère et cache la liste des labels GitHub existants pour le repo cible."""
@@ -89,63 +101,50 @@ class GitCreateTickets:
             return self.repo_full_name
         try:
             owner, repo = GitUtils.get_repo_info()
-            return f"{owner}/{repo}"
+            self.repo_full_name = f"{owner}/{repo}"
+            return self.repo_full_name
         except RuntimeError as e:
             debug_command([], f"Error getting current repo: {e}")
             return None
 
-    def _add_dependency_api(self, issue_number, blocked_by_number):
-        """Crée une vraie dépendance GitHub entre deux issues, en vérifiant le repo."""
-        current_repo_full_name = self._get_current_repo()
-        if not current_repo_full_name:
-            print("    ❌ Impossible de vérifier le repo courant. Dépendance ignorée.")
+    def _add_dependency_api(self, issue_number, dependency_number):
+        """Ajoute une dépendance via l'API GitHub (même repo seulement)"""
+        current_repo = self._get_current_repo()
+        if not current_repo:
+            print("    ❌ Impossible de déterminer le repo courant. Dépendance ignorée.")
             return False
+
+        # D'abord récupérer l'ID de l'issue dépendante
+        dep_url = f"https://api.github.com/repos/{current_repo}/issues/{dependency_number}"
+        dep_response = requests.get(dep_url, headers=self.headers)
         
-        owner, repo = current_repo_full_name.split('/')
-        debug_command([], f"Creating dependency in repo: {current_repo_full_name}")
-
-        url = f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/dependencies/blocked_by"
-
-        try:
-            token = os.getenv("GITHUB_TOKEN")
-            if not token:
-                result = subprocess.run(['gh', 'auth', 'token'], capture_output=True, text=True)
-                token = result.stdout.strip()
-        except:
-            print("⚠️ Impossible de récupérer le token GitHub")
+        if dep_response.status_code != 200:
+            print(f"  ❌ Issue dépendante #{dependency_number} introuvable dans {current_repo} (Status: {dep_response.status_code})")
             return False
-
-        headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {token}"}
-        data = {"issue_id": int(blocked_by_number)}
-
-        max_retries = 4
-        retry_delay = 5  # Augmentation du délai à 5 secondes
-
-        for attempt in range(max_retries):
-            try:
-                debug_command(['curl', '-X', 'POST', url, '-d', json.dumps(data)], f"add dependency {issue_number} <- {blocked_by_number}")
-                resp = requests.post(url, json=data, headers=headers)
-                
-                if resp.status_code == 201:
-                    print(f"    ✅ Dépendance API créée: #{issue_number} bloqué par #{blocked_by_number}")
-                    return True
-                
-                if resp.status_code == 404 and attempt < max_retries - 1:
-                    print(f"    ⏳ Tentative {attempt+1}/{max_retries-1}: Issue #{blocked_by_number} pas encore disponible, retry dans {retry_delay}s...")
-                    time.sleep(retry_delay)
-                    continue
-                
-                print(f"    ❌ Erreur API dépendance {issue_number} <- {blocked_by_number}: {resp.status_code} {resp.text}")
-                return False
-            except Exception as e:
-                print(f"    ❌ Exception lors de la création de dépendance: {e}")
-                return False
-        return False
+            
+        dep_issue_id = dep_response.json()['id']
+        
+        # CORRECT: Utiliser /blocked_by avec issue_id
+        url = f"https://api.github.com/repos/{current_repo}/issues/{issue_number}/dependencies/blocked_by"
+        
+        payload = {
+            "issue_id": dep_issue_id  # ID global, pas le numéro de l'issue !
+        }
+        
+        response = requests.post(url, json=payload, headers=self.headers)
+        
+        if response.status_code in [200, 201]:
+            print(f"  ✅ Dépendance API: #{issue_number} ← #{dependency_number}")
+            return True
+        else:
+            print(f"  ❌ Erreur API dépendance {issue_number} ← {dependency_number}: {response.status_code}")
+            print(f"      {response.text}")
+            return False
 
     def validate_requirements(self):
         """Vérifie que tous les outils nécessaires sont disponibles"""
-        if not self.repo_full_name and not GitUtils.is_git_repository():
-            print("❌ Erreur: Vous devez être dans un repository Git ou spécifier --repo")
+        if not self._get_current_repo():
+            print("❌ Erreur: Impossible de déterminer le repo. Utilisez --repo ou lancez depuis un repo Git.")
             sys.exit(1)
 
         try:
@@ -179,8 +178,8 @@ class GitCreateTickets:
         position_to_github_number = {}
         repo_arg = ['--repo', self._get_current_repo()] if self._get_current_repo() else []
 
+        # ÉTAPE 1: Créer TOUTES les issues d'abord
         print("\n🚀 Création des issues sur GitHub...")
-        
         for i, ticket in enumerate(tickets, 1):
             try:
                 issue_title = ticket['title']
@@ -216,13 +215,17 @@ class GitCreateTickets:
             except Exception as e:
                 print(f"  ❌ Erreur création: {e}")
 
+        # ÉTAPE 2: Attendre pour la propagation des issues
+        print("\n⏳ Attente de 1 seconde pour la propagation des issues...")
+        time.sleep(1)
+
+        # ÉTAPE 3: Créer les dépendances et labels
         print("\n🔗 Création des dépendances et labels...")
         for issue in created:
             if issue.get('dependencies'):
                 for dep_position in issue['dependencies']:
                     dep_github_number = position_to_github_number.get(dep_position)
                     if dep_github_number:
-                        # Ajout du label "blocked_by_#..."
                         label_name = f"blocked_by_#{dep_github_number}"
                         print(f"  - Ajout du label '{label_name}' à l'issue #{issue['github_number']}")
                         self._ensure_label_exists(label_name, color='d73a4a')
@@ -230,7 +233,6 @@ class GitCreateTickets:
                         debug_command(edit_cmd, f"add dependency label to #{issue['github_number']}")
                         subprocess.run(edit_cmd, capture_output=True, text=True)
 
-                        # Création de la dépendance
                         self._add_dependency_api(issue['github_number'], dep_github_number)
                     else:
                         print(f"    ⚠️  Dépendance non trouvée pour la position: {dep_position}")
