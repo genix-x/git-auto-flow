@@ -191,9 +191,7 @@ class GitCreateTickets:
                     self._ensure_label_exists(label, color)
 
                 description = f"{ticket['description']}\n\n**🎛️ Priorité:** {ticket['priority']}\n**⏱️ Estimation:** {ticket['estimate']} jours\n"
-                if ticket.get('dependencies'):
-                    deps_str = ', '.join([f"#{dep}" for dep in ticket['dependencies']])
-                    description += f"**🔗 Dépendances:** {deps_str}\n"
+                
                 description += f"\n---\n*🤖 Généré automatiquement par git-auto-flow*"
 
                 cmd = ['gh', 'issue', 'create', *repo_arg, '--title', issue_title, '--body', description]
