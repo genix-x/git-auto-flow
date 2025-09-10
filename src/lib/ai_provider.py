@@ -13,18 +13,14 @@ class AIProvider:
     
     def __init__(self):
         """Initialise le gestionnaire multi-IA"""
-        # Charge le fichier .env depuis le système global
         self._load_env_from_git_root()
         
-        # Stockage des clients
         self.gemini_client = None
         self.groq_client = None
         
-        # Configuration des APIs
         self.gemini_key = os.getenv('GEMINI_API_KEY')
         self.groq_key = os.getenv('GROQ_API_KEY')
         
-        # État des APIs (pour éviter de retester une API qui a échoué)
         self.gemini_available = bool(self.gemini_key)
         self.groq_available = bool(self.groq_key)
         
@@ -50,7 +46,6 @@ class AIProvider:
             load_dotenv(env_file)
             return
         
-        # Fallback sur le fichier local si le global n'existe pas
         local_env = os.path.join(os.path.dirname(__file__), '../../.env')
         if os.path.exists(local_env):
             load_dotenv(local_env)
@@ -59,7 +54,6 @@ class AIProvider:
         """Initialise le client Gemini si pas encore fait"""
         if not self.gemini_client and self.gemini_available:
             try:
-                # Import dynamique pour éviter les erreurs de chemin
                 import sys
                 from pathlib import Path
                 lib_path = Path(__file__).parent
@@ -79,7 +73,6 @@ class AIProvider:
         """Initialise le client Groq si pas encore fait"""
         if not self.groq_client and self.groq_available:
             try:
-                # Import dynamique pour éviter les erreurs de chemin
                 import sys
                 from pathlib import Path
                 lib_path = Path(__file__).parent
@@ -98,15 +91,7 @@ class AIProvider:
     def analyze_for_commit(self, diff: str, files: str) -> Dict:
         """
         Analyse intelligente avec fallback automatique
-        
-        Args:
-            diff: Le git diff des fichiers stagés
-            files: La liste des fichiers modifiés
-            
-        Returns:
-            Dict contenant les données du commit
         """
-        # Tentative 1: Gemini (priorité 1)
         if self.gemini_available:
             try:
                 print("🤖 Analyse avec Gemini...")
@@ -118,7 +103,6 @@ class AIProvider:
                 print("🔄 Fallback vers Groq...")
                 self.gemini_available = False
         
-        # Tentative 2: Groq (fallback)
         if self.groq_available:
             try:
                 print("🚀 Analyse avec Groq (fallback)...")
@@ -129,7 +113,6 @@ class AIProvider:
                 print(f"❌ Groq: {e}")
                 self.groq_available = False
         
-        # Aucune IA disponible
         raise RuntimeError(
             "❌ Aucune IA disponible!\n"
             "💡 Vérifiez vos clés API et votre connexion internet"
@@ -138,16 +121,7 @@ class AIProvider:
     def analyze_for_pr(self, diff: str, files: str, target_branch: str = "develop") -> Dict:
         """
         Analyse intelligente pour PR avec fallback automatique
-        
-        Args:
-            diff: Le git diff complet de la branche
-            files: La liste des fichiers modifiés
-            target_branch: La branche cible
-            
-        Returns:
-            Dict contenant les données de la PR
         """
-        # Tentative 1: Gemini (priorité 1)
         if self.gemini_available:
             try:
                 print("🤖 Génération PR avec Gemini...")
@@ -159,7 +133,6 @@ class AIProvider:
                 print("🔄 Fallback vers Groq...")
                 self.gemini_available = False
         
-        # Tentative 2: Groq (fallback)
         if self.groq_available:
             try:
                 print("🚀 Génération PR avec Groq (fallback)...")
@@ -170,7 +143,6 @@ class AIProvider:
                 print(f"❌ Groq: {e}")
                 self.groq_available = False
         
-        # Aucune IA disponible
         raise RuntimeError(
             "❌ Aucune IA disponible!\n"
             "💡 Vérifiez vos clés API et votre connexion internet"
@@ -179,17 +151,7 @@ class AIProvider:
     def analyze_for_release(self, diff: str, files: str, commits: list = None, latest_tag: str = "v0.0.0") -> Dict:
         """
         Analyse intelligente pour release PR avec fallback automatique
-        
-        Args:
-            diff: Le git diff complet develop -> main
-            files: La liste des fichiers modifiés
-            commits: Liste des messages de commits
-            latest_tag: Le dernier tag git pour le calcul de version
-            
-        Returns:
-            Dict contenant les données de la PR de release
         """
-        # Tentative 1: Gemini (priorité 1)
         if self.gemini_available:
             try:
                 print("🤖 Génération Release PR avec Gemini...")
@@ -201,7 +163,6 @@ class AIProvider:
                 print("🔄 Fallback vers Groq...")
                 self.gemini_available = False
         
-        # Tentative 2: Groq (fallback)
         if self.groq_available:
             try:
                 print("🚀 Génération Release PR avec Groq (fallback)...")
@@ -212,7 +173,6 @@ class AIProvider:
                 print(f"❌ Groq: {e}")
                 self.groq_available = False
         
-        # Aucune IA disponible
         raise RuntimeError(
             "❌ Aucune IA disponible!\n"
             "💡 Vérifiez vos clés API et votre connexion internet"
@@ -222,7 +182,6 @@ class AIProvider:
         """
         Génère une réponse JSON générique avec fallback automatique
         """
-        # Tentative 1: Gemini (priorité 1)
         if self.gemini_available:
             try:
                 print("🤖 Analyse avec Gemini...")
@@ -234,7 +193,6 @@ class AIProvider:
                 print("🔄 Fallback vers Groq...")
                 self.gemini_available = False
         
-        # Tentative 2: Groq (fallback)
         if self.groq_available:
             try:
                 print("🚀 Analyse avec Groq (fallback)...")
@@ -245,7 +203,6 @@ class AIProvider:
                 print(f"❌ Groq: {e}")
                 self.groq_available = False
         
-        # Aucune IA disponible
         raise RuntimeError(
             "❌ Aucune IA disponible!\n"
             "💡 Vérifiez vos clés API et votre connexion internet"
@@ -293,7 +250,6 @@ RÈGLES STRICTES:
 - Le JSON doit être la SEULE chose dans ta réponse. Pas de texte avant ou après. Pas de markdown.
 '''
         try:
-            print("🤖 Analyse avec Gemini...")
             return self.generate_response(prompt)
         except Exception as e:
             raise RuntimeError(f"Erreur génération tickets: {e}")
