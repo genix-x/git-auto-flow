@@ -293,3 +293,35 @@ class GitUtils:
         except subprocess.CalledProcessError:
             return False
 
+    @staticmethod
+    def get_repo_info() -> Tuple[str, str]:
+        """
+        Récupère l'owner et le nom du repo depuis l'URL remote de Git.
+        
+        Returns:
+            Tuple[str, str]: Un tuple contenant (owner, repo_name)
+        """
+        try:
+            cmd = ['git', 'remote', 'get-url', 'origin']
+            debug_command(cmd, "get remote origin URL")
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            url = result.stdout.strip()
+            
+            # Parse SSH URL: git@github.com:owner/repo.git
+            if url.startswith('git@'):
+                path = url.split(':')[1]
+                owner, repo = path.replace('.git', '').split('/')
+                return owner, repo
+            
+            # Parse HTTPS URL: https://github.com/owner/repo.git
+            if url.startswith('https://'):
+                path = url.split('github.com/')[1]
+                owner, repo = path.replace('.git', '').split('/')
+                return owner, repo
+            
+            raise ValueError(f"Format d'URL non reconnu: {url}")
+
+        except (subprocess.CalledProcessError, ValueError, IndexError) as e:
+            raise RuntimeError(f"Impossible de parser l'owner/repo depuis l'URL git: {e}")
+

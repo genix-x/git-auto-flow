@@ -13,18 +13,14 @@ class AIProvider:
     
     def __init__(self):
         """Initialise le gestionnaire multi-IA"""
-        # Charge le fichier .env depuis le système global
         self._load_env_from_git_root()
         
-        # Stockage des clients
         self.gemini_client = None
         self.groq_client = None
         
-        # Configuration des APIs
         self.gemini_key = os.getenv('GEMINI_API_KEY')
         self.groq_key = os.getenv('GROQ_API_KEY')
         
-        # État des APIs (pour éviter de retester une API qui a échoué)
         self.gemini_available = bool(self.gemini_key)
         self.groq_available = bool(self.groq_key)
         
@@ -50,7 +46,6 @@ class AIProvider:
             load_dotenv(env_file)
             return
         
-        # Fallback sur le fichier local si le global n'existe pas
         local_env = os.path.join(os.path.dirname(__file__), '../../.env')
         if os.path.exists(local_env):
             load_dotenv(local_env)
@@ -59,7 +54,6 @@ class AIProvider:
         """Initialise le client Gemini si pas encore fait"""
         if not self.gemini_client and self.gemini_available:
             try:
-                # Import dynamique pour éviter les erreurs de chemin
                 import sys
                 from pathlib import Path
                 lib_path = Path(__file__).parent
@@ -79,7 +73,6 @@ class AIProvider:
         """Initialise le client Groq si pas encore fait"""
         if not self.groq_client and self.groq_available:
             try:
-                # Import dynamique pour éviter les erreurs de chemin
                 import sys
                 from pathlib import Path
                 lib_path = Path(__file__).parent
@@ -98,15 +91,7 @@ class AIProvider:
     def analyze_for_commit(self, diff: str, files: str) -> Dict:
         """
         Analyse intelligente avec fallback automatique
-        
-        Args:
-            diff: Le git diff des fichiers stagés
-            files: La liste des fichiers modifiés
-            
-        Returns:
-            Dict contenant les données du commit
         """
-        # Tentative 1: Gemini (priorité 1)
         if self.gemini_available:
             try:
                 print("🤖 Analyse avec Gemini...")
@@ -118,7 +103,6 @@ class AIProvider:
                 print("🔄 Fallback vers Groq...")
                 self.gemini_available = False
         
-        # Tentative 2: Groq (fallback)
         if self.groq_available:
             try:
                 print("🚀 Analyse avec Groq (fallback)...")
@@ -129,7 +113,6 @@ class AIProvider:
                 print(f"❌ Groq: {e}")
                 self.groq_available = False
         
-        # Aucune IA disponible
         raise RuntimeError(
             "❌ Aucune IA disponible!\n"
             "💡 Vérifiez vos clés API et votre connexion internet"
@@ -138,16 +121,7 @@ class AIProvider:
     def analyze_for_pr(self, diff: str, files: str, target_branch: str = "develop") -> Dict:
         """
         Analyse intelligente pour PR avec fallback automatique
-        
-        Args:
-            diff: Le git diff complet de la branche
-            files: La liste des fichiers modifiés
-            target_branch: La branche cible
-            
-        Returns:
-            Dict contenant les données de la PR
         """
-        # Tentative 1: Gemini (priorité 1)
         if self.gemini_available:
             try:
                 print("🤖 Génération PR avec Gemini...")
@@ -159,7 +133,6 @@ class AIProvider:
                 print("🔄 Fallback vers Groq...")
                 self.gemini_available = False
         
-        # Tentative 2: Groq (fallback)
         if self.groq_available:
             try:
                 print("🚀 Génération PR avec Groq (fallback)...")
@@ -170,7 +143,6 @@ class AIProvider:
                 print(f"❌ Groq: {e}")
                 self.groq_available = False
         
-        # Aucune IA disponible
         raise RuntimeError(
             "❌ Aucune IA disponible!\n"
             "💡 Vérifiez vos clés API et votre connexion internet"
@@ -179,17 +151,7 @@ class AIProvider:
     def analyze_for_release(self, diff: str, files: str, commits: list = None, latest_tag: str = "v0.0.0") -> Dict:
         """
         Analyse intelligente pour release PR avec fallback automatique
-        
-        Args:
-            diff: Le git diff complet develop -> main
-            files: La liste des fichiers modifiés
-            commits: Liste des messages de commits
-            latest_tag: Le dernier tag git pour le calcul de version
-            
-        Returns:
-            Dict contenant les données de la PR de release
         """
-        # Tentative 1: Gemini (priorité 1)
         if self.gemini_available:
             try:
                 print("🤖 Génération Release PR avec Gemini...")
@@ -201,7 +163,6 @@ class AIProvider:
                 print("🔄 Fallback vers Groq...")
                 self.gemini_available = False
         
-        # Tentative 2: Groq (fallback)
         if self.groq_available:
             try:
                 print("🚀 Génération Release PR avec Groq (fallback)...")
@@ -212,7 +173,6 @@ class AIProvider:
                 print(f"❌ Groq: {e}")
                 self.groq_available = False
         
-        # Aucune IA disponible
         raise RuntimeError(
             "❌ Aucune IA disponible!\n"
             "💡 Vérifiez vos clés API et votre connexion internet"
@@ -222,7 +182,6 @@ class AIProvider:
         """
         Génère une réponse JSON générique avec fallback automatique
         """
-        # Tentative 1: Gemini (priorité 1)
         if self.gemini_available:
             try:
                 print("🤖 Analyse avec Gemini...")
@@ -234,7 +193,6 @@ class AIProvider:
                 print("🔄 Fallback vers Groq...")
                 self.gemini_available = False
         
-        # Tentative 2: Groq (fallback)
         if self.groq_available:
             try:
                 print("🚀 Analyse avec Groq (fallback)...")
@@ -245,7 +203,6 @@ class AIProvider:
                 print(f"❌ Groq: {e}")
                 self.groq_available = False
         
-        # Aucune IA disponible
         raise RuntimeError(
             "❌ Aucune IA disponible!\n"
             "💡 Vérifiez vos clés API et votre connexion internet"
@@ -256,35 +213,41 @@ class AIProvider:
         Génère des tickets/issues depuis un compte-rendu avec IA
         """
         prompt = f'''
-Analyse ce compte-rendu de projet et extrait les tickets/tâches à créer comme issues GitHub.
+Analyse ce plan de projet (format YAML/texte) et convertis CHAQUE TÂCHE ('task') en une issue GitHub.
 
-COMPTE-RENDU:
+PLAN DE PROJET:
+```
 {content}
+```
 
 CONTEXTE ADDITIONNEL:
 {context}
 
-Tu dois répondre UNIQUEMENT avec un JSON valide dans ce format exact:
+Tu dois répondre UNIQUEMENT avec un JSON valide dans ce format exact. Inclus TOUTES les tâches du plan.
 {{
   "tickets": [
     {{
-      "title": "Titre concis et actionnable",
-      "description": "Description détaillée avec critères d'acceptance",
-      "labels": ["enhancement", "priority-high"],
-      "priority": "high",
-      "estimate": "3"
+      "position": 1,
+      "title": "Titre concis et actionnable basé sur la description de la tâche",
+      "description": "Description détaillée de la tâche, incluant les fichiers concernés s'ils sont mentionnés.",
+      "labels": ["enhancement", "priority-medium"],
+      "priority": "medium",
+      "estimate": "2",
+      "dependencies": [1, 2]
     }}
   ]
 }}
 
 RÈGLES STRICTES:
-- Maximum 5 tickets les plus prioritaires
-- Titres courts et clairs (50 chars max)
-- Descriptions avec bullet points et critères d'acceptance
-- Labels GitHub standards: bug, enhancement, documentation, good first issue, etc.
-- Priority: high, medium, low
-- Estimate: nombre de jours (1-5)
-- Format JSON strict, pas de markdown autour
+- **Convertis TOUTES les tâches** trouvées dans le plan. Ne pas résumer.
+- Le champ "position" DOIT correspondre au champ "id" de la tâche dans le plan source. C'est crucial pour les dépendances.
+- Le champ "dependencies" DOIT être une liste des "id" des tâches dont cette tâche dépend.
+- Le "title" doit être basé sur la "description" de la tâche dans le plan.
+- La "description" dans le JSON doit être une version plus élaborée de la description de la tâche source.
+- Labels: Choisis parmi: bug, enhancement, documentation, refactor, testing.
+- Priority: high, medium, low.
+- Estimate: nombre de jours (1-5).
+- Le JSON doit être la SEULE chose dans ta réponse. Pas de texte avant ou après. Pas de markdown.
 '''
         try:
             return self.generate_response(prompt)
