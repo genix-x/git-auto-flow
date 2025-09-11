@@ -16,14 +16,13 @@ from git_utils import GitUtils
 from debug_logger import debug_command, set_global_debug_mode
 
 
-def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", no_auto_delete: bool = False, force: bool = False) -> str:
+def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = False) -> str:
     """
     Execute gh pr create avec les données automatiques
     
     Args:
         pr_data: Dict contenant title, body, labels, etc.
         base_branch: La branche cible pour la PR
-        no_auto_delete: Si True, ne pas activer la suppression de branche
         force: Si True, sauter la confirmation de création
         
     Returns:
@@ -70,22 +69,6 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", no_auto_delete
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         pr_url = result.stdout.strip()
         print(f"✅ PR créée avec succès: {pr_url}")
-        
-        # Activer l'auto-delete des branches après merge
-        if not no_auto_delete:
-            try:
-                print("🗑️  Activation auto-suppression branches...")
-                delete_cmd = [
-                    'gh', 'api', 'repos/:owner/:repo',
-                    '--method', 'PATCH',
-                    '--field', 'delete_branch_on_merge=true'
-                ]
-                debug_command(delete_cmd, "enable auto-delete branches")
-                    
-                subprocess.run(delete_cmd, capture_output=True, check=True)
-                print("✅ Auto-suppression activée sur le repo")
-            except subprocess.CalledProcessError:
-                print("⚠️  Auto-suppression échouée (permissions?) - ignoré")
         
         return pr_url
         
@@ -145,8 +128,6 @@ def main():
         action='store_true',
         help='Activer le mode debug pour voir les commandes exécutées'
     )
-    parser.add_argument('--no-auto-delete', action='store_true', 
-                   help='Ne pas activer la suppression automatique de la branche après merge')
     parser.add_argument(
         '--force', '-f',
         action='store_true',
@@ -226,7 +207,7 @@ def main():
             pr_data['draft'] = True
         
         # Crée la PR
-        pr_url = run_gh_pr_create(pr_data, args.base, no_auto_delete=args.no_auto_delete, force=args.force)
+        pr_url = run_gh_pr_create(pr_data, args.base, force=args.force)
         
         if pr_url:
             print(f"\n🎉 Success! PR disponible: {pr_url}")
