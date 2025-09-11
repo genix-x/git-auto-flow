@@ -67,9 +67,12 @@ def create_github_repo(project_name, org=None, force=False, private=True):
     console.print()
 
     # Confirmation
-    if not force and not confirm("✅ Lancer la création du repository GitHub ?"):
-        warning("Création annulée par l'utilisateur.")
-        sys.exit(0)
+    if not force:
+        if not confirm("✅ Lancer la création du repository GitHub ?"):
+            warning("Création annulée par l'utilisateur.")
+            sys.exit(0)
+    else:
+        info("🚀 Mode force activé - Création automatique du repository")
     
     try:
         # Création du repo via gh CLI
@@ -86,6 +89,11 @@ def create_github_repo(project_name, org=None, force=False, private=True):
         
         run_command(cmd, check=True)
         success(f"Repository GitHub {'privé' if private else 'public'} {github_org}/{project_name} créé avec succès!")
+
+        # Délai pour laisser GitHub propager le repository
+        info("Attente de la propagation du repository GitHub...")
+        import time
+        time.sleep(3)  # Attendre 3 secondes
         
     except CalledProcessError as e:
         if "already exists" in e.stderr:
@@ -98,10 +106,13 @@ def create_github_repo(project_name, org=None, force=False, private=True):
             sys.exit(1)
 
     # --- WORKFLOW DE SETUP ---
-    if not force and not confirm("🚀 Lancer le workflow de setup complet (clone, branches, README, PR, release) ?"):
-        warning("Workflow de setup annulé.")
-        info(f"Vous pouvez cloner manuellement le repo: git clone {repo_url}.git")
-        sys.exit(0)
+    if not force:
+        if not confirm("🚀 Lancer le workflow de setup complet (clone, branches, README, PR, release) ?"):
+            warning("Workflow de setup annulé.")
+            info(f"Vous pouvez cloner manuellement le repo: git clone {repo_url}.git")
+            sys.exit(0)
+    else:
+        info("🚀 Mode force activé - Setup automatique complet")
 
     try:
         header("🚀 Démarrage du workflow de setup")
@@ -112,22 +123,11 @@ def create_github_repo(project_name, org=None, force=False, private=True):
             info("Lancez `git pc` pour la configurer.")
             sys.exit(1)
 
-        project_path = setup_local_repo(project_name, f"{repo_url}.git", working_dir)
+        project_path = setup_local_repo(project_name, f"{repo_url}.git", working_dir, force=force)
         
-        if not setup_develop_branch(project_path):
-            raise Exception("Échec de la création de la branche develop.")
-
-        if not create_readme_feature(project_path, project_name):
-            raise Exception("Échec de la création de la feature README.")
-
-        if not auto_commit_and_pr(project_path, force_mode=True):
-            raise Exception("Échec du commit automatique et de la création de la PR.")
-
-        if not finish_readme_feature(project_path):
-            raise Exception("Échec de la terminaison de la feature README.")
-
-        if not auto_deploy_release(project_path, force_mode=True):
-            raise Exception("Échec du déploiement de la release initiale.")
+        if not create_readme_workflow(project_path, project_name):
+            error("❌ Le workflow de setup a échoué")
+            return
         
         header("🎉 WORKFLOW TERMINÉ AVEC SUCCÈS 🎉")
         release_url = f"{repo_url}/releases/tag/v0.1.0"
@@ -175,123 +175,121 @@ def run_command(command, cwd=None, check=True):
             error(e.stdout.strip())
         raise
 
-def setup_local_repo(project_name, repo_url, working_dir):
-    """Clone le repo dans le working_dir et se positionne dedans"""
+def setup_local_repo(project_name, repo_url, working_dir, force=False):
+    """Clone le repo dans le working_dir. Si le dossier existe et n'est pas un repo git,
+    demande avant de le remplacer."""
     try:
         info(f"Setup local repository dans {working_dir}")
         
         Path(working_dir).mkdir(parents=True, exist_ok=True)
-        
         project_path = Path(working_dir) / project_name
         
-        if not project_path.exists():
+        if not (project_path / ".git").is_dir():
+            if project_path.exists():
+                warning(f"Le dossier {project_path} existe mais n'est pas un repo git valide.")
+                if not force and not confirm("Voulez-vous le supprimer et re-cloner le projet ?"):
+                    error("Opération annulée. Le setup ne peut pas continuer.")
+                    raise Exception("Setup local annulé par l'utilisateur.")
+                
+                import shutil
+                info(f"Suppression du dossier existant: {project_path}")
+                shutil.rmtree(str(project_path))
+
+            info(f"Clonage du repository {repo_url}...")
             run_command(['git', 'clone', repo_url, str(project_path)])
         else:
-            warning(f"Le dossier {project_path} existe déjà. On continue dedans.")
+            warning(f"Le repo git {project_path} existe déjà. On continue dedans.")
         
         success(f"✅ Repository cloné dans {project_path}")
         return str(project_path)
         
     except Exception as e:
+        if "annulé par l'utilisateur" in str(e):
+            raise
         error(f"Erreur lors du clone: {e}")
         raise
 
-def setup_develop_branch(project_path):
-    """Crée et push la branche develop"""
+def create_readme_workflow(project_path, project_name):
+    """Workflow complet README avec Git natif - séquence testée et validée"""
     try:
-        info("Création branche develop")
+        info("🚀 Workflow README avec Git natif")
         
-        try:
-            run_command(['git', 'checkout', '-b', 'develop'], cwd=project_path)
-        except CalledProcessError as e:
-            if "already exists" in e.stderr or "existe déjà" in e.stderr:
-                warning("La branche 'develop' existe déjà. On se positionne dessus.")
-                run_command(['git', 'checkout', 'develop'], cwd=project_path)
-            else:
-                raise
+        # 1. GÉRER LE REPO VIDE (obligatoire pour les repos GitHub vides)
+        info("Initialisation du repository vide")
+        gitkeep_path = Path(project_path) / ".gitkeep"
+        gitkeep_path.write_text("# Initial commit\n")
         
-        info("Ajout d'un commit initial vide pour pouvoir push la branche develop")
-        run_command(['git', 'commit', '--allow-empty', '-m', 'Initial commit on develop'], cwd=project_path, check=False)
-
-        run_command(['git', 'push', '-u', 'origin', 'develop'], cwd=project_path)
-
-        # Create and push main branch for git-flow
-        info("Création de la branche main pour git-flow...")
-        run_command(['git', 'branch', 'main', 'develop'], cwd=project_path, check=False)
+        run_command(['git', 'add', '.gitkeep'], cwd=project_path)
+        run_command(['git', 'commit', '-m', 'Initial commit'], cwd=project_path)
+        run_command(['git', 'branch', '-M', 'main'], cwd=project_path)
         run_command(['git', 'push', '-u', 'origin', 'main'], cwd=project_path)
         
-        success("✅ Branche develop et main créées et pushées")
-        return True
+        # 2. Créer develop depuis main
+        info("Création de la branche develop")
+        run_command(['git', 'checkout', '-b', 'develop'], cwd=project_path)
+        run_command(['git', 'push', '-u', 'origin', 'develop'], cwd=project_path)
         
-    except Exception as e:
-        error(f"Erreur création develop: {e}")
-        return False
-
-def create_readme_feature(project_path, project_name):
-    """Crée une feature branch readme avec fichier README.md"""
-    try:
-        info("Création feature readme")
+        # 3. Créer feature branch depuis develop
+        info("Création de feature/readme")
+        run_command(['git', 'checkout', '-b', 'feature/readme'], cwd=project_path)
         
-        info("Initialisation de git-flow")
-        run_command(['git', 'flow', 'init', '-d'], cwd=project_path)
-        
-        run_command(['git', 'flow', 'feature', 'start', 'readme'], cwd=project_path)
-        
+        # 4. Créer README avec contenu dynamique
+        info("Génération du README.md")
         readme_path = Path(project_path) / "README.md"
-        readme_path.write_text(f"# {project_name}\n")
+        readme_content = f"""# {project_name}
 
-        if not readme_path.exists():
-            raise FileNotFoundError("Le fichier README.md n'a pas été créé.")
-        
-        success("✅ README.md créé dans feature/readme")
-        return True
-        
-    except Exception as e:
-        error(f"Erreur feature readme: {e}")
-        return False
+Projet {project_name} créé avec Git Auto-Flow.
 
-def auto_commit_and_pr(project_path, force_mode=True):
-    """Commit automatique et création PR vers develop"""
-    try:
-        info("Commit automatique et PR")
+## Installation
+
+```bash
+git clone https://github.com/[ORG]/{project_name}.git
+cd {project_name}
+```
+## Utilisation
+À documenter...
+"""
+        readme_path.write_text(readme_content)
         
+        # 5. Commit et push feature (Git natif - pas d'IA !)
         run_command(['git', 'add', 'README.md'], cwd=project_path)
+        run_command(['git', 'commit', '-m', 'feat: Add README.md'], cwd=project_path)
+        run_command(['git', 'push', '-u', 'origin', 'feature/readme'], cwd=project_path)
         
-        cmd = ['git', 'ca']
-        if force_mode:
-            cmd.append('--force')
+        # 6. PR feature → develop + merge automatique
+        info("Création PR feature/readme → develop")
+        run_command(['gh', 'pr', 'create', '--base', 'develop', '--head', 'feature/readme', 
+                    '--title', 'feat: Add README', '--body', 'Initial README', '--fill'], cwd=project_path)
+        run_command(['gh', 'pr', 'merge', '--squash'], cwd=project_path)
         
-        run_command(cmd, cwd=project_path)
+        # 7. Retour sur develop et pull des changements
+        run_command(['git', 'checkout', 'develop'], cwd=project_path)
+        run_command(['git', 'pull'], cwd=project_path)
         
-        success("✅ Commit effectué et PR créée vers develop")
+        # 8. PR develop → main + merge automatique
+        info("Création PR develop → main (Release)")
+        run_command(['gh', 'pr', 'create', '--base', 'main', '--head', 'develop',
+                    '--title', 'Release v0.1.0', '--body', 'First release', '--fill'], cwd=project_path)
+        run_command(['gh', 'pr', 'merge', '--squash'], cwd=project_path)
+        
+        # 9. Tag de release
+        info("Création du tag v0.1.0")
+        run_command(['git', 'checkout', 'main'], cwd=project_path)
+        run_command(['git', 'pull'], cwd=project_path)
+        run_command(['git', 'tag', 'v0.1.0'], cwd=project_path)
+        run_command(['git', 'push', '--tags'], cwd=project_path)
+        
+        # 10. NETTOYAGE : Supprimer la branche feature/readme
+        info("Nettoyage des branches temporaires")
+        run_command(['git', 'push', 'origin', '--delete', 'feature/readme'], cwd=project_path)
+        run_command(['git', 'branch', '-D', 'feature/readme'], cwd=project_path)
+        
+        success("✅ Workflow complet terminé !")
+        success("✅ Repository prêt avec README, branches GitFlow et release v0.1.0")
         return True
         
     except Exception as e:
-        error(f"Erreur commit/PR: {e}")
-        return False
-
-def auto_deploy_release(project_path, force_mode=True):
-    """Lance git deploy pour créer le premier tag"""
-    try:
-        info("Déploiement automatique v0.1.0")
-        
-        cmd = ['git', 'deploy']
-        if force_mode: # Re-add the force flag
-            cmd.append('--force')
-        
-        run_command(cmd, cwd=project_path)
-        
-        tags_result = run_command(['git', 'tag'], cwd=project_path, check=False)
-        if 'v0.1.0' in tags_result.stdout:
-            success("Vérification: Tag v0.1.0 trouvé.")
-        else:
-            warning("Vérification: Tag v0.1.0 non trouvé.")
-        
-        success("✅ Release v0.1.0 créée avec succès")
-        return True
-        
-    except Exception as e:
-        error(f"Erreur déploiement: {e}")
+        error(f"Erreur workflow: {e}")
         return False
 
 def main():
@@ -348,7 +346,7 @@ def main():
     # Validation du nom de projet
     if not project_name.replace('-', '').replace('_', '').isalnum():
         error("Nom de projet invalide.")
-        info("Utilise uniquement des lettres, chiffres, '-' et '_'.")
+        info("Utilise uniquement des lettres, chiffres, '-', et '_'.")
         sys.exit(1)
     
     # Demander à l'utilisateur si pas en mode force
@@ -361,22 +359,6 @@ def main():
 
     # Lancement du processus
     create_github_repo(project_name, org=org, force=force, private=private)
-
-def finish_readme_feature(project_path):
-    """Termine la feature branch readme et la merge dans develop"""
-    try:
-        info("Terminaison de la feature readme...")
-        run_command(['git', 'flow', 'feature', 'finish', 'readme'], cwd=project_path)
-        
-        # Push develop to origin after finishing the feature
-        info("Pushing develop to origin...")
-        run_command(['git', 'push', 'origin', 'develop'], cwd=project_path)
-
-        success("✅ Feature readme terminée et mergée dans develop.")
-        return True
-    except Exception as e:
-        error(f"Erreur lors de la terminaison de la feature readme: {e}")
-        return False
 
 if __name__ == "__main__":
     main()
