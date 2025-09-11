@@ -16,14 +16,14 @@ from git_utils import GitUtils
 from debug_logger import debug_command, set_global_debug_mode
 
 
-def run_gh_pr_create(pr_data: dict, base_branch: str = "develop") -> str:
+def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", no_auto_delete: bool = False) -> str:
     """
     Execute gh pr create avec les données automatiques
     
     Args:
         pr_data: Dict contenant title, body, labels, etc.
         base_branch: La branche cible pour la PR
-        debug_mode: Si True, affiche les commandes exécutées
+        no_auto_delete: Si True, ne pas activer la suppression de branche
         
     Returns:
         str: L'URL de la PR créée
@@ -70,19 +70,20 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop") -> str:
         print(f"✅ PR créée avec succès: {pr_url}")
         
         # Activer l'auto-delete des branches après merge
-        try:
-            print("🗑️  Activation auto-suppression branches...")
-            delete_cmd = [
-                'gh', 'api', 'repos/:owner/:repo',
-                '--method', 'PATCH',
-                '--field', 'delete_branch_on_merge=true'
-            ]
-            debug_command(delete_cmd, "enable auto-delete branches")
-                
-            subprocess.run(delete_cmd, capture_output=True, check=True)
-            print("✅ Auto-suppression activée sur le repo")
-        except subprocess.CalledProcessError:
-            print("⚠️  Auto-suppression échouée (permissions?) - ignoré")
+        if not no_auto_delete:
+            try:
+                print("🗑️  Activation auto-suppression branches...")
+                delete_cmd = [
+                    'gh', 'api', 'repos/:owner/:repo',
+                    '--method', 'PATCH',
+                    '--field', 'delete_branch_on_merge=true'
+                ]
+                debug_command(delete_cmd, "enable auto-delete branches")
+                    
+                subprocess.run(delete_cmd, capture_output=True, check=True)
+                print("✅ Auto-suppression activée sur le repo")
+            except subprocess.CalledProcessError:
+                print("⚠️  Auto-suppression échouée (permissions?) - ignoré")
         
         return pr_url
         
@@ -142,6 +143,8 @@ def main():
         action='store_true',
         help='Activer le mode debug pour voir les commandes exécutées'
     )
+    parser.add_argument('--no-auto-delete', action='store_true', 
+                   help='Ne pas activer la suppression automatique de la branche après merge')
     
     args = parser.parse_args()
     
@@ -216,7 +219,7 @@ def main():
             pr_data['draft'] = True
         
         # Crée la PR
-        pr_url = run_gh_pr_create(pr_data, args.base)
+        pr_url = run_gh_pr_create(pr_data, args.base, no_auto_delete=args.no_auto_delete)
         
         if pr_url:
             print(f"\n🎉 Success! PR disponible: {pr_url}")
