@@ -67,9 +67,12 @@ def create_github_repo(project_name, org=None, force=False, private=True):
     console.print()
 
     # Confirmation
-    if not force and not confirm("✅ Lancer la création du repository GitHub ?"):
-        warning("Création annulée par l'utilisateur.")
-        sys.exit(0)
+    if not force:
+        if not confirm("✅ Lancer la création du repository GitHub ?"):
+            warning("Création annulée par l'utilisateur.")
+            sys.exit(0)
+    else:
+        info("🚀 Mode force activé - Création automatique du repository")
     
     try:
         # Création du repo via gh CLI
@@ -86,6 +89,11 @@ def create_github_repo(project_name, org=None, force=False, private=True):
         
         run_command(cmd, check=True)
         success(f"Repository GitHub {'privé' if private else 'public'} {github_org}/{project_name} créé avec succès!")
+
+        # Délai pour laisser GitHub propager le repository
+        info("Attente de la propagation du repository GitHub...")
+        import time
+        time.sleep(3)  # Attendre 3 secondes
         
     except CalledProcessError as e:
         if "already exists" in e.stderr:
@@ -98,10 +106,13 @@ def create_github_repo(project_name, org=None, force=False, private=True):
             sys.exit(1)
 
     # --- WORKFLOW DE SETUP ---
-    if not force and not confirm("🚀 Lancer le workflow de setup complet (clone, branches, README, PR, release) ?"):
-        warning("Workflow de setup annulé.")
-        info(f"Vous pouvez cloner manuellement le repo: git clone {repo_url}.git")
-        sys.exit(0)
+    if not force:
+        if not confirm("🚀 Lancer le workflow de setup complet (clone, branches, README, PR, release) ?"):
+            warning("Workflow de setup annulé.")
+            info(f"Vous pouvez cloner manuellement le repo: git clone {repo_url}.git")
+            sys.exit(0)
+    else:
+        info("🚀 Mode force activé - Setup automatique complet")
 
     try:
         header("🚀 Démarrage du workflow de setup")
