@@ -1,0 +1,174 @@
+
+{
+    "name": "Todo List application",
+    "date": "2025-09-10",
+    "tasks": [
+        {
+            "name": "Scaffold Next.js app with TypeScript, Tailwind, and linting",
+            "id": "feat-10",
+            "runner": "developer",
+            "prompt": "Create a new Next.js (latest) app using the App Router with TypeScript. Add Tailwind CSS, ESLint (next/core-web-vitals) and Prettier. Provide a minimal layout with a centered container and a header. Add an `/api/health` route handler returning `{ ok: true }`. Include npm scripts: `dev`, `build`, `start`, `lint`, `typecheck`. Ensure clean, production-ready structure (src/ aliases, strict TS).\n\nSelf-review loop: After implementation, run lint, typecheck, and start the dev server. Verify `/api/health` returns ok. Score yourself 1–5 against: (a) boots and runs without errors, (b) repo hygiene (scripts, configs), (c) TypeScript strictness, (d) Tailwind working, (e) clean layout. If score ≥4, mark done. If <4, fix issues, increment `retries`, and re-evaluate up to `max_retries`.",
+            "acceptance_criteria": "Project boots with `npm run dev`; `/api/health` returns `{ ok: true }`; `npm run build` succeeds; ESLint and Prettier configured; Tailwind styles render.",
+            "dependencies": [],
+            "status": "pending",
+            "tags": [
+                "setup",
+                "frontend",
+                "backend"
+            ],
+            "retries": 0,
+            "max_retries": 5,
+            "score": null
+        },
+        {
+            "name": "Implement Todo domain and API routes with validation",
+            "id": "feat-20",
+            "runner": "developer",
+            "prompt": "Create a Todo type `{ id: string; title: string; labels: string[]; createdAt: string }`. Implement an in-memory repository module with CRUD operations (note: include comments on swapping to a DB). Under `app/api/todos`, add route handlers:\n- `GET /api/todos?label=work&sort=label|createdAt` returns filtered/sorted todos.\n- `POST /api/todos` accepts `{ title, labels }` (zod-validated), returns created todo.\n- `DELETE /api/todos/:id` removes and returns 204.\nAdd basic unit tests for the repository and route handlers using Vitest (Node test env).\n\nSelf-review loop: Run tests and try requests via curl or REST client. Score 1–5 on: (a) schema validation and error handling, (b) API correctness (status codes, payloads), (c) code clarity and comments for future DB swap, (d) test coverage of happy/error paths, (e) typesafety. If score ≥4 mark done; else iterate, increment `retries`, and retry up to `max_retries`.",
+            "acceptance_criteria": "All route handlers exist; zod validates input with helpful errors; unit tests pass; filtering and sorting by label/createdAt work; consistent JSON responses and HTTP codes.",
+            "dependencies": [
+                "feat-10"
+            ],
+            "status": "pending",
+            "tags": [
+                "backend",
+                "api",
+                "testing"
+            ],
+            "retries": 0,
+            "max_retries": 5,
+            "score": null
+        },
+        {
+            "name": "Build UI for adding, deleting, and labeling todos with filter/sort",
+            "id": "feat-30",
+            "runner": "developer",
+            "prompt": "Create client components: (1) `TodoForm` to add a todo with title and comma-separated labels (chips UI), (2) `TodoList` rendering items with label badges and a delete button, (3) controls for filtering by label (select) and sorting (createdAt/label). Use Tailwind for styling, optimistic UI where reasonable, and call the API routes. Keep accessibility in mind (labels, focus states, keyboard actions). Add minimal state management within components; no external stores needed.\n\nSelf-review loop: Manually verify: add works, delete works, labels render, filter and sort work, empty states, error toasts. Lighthouse check for basic a11y. Score 1–5 on UX clarity, accessibility basics, correctness, and code readability. If <4, refine UI/UX and code, increment `retries`, and retry up to `max_retries`.",
+            "acceptance_criteria": "User can add a todo with labels; list updates immediately; user can delete; user can filter by a label and sort; basic responsive layout; no console errors.",
+            "dependencies": [
+                "feat-20"
+            ],
+            "status": "pending",
+            "tags": [
+                "frontend",
+                "ui",
+                "ux",
+                "accessibility"
+            ],
+            "retries": 0,
+            "max_retries": 5,
+            "score": null
+        },
+        {
+            "name": "Demo: Core features walkthrough",
+            "id": "feat-35",
+            "runner": "human",
+            "demo": true,
+            "prompt": "Run the app locally. Using the UI, add several todos with various labels, filter by a label, sort by created date and by label, and delete an item. Confirm behavior matches expectations and that API responses look correct in devtools.",
+            "acceptance_criteria": "Human validation that add/delete/label/filter/sort work reliably and UX is acceptable.",
+            "dependencies": [
+                "feat-30"
+            ],
+            "status": "pending",
+            "tags": [
+                "demo"
+            ],
+            "retries": 0,
+            "max_retries": 0,
+            "score": null
+        },
+        {
+            "name": "Containerize with production-ready Dockerfile",
+            "id": "feat-40",
+            "runner": "devops",
+            "prompt": "Create a multi-stage Dockerfile for Next.js: builder (installs deps, caches, builds) and runner (non-root user, `NODE_ENV=production`, copy `.next`, `public`, `package.json`, and production deps). Expose 3000 and set a HEALTHCHECK hitting `/api/health`. Add `.dockerignore`. Provide `docker build` and `docker run` example comments at top of Dockerfile. Ensure image size is optimized and uses `NODE_OPTIONS=--enable-source-maps` for debugging.",
+            "acceptance_criteria": "Image builds successfully; container starts with `npm run start` and serves app; HEALTHCHECK passes; final image size is reasonable (< 300MB if possible).",
+            "dependencies": [
+                "feat-30"
+            ],
+            "status": "pending",
+            "tags": [
+                "infra",
+                "docker",
+                "devops"
+            ],
+            "retries": 0,
+            "max_retries": 5,
+            "score": null
+        },
+        {
+            "name": "Configure Fly.io deployment",
+            "id": "feat-50",
+            "runner": "devops",
+            "prompt": "Create `fly.toml` compatible with the Dockerfile. Configure internal port 3000, HTTP service, health checks to `/api/health`, reasonable concurrency limits, auto-scaling disabled by default, and a `PRIMARY_REGION` placeholder. Include comments for running: `flyctl launch --no-deploy`, `flyctl deploy`, `flyctl open`. Add notes on setting secrets if needed and on ephemeral storage limitations (since in-memory todos are stateless).",
+            "acceptance_criteria": "`fly.toml` present with correct service/ports; `flyctl deploy` would work using the Dockerfile; health checks mapped; documentation comments included.",
+            "dependencies": [
+                "feat-40"
+            ],
+            "status": "pending",
+            "tags": [
+                "infra",
+                "flyio",
+                "devops"
+            ],
+            "retries": 0,
+            "max_retries": 5,
+            "score": null
+        },
+        {
+            "name": "Demo: Container & deployment readiness",
+            "id": "feat-55",
+            "runner": "human",
+            "demo": true,
+            "prompt": "Build and run the Docker image locally, verify `/api/health` passes and the UI works. Then run `flyctl launch --no-deploy` to validate config, and review the `fly.toml` service mapping and health checks.",
+            "acceptance_criteria": "Human validation that the container runs locally and Fly.io config is sane prior to deployment.",
+            "dependencies": [
+                "feat-50"
+            ],
+            "status": "pending",
+            "tags": [
+                "demo"
+            ],
+            "retries": 0,
+            "max_retries": 0,
+            "score": null
+        },
+        {
+            "name": "Author README with local, Docker, and Fly.io instructions",
+            "id": "feat-60",
+            "runner": "developer",
+            "prompt": "Write a concise README that documents: (1) prerequisites, (2) local setup (`npm i`, `npm run dev`, env vars if any), (3) API overview with sample curl commands, (4) Docker build/run commands, (5) Fly.io deployment steps and caveats about stateless in-memory storage, (6) how to run tests (Vitest) and any Playwright E2E if present. Include a project tree and pointers to where to swap the in-memory repo with a DB later.",
+            "acceptance_criteria": "README renders clearly in GitHub; steps are copy-pasteable and succeed; includes troubleshooting tips.",
+            "dependencies": [
+                "feat-50"
+            ],
+            "status": "pending",
+            "tags": [
+                "docs"
+            ],
+            "retries": 0,
+            "max_retries": 5,
+            "score": null
+        },
+        {
+            "name": "Add happy-path E2E tests for core flows",
+            "id": "feat-70",
+            "runner": "developer",
+            "prompt": "Set up Playwright with a single E2E spec covering: add a todo with two labels, filter by one label, verify list shrinks, sort toggles, delete the item. Run against the dev server. Integrate `npm run e2e`.\n\nSelf-review loop: Ensure tests are reliable (no flakiness), run in CI-like headless mode, and are independent. Score 1–5 on coverage of core flows and reliability. If <4, stabilize tests, increment `retries`, and retry up to `max_retries`.",
+            "acceptance_criteria": "`npm run e2e` passes locally; test is deterministic and validates UI behaviors.",
+            "dependencies": [
+                "feat-30"
+            ],
+            "status": "pending",
+            "tags": [
+                "testing",
+                "e2e",
+                "frontend"
+            ],
+            "retries": 0,
+            "max_retries": 5,
+            "score": null
+        }
+    ]
+}
+
