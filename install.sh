@@ -185,7 +185,6 @@ git config --global alias.commit-auto "!cd \$(git rev-parse --show-toplevel) && 
 git config --global alias.ca "!git commit-auto"
 git config --global alias.pr "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-auto.py"
 git config --global alias.feature-finish "!f() { echo '🔄 Finalisation de la feature...'; git fetch origin develop && git rebase origin/develop && git push --force-with-lease origin \$(git branch --show-current) && echo '✅ Feature prête pour PR vers develop'; }; f"
-git config --global alias.pr-create-auto "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-create-auto.py"
 git config --global alias.deploy "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-release-auto.py"
 git config --global alias.cleanup-branches "!f() { echo '🧹 Nettoyage des branches locales...'; git fetch --prune origin; git branch --merged develop | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; git branch --merged main | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; echo '✅ Branches mergées supprimées'; }; f"
 
