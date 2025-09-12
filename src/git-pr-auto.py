@@ -35,7 +35,8 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = 
     print(f"   Base: {base_branch}")
     if pr_data.get('labels'):
         print(f"   Labels: {', '.join(pr_data['labels'])}")
-    print(f"\n{pr_data['body']}")
+    print(f"
+{pr_data['body']}")
     
     # Demande confirmation
     if not force:
