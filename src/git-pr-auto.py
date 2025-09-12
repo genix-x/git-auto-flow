@@ -85,18 +85,10 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = 
                 subprocess.run(merge_cmd, capture_output=True, text=True, check=True)
                 print("✅ PR mergée avec succès")
 
-                # Stash des changements locaux pour permettre le checkout
-                print("📦 Stashing local changes...")
-                subprocess.run(['git', 'stash'], check=True, capture_output=True)
-
                 # Retourner sur la branche de base et pull
                 print(f"🔄 Retour sur la branche '{base_branch}'...")
                 subprocess.run(['git', 'checkout', base_branch], check=True)
                 subprocess.run(['git', 'pull'], check=True)
-
-                # Réappliquer les changements mis en stash
-                print("📦 Re-applying stashed changes...")
-                subprocess.run(['git', 'stash', 'pop'], capture_output=True)
                 
                 # Supprimer la branche si demandé
                 if delete_branch:
