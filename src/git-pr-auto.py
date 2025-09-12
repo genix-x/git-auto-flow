@@ -16,7 +16,7 @@ from git_utils import GitUtils
 from debug_logger import debug_command, set_global_debug_mode
 
 
-def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = False) -> str:
+def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = False, auto_merge: bool = False) -> str:
     """
     Execute gh pr create avec les données automatiques
     
@@ -24,6 +24,7 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = 
         pr_data: Dict contenant title, body, labels, etc.
         base_branch: La branche cible pour la PR
         force: Si True, sauter la confirmation de création
+        auto_merge: Si True, merger la PR automatiquement
         
     Returns:
         str: L'URL de la PR créée
@@ -69,6 +70,31 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = 
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         pr_url = result.stdout.strip()
         print(f"✅ PR créée avec succès: {pr_url}")
+
+        # Auto-merge si demandé
+        if auto_merge:
+            print("🔄 Merge automatique de la PR...")
+            try:
+                # Attendre un peu que GitHub traite la PR
+                import time
+                time.sleep(2)
+                
+                # Merger la PR avec squash (plus propre)
+                merge_cmd = ['gh', 'pr', 'merge', '--squash', '--delete-branch']
+                debug_command(merge_cmd, "merge PR")
+                
+                merge_result = subprocess.run(merge_cmd, capture_output=True, text=True, check=True)
+                print("✅ PR mergée et branche supprimée automatiquement")
+                
+                # Retourner sur develop et pull les changements
+                print("🔄 Retour sur la branche principale...")
+                subprocess.run(['git', 'checkout', base_branch], check=True)
+                subprocess.run(['git', 'pull'], check=True)
+                print(f"✅ Branche {base_branch} mise à jour")
+                
+            except subprocess.CalledProcessError as e:
+                print(f"⚠️  Erreur lors du merge automatique: {e.stderr if e.stderr else e}")
+                print(f"💡 PR créée mais non mergée: {pr_url}")
         
         return pr_url
         
@@ -78,6 +104,7 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = 
         else:
             print(f"❌ Erreur lors de la création de la PR: {e}")
         sys.exit(1)
+
 
 
 def check_gh_cli():
@@ -132,6 +159,11 @@ def main():
         '--force', '-f',
         action='store_true',
         help='Forcer la création de la PR sans confirmation'
+    )
+    parser.add_argument(
+        '--merge', '-m',
+        action='store_true',
+        help='Merger automatiquement la PR après création'
     )
     
     args = parser.parse_args()
@@ -206,8 +238,16 @@ def main():
         if args.draft:
             pr_data['draft'] = True
         
+        # Validation sécurité pour auto-merge
+        if args.merge and not args.force:
+            print("⚠️  Auto-merge activé - la PR sera mergée automatiquement")
+            response = input("✅ Continuer avec le merge automatique? (y/N): ").strip().lower()
+            if response not in ['y', 'yes', 'o', 'oui']:
+                print("❌ Opération annulée")
+                sys.exit(1)
+
         # Crée la PR
-        pr_url = run_gh_pr_create(pr_data, args.base, force=args.force)
+        pr_url = run_gh_pr_create(pr_data, args.base, force=args.force, auto_merge=args.merge)
         
         if pr_url:
             print(f"\n🎉 Success! PR disponible: {pr_url}")

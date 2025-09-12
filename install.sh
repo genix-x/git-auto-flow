@@ -1,6 +1,22 @@
 #!/bin/bash
 # Git Auto-Flow - Installation des alias et configuration
 
+# Variables pour mode non-interactif
+NON_INTERACTIVE=false
+
+# Parse des arguments
+for arg in "$@"; do
+    case $arg in
+        --non-interactive|-f)
+        NON_INTERACTIVE=true
+        shift
+        ;;
+        *)
+        # Argument inconnu
+        ;;
+    esac
+done
+
 set -e
 
 # Couleurs pour les messages
@@ -14,6 +30,8 @@ NC='\033[0m' # No Color
 INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo -e "${BLUE}🚀 Git Auto-Flow - Installation Globale${NC}"
+echo "Usage: $0 [--non-interactive|-f]"
+echo "  --non-interactive, -f    Installation automatique sans interaction"
 echo -e "${BLUE}=================================${NC}"
 echo -e "📍 Répertoire d'installation: ${INSTALL_DIR}"
 echo ""
@@ -205,35 +223,78 @@ if [ -f "package.json" ]; then
     fi
 fi
 
-# 6. Configuration interactive des clés API  
-echo ""
+# 🔑 Configuration des clés API
 echo -e "${BLUE}🔑 Configuration des clés API...${NC}"
 
 GLOBAL_ENV_FILE="$HOME/.env.gitautoflow"
+
 if [ -f "$GLOBAL_ENV_FILE" ]; then
     echo -e "${GREEN}✅ Configuration API trouvée: $GLOBAL_ENV_FILE${NC}"
 else
-    echo -e "${YELLOW}💡 Configurons vos clés API (optionnel):${NC}"
-    echo ""
-    echo -e "${BLUE}🤖 Gemini API (Google AI Studio):${NC}"
-    echo -e "   🔗 ${YELLOW}https://makersuite.google.com/app/apikey${NC}"
-    read -p "Entrez votre clé Gemini API (ou ENTER pour ignorer): " GEMINI_KEY
-    echo ""
-    echo -e "${BLUE}⚡ Groq API (Fallback gratuit):${NC}"
-    echo -e "   🔗 ${YELLOW}https://console.groq.com/keys${NC}"
-    read -p "Entrez votre clé Groq API (ou ENTER pour ignorer): " GROQ_KEY
+    if [ "$NON_INTERACTIVE" = true ]; then
+        # Mode non-interactif : récupérer depuis les variables d'environnement
+        echo -e "${YELLOW}🤖 Mode non-interactif : configuration via variables d'environnement${NC}"
+        
+        GEMINI_KEY="${GEMINI_API_KEY:-}"
+        GROQ_KEY="${GROQ_API_KEY:-}"
+        
+        # Validation : au moins une clé doit être présente
+        if [ -z "$GEMINI_KEY" ] && [ -z "$GROQ_KEY" ]; then
+            echo -e "${RED}❌ Erreur: Aucune clé API trouvée en mode non-interactif${NC}"
+            echo -e "${YELLOW}💡 Définissez les variables d'environnement avant l'installation :${NC}"
+            echo -e "   export GEMINI_API_KEY=\"votre_clé_gemini\""
+            echo -e "   export GROQ_API_KEY=\"votre_clé_groq\""
+            echo -e "${YELLOW}ℹ️  Au moins une des deux clés est requise${NC}"
+            exit 1
+        fi
+        
+        if [ -n "$GEMINI_KEY" ]; then
+            echo -e "${GREEN}✅ Clé Gemini API trouvée${NC}"
+        else
+            echo -e "${YELLOW}⚠️  Clé Gemini API non définie${NC}"
+        fi
+        
+        if [ -n "$GROQ_KEY" ]; then
+            echo -e "${GREEN}✅ Clé Groq API trouvée${NC}"
+        else
+            echo -e "${YELLOW}⚠️  Clé Groq API non définie${NC}"
+        fi
 
-    {
-        echo "# Git Auto-Flow - Configuration des API"
-        echo "# Généré automatiquement le $(date)"
+        {
+            echo "# Git Auto-Flow - Configuration des API"
+            echo "# Généré automatiquement le $(date)"
+            echo ""
+            echo "GEMINI_API_KEY=${GEMINI_KEY}"
+            echo "GROQ_API_KEY=${GROQ_KEY}"
+        } > "$GLOBAL_ENV_FILE"
+
+        echo -e "${GREEN}✅ Configuration API créée en mode non-interactif${NC}"
+        
+    else
+        # Mode interactif (comportement original)
+        echo -e "${YELLOW}💡 Configurons vos clés API (optionnel):${NC}"
         echo ""
-        echo "GEMINI_API_KEY=${GEMINI_KEY}"
-        echo "GROQ_API_KEY=${GROQ_KEY}"
-    } > "$GLOBAL_ENV_FILE"
+        echo -e "${BLUE}🤖 Gemini API (Google AI Studio):${NC}"
+        echo -e "   🔗 ${YELLOW}https://makersuite.google.com/app/apikey${NC}"
+        read -p "Entrez votre clé Gemini API (ou ENTER pour ignorer): " GEMINI_KEY
+        echo ""
+        echo -e "${BLUE}⚡ Groq API (Fallback gratuit):${NC}"
+        echo -e "   🔗 ${YELLOW}https://console.groq.com/keys${NC}"
+        read -p "Entrez votre clé Groq API (ou ENTER pour ignorer): " GROQ_KEY
 
-    echo -e "${GREEN}✅ Clés API configurées dans $GLOBAL_ENV_FILE${NC}"
+        {
+            echo "# Git Auto-Flow - Configuration des API"
+            echo "# Généré automatiquement le $(date)"
+            echo ""
+            echo "GEMINI_API_KEY=${GEMINI_KEY}"
+            echo "GROQ_API_KEY=${GROQ_KEY}"
+        } > "$GLOBAL_ENV_FILE"
+
+        echo -e "${GREEN}✅ Clés API configurées dans $GLOBAL_ENV_FILE${NC}"
+    fi
     echo ""
 fi
+
 
 # 7. Instructions finales
 echo ""
