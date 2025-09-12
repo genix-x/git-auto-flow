@@ -223,8 +223,7 @@ if [ -f "package.json" ]; then
     fi
 fi
 
-# 6. Configuration interactive des clés API  
-echo ""
+# 🔑 Configuration des clés API
 echo -e "${BLUE}🔑 Configuration des clés API...${NC}"
 
 GLOBAL_ENV_FILE="$HOME/.env.gitautoflow"
@@ -233,11 +232,34 @@ if [ -f "$GLOBAL_ENV_FILE" ]; then
     echo -e "${GREEN}✅ Configuration API trouvée: $GLOBAL_ENV_FILE${NC}"
 else
     if [ "$NON_INTERACTIVE" = true ]; then
-        # Mode non-interactif : utiliser les variables d'environnement
+        # Mode non-interactif : récupérer depuis les variables d'environnement
         echo -e "${YELLOW}🤖 Mode non-interactif : configuration via variables d'environnement${NC}"
+        
         GEMINI_KEY="${GEMINI_API_KEY:-}"
         GROQ_KEY="${GROQ_API_KEY:-}"
         
+        # Validation : au moins une clé doit être présente
+        if [ -z "$GEMINI_KEY" ] && [ -z "$GROQ_KEY" ]; then
+            echo -e "${RED}❌ Erreur: Aucune clé API trouvée en mode non-interactif${NC}"
+            echo -e "${YELLOW}💡 Définissez les variables d'environnement avant l'installation :${NC}"
+            echo -e "   export GEMINI_API_KEY=\"votre_clé_gemini\""
+            echo -e "   export GROQ_API_KEY=\"votre_clé_groq\""
+            echo -e "${YELLOW}ℹ️  Au moins une des deux clés est requise${NC}"
+            exit 1
+        fi
+        
+        if [ -n "$GEMINI_KEY" ]; then
+            echo -e "${GREEN}✅ Clé Gemini API trouvée${NC}"
+        else
+            echo -e "${YELLOW}⚠️  Clé Gemini API non définie${NC}"
+        fi
+        
+        if [ -n "$GROQ_KEY" ]; then
+            echo -e "${GREEN}✅ Clé Groq API trouvée${NC}"
+        else
+            echo -e "${YELLOW}⚠️  Clé Groq API non définie${NC}"
+        fi
+
         {
             echo "# Git Auto-Flow - Configuration des API"
             echo "# Généré automatiquement le $(date)"
@@ -245,8 +267,9 @@ else
             echo "GEMINI_API_KEY=${GEMINI_KEY}"
             echo "GROQ_API_KEY=${GROQ_KEY}"
         } > "$GLOBAL_ENV_FILE"
-        
+
         echo -e "${GREEN}✅ Configuration API créée en mode non-interactif${NC}"
+        
     else
         # Mode interactif (comportement original)
         echo -e "${YELLOW}💡 Configurons vos clés API (optionnel):${NC}"
@@ -271,6 +294,7 @@ else
     fi
     echo ""
 fi
+
 
 # 7. Instructions finales
 echo ""
