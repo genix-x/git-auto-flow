@@ -224,13 +224,6 @@ class GitCreateTickets:
                 for dep_position in issue['dependencies']:
                     dep_github_number = position_to_github_number.get(dep_position)
                     if dep_github_number:
-                        label_name = f"blocked_by_#{dep_github_number}"
-                        print(f"  - Ajout du label '{label_name}' à l'issue #{issue['github_number']}")
-                        self._ensure_label_exists(label_name, color='d73a4a')
-                        edit_cmd = ['gh', 'issue', 'edit', issue['github_number'], *repo_arg, '--add-label', label_name]
-                        debug_command(edit_cmd, f"add dependency label to #{issue['github_number']}")
-                        subprocess.run(edit_cmd, capture_output=True, text=True)
-
                         self._add_dependency_api(issue['github_number'], dep_github_number)
                     else:
                         print(f"    ⚠️  Dépendance non trouvée pour la position: {dep_position}")

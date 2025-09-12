@@ -16,7 +16,7 @@ from git_utils import GitUtils
 from debug_logger import debug_command, set_global_debug_mode
 
 
-def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = False, auto_merge: bool = False) -> str:
+def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = False, auto_merge: bool = False, delete_branch: bool = False) -> str:
     """
     Execute gh pr create avec les données automatiques
     
@@ -25,6 +25,7 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = 
         base_branch: La branche cible pour la PR
         force: Si True, sauter la confirmation de création
         auto_merge: Si True, merger la PR automatiquement
+        delete_branch: Si True et si auto_merge est activé, supprime la branche après le merge
         
     Returns:
         str: L'URL de la PR créée
@@ -52,9 +53,8 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = 
         '--body', pr_data['body']
     ]
     
-    # Ajoute les labels si présents (ignore les erreurs de labels inexistants)
+    # Ajoute les labels si présents
     if pr_data.get('labels'):
-        # Liste des labels connus qui existent sur le repo
         valid_labels = ['enhancement', 'bug', 'documentation', 'feature']
         for label in pr_data['labels']:
             if label in valid_labels:
@@ -74,26 +74,41 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = 
         # Auto-merge si demandé
         if auto_merge:
             print("🔄 Merge automatique de la PR...")
+            current_branch = GitUtils.get_current_branch()
             try:
-                # Attendre un peu que GitHub traite la PR
                 import time
                 time.sleep(2)
                 
-                # Merger la PR avec squash (plus propre)
-                merge_cmd = ['gh', 'pr', 'merge', '--squash', '--delete-branch']
+                merge_cmd = ['gh', 'pr', 'merge', pr_url, '--squash']
                 debug_command(merge_cmd, "merge PR")
                 
-                merge_result = subprocess.run(merge_cmd, capture_output=True, text=True, check=True)
-                print("✅ PR mergée et branche supprimée automatiquement")
-                
-                # Retourner sur develop et pull les changements
-                print("🔄 Retour sur la branche principale...")
+                subprocess.run(merge_cmd, capture_output=True, text=True, check=True)
+                print("✅ PR mergée avec succès")
+
+                # Stash des changements locaux pour permettre le checkout
+                print("📦 Stashing local changes...")
+                subprocess.run(['git', 'stash'], check=True, capture_output=True)
+
+                # Retourner sur la branche de base et pull
+                print(f"🔄 Retour sur la branche '{base_branch}'...")
                 subprocess.run(['git', 'checkout', base_branch], check=True)
                 subprocess.run(['git', 'pull'], check=True)
-                print(f"✅ Branche {base_branch} mise à jour")
+
+                # Réappliquer les changements mis en stash
+                print("📦 Re-applying stashed changes...")
+                subprocess.run(['git', 'stash', 'pop'], capture_output=True)
                 
+                # Supprimer la branche si demandé
+                if delete_branch:
+                    print(f"🗑️ Suppression de la branche '{current_branch}'...")
+                    subprocess.run(['git', 'branch', '-D', current_branch], check=True)
+                    subprocess.run(['git', 'push', 'origin', '--delete', current_branch], check=True)
+                    print(f"✅ Branche '{current_branch}' supprimée (local et remote)")
+                else:
+                    print(f"✅ Branche '{base_branch}' mise à jour. La branche '{current_branch}' est conservée.")
+
             except subprocess.CalledProcessError as e:
-                print(f"⚠️  Erreur lors du merge automatique: {e.stderr if e.stderr else e}")
+                print(f"⚠️  Erreur lors du merge ou de la suppression de branche: {e.stderr if e.stderr else e}")
                 print(f"💡 PR créée mais non mergée: {pr_url}")
         
         return pr_url
@@ -106,28 +121,20 @@ def run_gh_pr_create(pr_data: dict, base_branch: str = "develop", force: bool = 
         sys.exit(1)
 
 
-
 def check_gh_cli():
     """Vérifie que GitHub CLI est installé et authentifié"""
     try:
-        # Vérifie que gh est installé
         version_cmd = ['gh', '--version']
         debug_command(version_cmd, "check gh version")
-            
         subprocess.run(version_cmd, capture_output=True, check=True)
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("❌ GitHub CLI (gh) n'est pas installé")
-        print("💡 Installation:")
-        print("   macOS: brew install gh")
-        print("   Ubuntu/Debian: sudo apt install gh")
-        print("   Ou: https://github.com/cli/cli/releases")
+        print("💡 Installation: brew install gh")
         sys.exit(1)
     
     try:
-        # Vérifie l'authentification
         auth_cmd = ['gh', 'auth', 'status']
         debug_command(auth_cmd, "check gh auth")
-            
         subprocess.run(auth_cmd, capture_output=True, check=True)
     except subprocess.CalledProcessError:
         print("❌ GitHub CLI n'est pas authentifié")
@@ -165,40 +172,37 @@ def main():
         action='store_true',
         help='Merger automatiquement la PR après création'
     )
+    parser.add_argument(
+        '--delete-branch', '-D',
+        action='store_true',
+        help='Supprimer la branche locale et remote après un merge réussi (nécessite --merge)'
+    )
     
     args = parser.parse_args()
     
-    # Configuration du logger global
     set_global_debug_mode(args.debug)
     
-    # Vérifie les prérequis
     if not GitUtils.is_git_repository():
         print("❌ Pas dans un repository Git")
         sys.exit(1)
     
     check_gh_cli()
     
-    # Vérifie qu'il y a des changements dans la branche
     current_branch = GitUtils.get_current_branch()
     if current_branch == args.base:
         print(f"❌ Vous êtes sur la branche cible '{args.base}'")
-        print("💡 Créez une feature branch d'abord")
         sys.exit(1)
     
     if not GitUtils.has_branch_changes(args.base):
         print(f"❌ Aucun changement dans la branche courante vs {args.base}")
-        print("💡 Effectuez des commits d'abord")
         sys.exit(1)
     
-    # Vérifie si la branche est à jour et rebase si nécessaire
     print(f"🔄 Vérification si la branche est à jour avec {args.base}...")
     if not GitUtils.is_branch_up_to_date(args.base):
         print(f"⚠️  Branche en retard sur {args.base}, rebase automatique...")
         try:
             GitUtils.rebase_on_target(args.base)
             print("✅ Rebase terminé avec succès")
-            
-            # Push après rebase
             print("📤 Push de la branche rebasée...")
             GitUtils.push_current_branch(force_with_lease=True)
             print("✅ Push terminé")
@@ -207,47 +211,43 @@ def main():
             sys.exit(1)
     else:
         print(f"✅ Branche à jour avec {args.base}")
-        
-        # S'assurer que la branche est pushée
         try:
             print("📤 Vérification du push...")
             GitUtils.push_current_branch()
             print("✅ Push vérifié")
         except RuntimeError:
-            # Si le push échoue, c'est probablement que la branche est déjà pushée
             pass
     
     try:
-        # Initialise le gestionnaire multi-IA
         ai = AIProvider()
         print(ai.get_status())
         
-        # Récupère les changements de la branche
         print(f"🔍 Analyse des changements vs {args.base}...")
         diff = GitUtils.get_branch_diff(args.base)
-        files_list = GitUtils.get_branch_files(args.base)
-        commits = GitUtils.get_commit_messages(args.base)
-        
-        # Convertit la liste de fichiers en string pour l'IA
-        files = '\n'.join(files_list)
+        files = '\n'.join(GitUtils.get_branch_files(args.base))
         
         print("🤖 Génération de la PR avec Multi-IA...")
         pr_data = ai.analyze_for_pr(diff, files, args.base)
         
-        # Force le mode draft si demandé
         if args.draft:
             pr_data['draft'] = True
         
-        # Validation sécurité pour auto-merge
         if args.merge and not args.force:
             print("⚠️  Auto-merge activé - la PR sera mergée automatiquement")
-            response = input("✅ Continuer avec le merge automatique? (y/N): ").strip().lower()
+            if args.delete_branch:
+                print("🗑️  L'option de suppression de branche est également activée.")
+            response = input("✅ Continuer? (y/N): ").strip().lower()
             if response not in ['y', 'yes', 'o', 'oui']:
                 print("❌ Opération annulée")
                 sys.exit(1)
 
-        # Crée la PR
-        pr_url = run_gh_pr_create(pr_data, args.base, force=args.force, auto_merge=args.merge)
+        pr_url = run_gh_pr_create(
+            pr_data, 
+            args.base, 
+            force=args.force, 
+            auto_merge=args.merge,
+            delete_branch=args.delete_branch
+        )
         
         if pr_url:
             print(f"\n🎉 Success! PR disponible: {pr_url}")
