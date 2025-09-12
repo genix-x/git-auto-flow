@@ -7,6 +7,29 @@ Simplifiez votre workflow Git avec des commits conventionnels, des PRs généré
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Version](https://img.shields.io/badge/version-v0.15.0-blue.svg)](https://github.com/genix-x/git-auto-flow/releases/latest)
 
+## 🤖 Usine Numérique AIOps - De l'Idée à la Production en 3 Minutes
+
+**AIOps = Intelligence Artificielle + Automatisation DevOps.** Git Auto-Flow transforme votre pipeline en un cerveau autonome qui code, teste et déploie.
+
+**⚡ Workflow AIOps Ultra-Rapide (Challenge 3 min)**
+```bash
+# 1. Setup (30s)
+git clone https://github.com/genix-x/git-auto-flow.git && cd git-auto-flow && ./install.sh
+git repo-create mon-projet --force
+
+# 2. Développement (60s)
+git feature-start ma-feature
+# ... Votre code ici ...
+
+# 3. Déploiement (90s)
+git ca --force                     # Commit IA + Scan Sécurité
+git pr --force --auto-merge        # PR auto-mergée vers develop
+git deploy --force                 # Release de develop vers main (auto-tag)
+```
+**Architecture GitFlow AIOps :** `main` ← `develop` ← `feature/*`
+
+**✅ ROI Immédiat : 95% de Temps Gagné.**
+
 ## 🎯 Fonctionnalités Actuelles
 
 ### ✅ Multi-IA avec Fallback Planifié
