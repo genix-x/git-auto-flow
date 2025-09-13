@@ -245,11 +245,6 @@ GITHUB_BASE_URL=https://github.com/genix-x/
 - v0.10.0 : Création tickets avec dépendances GitHub API
 - v0.6.0 : Création automatique tickets depuis meetings
 
-### 🔮 **À Venir**
-- 🚀 v0.16.0 : Support complet Groq API (fallback multi-IA)
-- 📋 v0.17.0 : Templates de projets avancés
-- 🖥️ v0.18.0 : Dashboard web de gestion projets
-
 ---
 
 ## 🎉 Avantages
