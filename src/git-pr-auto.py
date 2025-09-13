@@ -169,6 +169,11 @@ def main():
         action='store_true',
         help='Supprimer la branche locale et remote après un merge réussi (nécessite --merge)'
     )
+    parser.add_argument(
+        '--closes',
+        type=int,
+        help='Numéro de l\'issue à fermer automatiquement avec la PR'
+    )
     
     args = parser.parse_args()
     
@@ -223,6 +228,10 @@ def main():
         
         if args.draft:
             pr_data['draft'] = True
+
+        # Ajouter le closes si spécifié
+        if args.closes:
+            pr_data['body'] += f"\n\nCloses #{args.closes}"
         
         if args.merge and not args.force:
             print("⚠️  Auto-merge activé - la PR sera mergée automatiquement")
