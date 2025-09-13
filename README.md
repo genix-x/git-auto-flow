@@ -1,3 +1,80 @@
+License: MIT Python 3.8+ Version
+
+ Usine Numérique AIOps - De l'Idée à la Production en 3 Minutes
+AIOps = Intelligence Artificielle + Automatisation DevOps. Git Auto-Flow transforme votre pipeline en un cerveau autonome qui code, teste et déploie.
+
+⚡ Workflow AIOps Ultra-Rapide (Challenge 3 min)
+
+# 1. Setup (30s)
+git clone https://github.com/genix-x/git-auto-flow.git && cd git-auto-flow && ./install.sh
+git repo-create mon-projet --force
+
+# 2. Développement (60s)
+git feature-start ma-feature
+# ... Votre code ici ...
+
+# 3. Déploiement (90s)
+git ca --force                     # Commit IA + Scan Sécurité
+git pr --force --auto-merge        # PR auto-mergée vers develop
+git deploy --force                 # Release de develop vers main (auto-tag)
+Architecture GitFlow AIOps : main ← develop ← feature/*
+
+✅ ROI Immédiat : 95% de Temps Gagné.
+
+Création Automatique de Tickets
+✅ Génération d'Issues depuis Compte-Rendu
+# Analyser un CR de réunion et créer les tickets GitHub
+git create-tickets meeting-notes.md
+
+# Pour un autre repository
+git create-tickets notes.md --repo genix-x/mon-projet
+
+# Mode debug
+git create-tickets notes.md --debug
+Fonctionnalités :
+
+Analyse IA du compte-rendu de réunion
+Extraction automatique des tâches et priorités
+️ Création des labels GitHub (priority-high, enhancement, etc.)
+Gestion des dépendances entre tickets
+⏱️ Estimation automatique en jours
+Confirmation interactive avant création
+Exemple de fichier meeting-notes.md :
+
+# Réunion Planning Sprint
+
+## Fonctionnalités à développer
+- Système d'authentification avec OAuth
+- Dashboard utilisateur avec stats
+- API REST pour mobile
+- Tests unitaires complets
+
+## Points bloquants
+- L'API dépend de l'auth
+- Tests dépendent de l'API
+Résultat : 4 issues GitHub créées avec labels, priorités et dépendances !
+
+⚡ Workflow Ultra-Automatisé v0.15.0
+Depuis Meeting → Code Déployé
+#  1. Créer projet complet depuis 0
+git repo-create mon-super-projet    # Repo + GitFlow + README + v0.1.0
+
+#  2. Générer tickets depuis CR réunion  
+git create-tickets meeting-notes.md # IA → Issues GitHub avec dépendances
+
+#  3. Dev cycle ultra-rapide
+git feature-start auth-system       # Feature branch
+git ca                              # Commit IA + Gitleaks scan
+git pr --auto-merge                 # PR auto-merged après CI ✅
+
+# ♻️ 4. Répéter pour chaque ticket
+git feature-start dashboard && git ca && git pr --force
+
+#  5. Release automatique
+git checkout develop  
+git pr --base main --auto-merge     # → Auto-release v0.2.0 
+Résultat : De la réunion au code en prod en quelques minutes ! ⚡
+
 # 🤖 Git Auto-Flow
 **Automatisation Git intelligente avec Multi-IA (Gemini + Groq) et Gestion de Projets GitHub**
 
@@ -8,31 +85,13 @@ Simplifiez votre workflow Git avec des commits conventionnels, des PRs généré
 [![Version](https://img.shields.io/badge/version-v0.15.0-blue.svg)](https://github.com/genix-x/git-auto-flow/releases/latest)
 
 ## Sommaire
-- [Challenge 3 Minutes : Meeting → Production](#challenge-3-minutes--meeting--production)
 - [Fonctionnalités Core](#fonctionnalités-core)
   - [Sécurité & Qualité Built-in](#sécurité--qualité-built-in)
 - [Installation & Setup](#-installation--setup)
 - [Guide Détaillé](#guide-détaillé)
-  - [Project Management Avancé (`git create-tickets`)](#project-management-avancé-git-create-tickets)
   - [Exemples de Workflow](#exemples-de-workflow)
 - [Configuration (.env.gitautoflow)](#️-configuration-envgitautoflow)
 - [Roadmap](#-roadmap)
-
-## Challenge 3 Minutes : Meeting → Production
-
-```bash
-#  Setup + Planification (60s)
-git repo-create mon-projet --force
-git create-tickets meeting-notes.md
-
-# ⚡ Développement (90s/feature)  
-git feature-start auth-system
-git ca --force && git pr --force --auto-merge --closes 42
-
-#  Production (30s)
-git deploy --force  # v1.1.0 → main
-```
-**ROI : 95% temps gagné | Sécurité : 100% commits scannés**
 
 ## Fonctionnalités Core
 
@@ -62,24 +121,6 @@ git clone https://github.com/genix-x/git-auto-flow.git && cd git-auto-flow && ./
 Le script configure Gitleaks, les dépendances Python et les alias Git automatiquement.
 
 ## Guide Détaillé
-
-### Project Management Avancé (`git create-tickets`)
-
-Transformez un compte-rendu de réunion en issues GitHub structurées en une seule commande.
-
-```bash
-# Analyser un fichier et créer les issues dans le repo courant
-git create-tickets meeting-notes.md
-
-# Spécifier un autre repo
-git create-tickets notes.md --repo my-org/another-repo
-```
-
-L'IA se charge de :
-- **Extraire** les tâches, priorités et dépendances.
-- **Créer** les labels (`priority-high`, `bug`, `enhancement`).
-- **Lier** les issues entre elles avec les dépendances GitHub.
-- **Estimer** le temps de développement en jours.
 
 ### Exemples de Workflow
 
