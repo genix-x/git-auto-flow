@@ -48,6 +48,7 @@ git deploy --force                 # Release de develop vers main (auto-tag)
 - Auto-merge optionnel avec `--auto-merge`
 - Mode force avec `--force` (skip confirmation)
 - Contrôle suppression branches avec `--no-auto-delete`
+- **Fermeture auto des issues avec `--closes <issue_number>`**
 - Titre et description générés par IA
 - Support mode draft et labels
 
@@ -127,10 +128,10 @@ git repo-create mon-super-projet    # Repo + GitFlow + README + v0.1.0
 #  2. Générer tickets depuis CR réunion  
 git create-tickets meeting-notes.md # IA → Issues GitHub avec dépendances
 
-#  3. Dev cycle ultra-rapide
+#  3. Dev cycle ultra-rapide (pour l'issue #42)
 git feature-start auth-system       # Feature branch
 git ca                              # Commit IA + Gitleaks scan
-git pr --auto-merge                 # PR auto-merged après CI ✅
+git pr --auto-merge --closes 42     # PR qui ferme l'issue #42 en mergant ✅
 
 # ♻️ 4. Répéter pour chaque ticket
 git feature-start dashboard && git ca && git pr --force
