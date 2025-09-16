@@ -1,4 +1,5 @@
 # Git Auto-Flow Dependencies
 google-generativeai>=0.3.0
 python-dotenv>=1.0.0
-groq>=0.4.0rich>=13.0.0
+groq>=0.4.0
+rich>=13.0.0
