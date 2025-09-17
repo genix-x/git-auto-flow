@@ -37,7 +37,7 @@ echo -e "📍 Répertoire d'installation: ${INSTALL_DIR}"
 echo ""
 
 # 1. Vérification des prérequis
-echo -e "${BLUE}🔍 Vérification des prérequis...${NC}"
+echo -e "${BLUE}�� Vérification des prérequis...${NC}"
 
 # Python 3
 if ! command -v python3 &> /dev/null; then
@@ -71,10 +71,14 @@ if ! command -v gh &> /dev/null; then
     echo -e "   Ubuntu: sudo apt install gh"
     echo -e "   Ou: https://github.com/cli/cli/releases"
     echo ""
-    read -p "Continuer sans GitHub CLI? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
+    if [ "$NON_INTERACTIVE" = true ]; then
+        echo -e "${YELLOW}🤖 Mode non-interactif, continuation sans GitHub CLI.${NC}"
+    else
+        read -p "Continuer sans GitHub CLI? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
     fi
 else
     echo -e "${GREEN}✅ GitHub CLI trouvé: $(gh --version | head -n1)${NC}"
@@ -128,92 +132,107 @@ install_python_deps() {
 if install_python_deps; then
     echo -e "${GREEN}✅ Dépendances Python configurées${NC}"
 else
-    echo -e "${YELLOW}⚠️  Continuez avec installation manuelle si nécessaire${NC}"
+    echo -e "${YELLOW}⚠️  Continuez avec installation manuelle des dépendances Python si nécessaire${NC}"
 fi
 
 echo ""
 
 # 3. Installation gitleaks pour sécurité
 echo -e "${BLUE}📦 Installation gitleaks (sécurité)...${NC}"
-if command -v brew &> /dev/null; then
-    if ! command -v gitleaks &> /dev/null; then
-        brew install gitleaks --quiet 2>/dev/null && echo -e "${GREEN}✅ gitleaks installé via brew${NC}" || echo -e "${YELLOW}⚠️  Installation gitleaks via brew échouée${NC}"
-    else
+
+install_gitleaks() {
+    if command -v gitleaks &> /dev/null; then
         echo -e "${GREEN}✅ gitleaks déjà installé${NC}"
+        return 0
     fi
-elif command -v curl &> /dev/null; then
-    if [[ ! -f "${INSTALL_DIR}/bin/gitleaks" ]]; then
-        echo "📥 Téléchargement gitleaks depuis GitHub..."
+
+    # Essayer brew d'abord (macOS/Linux)
+    if command -v brew &> /dev/null; then
+        if brew install gitleaks --quiet 2>/dev/null; then
+            echo -e "${GREEN}✅ gitleaks installé via brew${NC}"
+            return 0
+        fi
+    fi
+
+    # Installation manuelle via GitHub releases
+    if command -v curl &> /dev/null; then
+        echo "�� Téléchargement gitleaks depuis GitHub..."
+        
         GITLEAKS_VERSION="8.18.4"
         OS=$(uname -s | tr '[:upper:]' '[:lower:]')
         ARCH=$(uname -m)
-        if [[ "$ARCH" == "x86_64" ]]; then ARCH="amd64"; fi
-        if [[ "$ARCH" == "arm64" ]] && [[ "$OS" == "darwin" ]]; then ARCH="arm64"; fi
         
-        curl -L "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_${OS}_${ARCH}.tar.gz" -o /tmp/gitleaks.tar.gz 2>/dev/null && {
-            tar -xzf /tmp/gitleaks.tar.gz -C /tmp/ 2>/dev/null && {
-                mkdir -p "${INSTALL_DIR}/bin"
-                mv /tmp/gitleaks "${INSTALL_DIR}/bin/"
-                chmod +x "${INSTALL_DIR}/bin/gitleaks"
-                rm /tmp/gitleaks.tar.gz
-                echo -e "${GREEN}✅ gitleaks installé dans ${INSTALL_DIR}/bin/${NC}"
-            } || echo -e "${YELLOW}⚠️  Extraction gitleaks échouée${NC}"
-        } || echo -e "${YELLOW}⚠️  Téléchargement gitleaks échoué${NC}"
-    else
-        echo -e "${GREEN}✅ gitleaks déjà installé dans ${INSTALL_DIR}/bin/${NC}"
-    fi
-else
-    echo -e "${YELLOW}⚠️  curl et brew non trouvés - gitleaks non installé${NC}"
-fi
-echo ""
-
-# 4. Configuration des alias Git
-echo -e "${BLUE}⚙️  Configuration des alias Git...${NC}"
-
-# Sauvegarde de la configuration actuelle
-if [ -f ~/.gitconfig ]; then
-    cp ~/.gitconfig ~/.gitconfig.backup.$(date +%Y%m%d_%H%M%S)
-    echo -e "${GREEN}✅ Sauvegarde de ~/.gitconfig créée${NC}"
-fi
-
-# Configuration sécurisée des alias via git config
-echo -e "${BLUE}🔧 Configuration des alias Git Auto-Flow...${NC}"
-
-# WORKFLOW
-git config --global alias.feature-start "!f() { echo '🚀 Feature: '\$1; echo '🧹 Nettoyage des branches mergées...'; git fetch --prune origin 2>/dev/null || true; git branch --merged main 2>/dev/null | grep 'feature/' | xargs -n 1 git branch -d 2>/dev/null || true; git branch --merged develop 2>/dev/null | grep 'feature/' | xargs -n 1 git branch -d 2>/dev/null || true; git branch -r --merged main 2>/dev/null | grep 'origin/feature/' | sed 's/origin\\///' | xargs -n 1 git push origin --delete 2>/dev/null || true; git branch -r --merged develop 2>/dev/null | grep 'origin/feature/' | sed 's/origin\\///' | xargs -n 1 git push origin --delete 2>/dev/null || true; git checkout develop 2>/dev/null || git checkout -b develop; git pull origin develop 2>/dev/null || true; git checkout -b feature/\$1 && git push -u origin feature/\$1 2>/dev/null || true; echo '✅ Feature créée: feature/'\$1; }; f"
-git config --global alias.commit-auto "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-commit-auto.py"
-git config --global alias.ca "!git commit-auto"
-git config --global alias.pr "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-pr-auto.py"
-git config --global alias.feature-finish "!f() { echo '🔄 Finalisation de la feature...'; git fetch origin develop && git rebase origin/develop && git push --force-with-lease origin \$(git branch --show-current) && echo '✅ Feature prête pour PR vers develop'; }; f"
-git config --global alias.deploy "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-release-auto.py"
-git config --global alias.cleanup-branches "!f() { echo '🧹 Nettoyage des branches locales...'; git fetch --prune origin; git branch --merged develop | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; git branch --merged main | grep -v 'develop\\|main\\|master' | xargs -n 1 git branch -d 2>/dev/null || true; echo '✅ Branches mergées supprimées'; }; f"
-
-# PROJECT MANAGEMENT
-git config --global alias.project-config "!cd \$(git rev-parse --show-toplevel 2>/dev/null || pwd) && python3 ${INSTALL_DIR}/src/git-project-config.py"
-git config --global alias.pc "!git project-config"
-git config --global alias.repo-create "!cd \$(git rev-parse --show-toplevel 2>/dev/null || pwd) && python3 ${INSTALL_DIR}/src/git-repo-create.py"
-git config --global alias.autoflow-init "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-autoflow-init.py"
-git config --global alias.create-tickets "!cd \$(git rev-parse --show-toplevel) && python3 ${INSTALL_DIR}/src/git-create-tickets.py"
-
-echo -e "${GREEN}✅ Alias Git Auto-Flow configurés proprement${NC}"
-
-# 5. Installation semantic-release (conditionnelle)
-if [ -f "package.json" ]; then
-    if command -v npm &> /dev/null || command -v pnpm &> /dev/null || command -v yarn &> /dev/null; then
-        echo ""
-        echo -e "${BLUE}📦 Installation semantic-release (détecté package.json)...${NC}"
+        # Normalisation de l'architecture
+        case "$ARCH" in
+            x86_64) ARCH="amd64" ;;
+            aarch64) ARCH="arm64" ;;
+            arm64) ARCH="arm64" ;;
+        esac
         
-        if command -v pnpm &> /dev/null; then
-            PACKAGE_MANAGER="pnpm"
-        elif command -v yarn &> /dev/null; then
-            PACKAGE_MANAGER="yarn"
+        # URL de téléchargement
+        GITLEAKS_URL="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_${OS}_${ARCH}.tar.gz"
+        
+        echo "🔗 URL: $GITLEAKS_URL"
+        
+        # Créer le répertoire bin local
+        mkdir -p "${INSTALL_DIR}/bin"
+        
+        # Téléchargement avec timeout et retry
+        if curl -L --connect-timeout 10 --max-time 60 --retry 2 --fail \
+                -o "/tmp/gitleaks.tar.gz" "$GITLEAKS_URL" 2>/dev/null; then
+            
+            # Extraction
+            if tar -xzf /tmp/gitleaks.tar.gz -C /tmp/ 2>/dev/null; then
+                # Installation locale
+                if mv /tmp/gitleaks "${INSTALL_DIR}/bin/" 2>/dev/null; then
+                    chmod +x "${INSTALL_DIR}/bin/gitleaks"
+                    rm -f /tmp/gitleaks.tar.gz 2>/dev/null
+                    echo -e "${GREEN}✅ gitleaks installé dans ${INSTALL_DIR}/bin/${NC}"
+                    return 0
+                else
+                    echo -e "${YELLOW}⚠️  Impossible de déplacer gitleaks${NC}"
+                fi
+            else
+                echo -e "${YELLOW}⚠️  Extraction gitleaks échouée${NC}"
+            fi
         else
-            PACKAGE_MANAGER="npm"
+            echo -e "${YELLOW}⚠️  Téléchargement gitleaks échoué (timeout ou URL invalide)${NC}"
         fi
         
-        echo -e "${YELLOW}📦 Utilisation de ${PACKAGE_MANAGER}...${NC}"
-        
-        if $PACKAGE_MANAGER install >/dev/null 2>&1; then
+        # Nettoyage en cas d'échec
+        rm -f /tmp/gitleaks.tar.gz /tmp/gitleaks 2>/dev/null
+    fi
+    
+    echo -e "${YELLOW}⚠️  Installation gitleaks échouée - continuons sans (optionnel)${NC}"
+    return 1
+}
+
+# Appel de la fonction (non bloquant)
+install_gitleaks || true
+
+echo ""
+
+# 4. Installation semantic-release (Node.js)
+if [ -f "${INSTALL_DIR}/package.json" ]; then
+    echo -e "${BLUE}📦 Installation semantic-release (Node.js)...${NC}"
+    
+    if command -v pnpm &> /dev/null; then
+        echo -e "${GREEN}🔧 Utilisation de pnpm...${NC}"
+        if cd "${INSTALL_DIR}" && pnpm install --quiet 2>/dev/null; then
+            echo -e "${GREEN}✅ Dépendances Node.js installées${NC}"
+        else
+            echo -e "${YELLOW}⚠️  Installation des dépendances Node.js échouée${NC}"
+        fi
+    elif command -v npm &> /dev/null; then
+        echo -e "${GREEN}🔧 Utilisation de npm...${NC}"
+        if cd "${INSTALL_DIR}" && npm install --silent 2>/dev/null; then
+            echo -e "${GREEN}✅ Dépendances Node.js installées${NC}"
+        else
+            echo -e "${YELLOW}⚠️  Installation des dépendances Node.js échouée${NC}"
+        fi
+    elif command -v yarn &> /dev/null; then
+        echo -e "${GREEN}🔧 Utilisation de yarn...${NC}"
+        if cd "${INSTALL_DIR}" && yarn install --silent 2>/dev/null; then
             echo -e "${GREEN}✅ Dépendances Node.js installées${NC}"
         else
             echo -e "${YELLOW}⚠️  Installation des dépendances Node.js échouée${NC}"
@@ -223,98 +242,167 @@ if [ -f "package.json" ]; then
     fi
 fi
 
-# 🔑 Configuration des clés API
-echo -e "${BLUE}🔑 Configuration des clés API...${NC}"
+# 5. Configuration des clés API
+echo -e "${BLUE}�� Configuration des clés API...${NC}"
 
 GLOBAL_ENV_FILE="$HOME/.env.gitautoflow"
 
-if [ -f "$GLOBAL_ENV_FILE" ]; then
-    echo -e "${GREEN}✅ Configuration API trouvée: $GLOBAL_ENV_FILE${NC}"
+# Priorité 1: Variables d'environnement
+if [ -n "${GEMINI_API_KEY:-}" ] || [ -n "${GROQ_API_KEY:-}" ]; then
+    echo -e "${YELLOW}✨ Variables d'environnement GEMINI_API_KEY/GROQ_API_KEY détectées.${NC}"
+    echo -e "${GREEN}   Utilisation de ces clés pour configurer $GLOBAL_ENV_FILE...${NC}"
+    
+    {
+        echo "# Git Auto-Flow - Configuration des API"
+        echo "# Généré automatiquement le $(date)"
+        echo "# Priorité donnée aux variables d'environnement lors de l'installation."
+        echo ""
+        echo "GEMINI_API_KEY=${GEMINI_API_KEY:-}"
+        echo "GROQ_API_KEY=${GROQ_API_KEY:-}"
+    } > "$GLOBAL_ENV_FILE"
+
+    if [ -n "${GEMINI_API_KEY:-}" ]; then
+        echo -e "${GREEN}✅ Clé Gemini API configurée depuis l'environnement.${NC}"
+    fi
+    if [ -n "${GROQ_API_KEY:-}" ]; then
+        echo -e "${GREEN}✅ Clé Groq API configurée depuis l'environnement.${NC}"
+    fi
+    echo ""
+
+# Priorité 2: Fichier de configuration existant
+elif [ -f "$GLOBAL_ENV_FILE" ]; then
+    echo -e "${GREEN}✅ Fichier de configuration API déjà existant: $GLOBAL_ENV_FILE${NC}"
+    echo -e "${YELLOW}   (Les variables d'environnement GEMINI_API_KEY/GROQ_API_KEY peuvent surcharger ce fichier à l'exécution)${NC}"
+    echo ""
+
+# Priorité 3: Configuration interactive ou non-interactive
 else
     if [ "$NON_INTERACTIVE" = true ]; then
-        # Mode non-interactif : récupérer depuis les variables d'environnement
-        echo -e "${YELLOW}🤖 Mode non-interactif : configuration via variables d'environnement${NC}"
-        
-        GEMINI_KEY="${GEMINI_API_KEY:-}"
-        GROQ_KEY="${GROQ_API_KEY:-}"
-        
-        # Validation : au moins une clé doit être présente
-        if [ -z "$GEMINI_KEY" ] && [ -z "$GROQ_KEY" ]; then
-            echo -e "${RED}❌ Erreur: Aucune clé API trouvée en mode non-interactif${NC}"
-            echo -e "${YELLOW}💡 Définissez les variables d'environnement avant l'installation :${NC}"
-            echo -e "   export GEMINI_API_KEY=\"votre_clé_gemini\""
-            echo -e "   export GROQ_API_KEY=\"votre_clé_groq\""
-            echo -e "${YELLOW}ℹ️  Au moins une des deux clés est requise${NC}"
-            exit 1
-        fi
-        
-        if [ -n "$GEMINI_KEY" ]; then
-            echo -e "${GREEN}✅ Clé Gemini API trouvée${NC}"
-        else
-            echo -e "${YELLOW}⚠️  Clé Gemini API non définie${NC}"
-        fi
-        
-        if [ -n "$GROQ_KEY" ]; then
-            echo -e "${GREEN}✅ Clé Groq API trouvée${NC}"
-        else
-            echo -e "${YELLOW}⚠️  Clé Groq API non définie${NC}"
-        fi
-
-        {
-            echo "# Git Auto-Flow - Configuration des API"
-            echo "# Généré automatiquement le $(date)"
-            echo ""
-            echo "GEMINI_API_KEY=${GEMINI_KEY}"
-            echo "GROQ_API_KEY=${GROQ_KEY}"
-        } > "$GLOBAL_ENV_FILE"
-
-        echo -e "${GREEN}✅ Configuration API créée en mode non-interactif${NC}"
-        
+        echo -e "${RED}❌ Erreur: Aucune clé API trouvée en mode non-interactif et pas de fichier de config existant.${NC}"
+        echo -e "${YELLOW}💡 Définissez les variables d'environnement avant l'installation :${NC}"
+        echo -e "   export GEMINI_API_KEY=\"votre_clé_gemini\""
+        echo -e "   export GROQ_API_KEY=\"votre_clé_groq\""
+        exit 1
     else
-        # Mode interactif (comportement original)
+        # Mode interactif
         echo -e "${YELLOW}💡 Configurons vos clés API (optionnel):${NC}"
         echo ""
         echo -e "${BLUE}🤖 Gemini API (Google AI Studio):${NC}"
         echo -e "   🔗 ${YELLOW}https://makersuite.google.com/app/apikey${NC}"
-        read -p "Entrez votre clé Gemini API (ou ENTER pour ignorer): " GEMINI_KEY
+        read -p "Entrez votre clé Gemini API (ou ENTER pour ignorer): " USER_GEMINI_KEY
         echo ""
         echo -e "${BLUE}⚡ Groq API (Fallback gratuit):${NC}"
         echo -e "   🔗 ${YELLOW}https://console.groq.com/keys${NC}"
-        read -p "Entrez votre clé Groq API (ou ENTER pour ignorer): " GROQ_KEY
+        read -p "Entrez votre clé Groq API (ou ENTER pour ignorer): " USER_GROQ_KEY
 
         {
             echo "# Git Auto-Flow - Configuration des API"
             echo "# Généré automatiquement le $(date)"
             echo ""
-            echo "GEMINI_API_KEY=${GEMINI_KEY}"
-            echo "GROQ_API_KEY=${GROQ_KEY}"
+            echo "GEMINI_API_KEY=${USER_GEMINI_KEY}"
+            echo "GROQ_API_KEY=${USER_GROQ_KEY}"
         } > "$GLOBAL_ENV_FILE"
 
         echo -e "${GREEN}✅ Clés API configurées dans $GLOBAL_ENV_FILE${NC}"
+        echo ""
     fi
-    echo ""
 fi
 
+# 6. Installation des alias Git
+echo -e "${BLUE}📝 Installation des alias Git...${NC}"
 
-# 7. Instructions finales
+# Fonction pour installer un alias Git de manière sûre
+install_git_alias() {
+    local alias_name="$1"
+    local alias_command="$2"
+    
+    # Vérifier si l'alias existe déjà
+    if git config --global --get-regexp "alias\.${alias_name}" >/dev/null 2>&1; then
+        echo -e "${YELLOW}   ⚠️  Alias 'git ${alias_name}' existe déjà${NC}"
+        return 1
+    else
+        git config --global alias."${alias_name}" "${alias_command}"
+        echo -e "${GREEN}   ✅ git ${alias_name}${NC}"
+        return 0
+    fi
+}
+
+# Installation des alias principaux
+echo "Installation des alias Git Auto-Flow..."
+
+install_git_alias "ca" "!python3 '${INSTALL_DIR}/scripts/commit_ai.py'"
+install_git_alias "pr" "!python3 '${INSTALL_DIR}/scripts/create_pr.py'"
+install_git_alias "pc" "!python3 '${INSTALL_DIR}/scripts/project_config.py'"
+install_git_alias "feature-start" "!python3 '${INSTALL_DIR}/scripts/feature_start.py'"
+install_git_alias "repo-create" "!python3 '${INSTALL_DIR}/scripts/repo_create.py'"
+
+# Alias utilitaires
+install_git_alias "acp" "!git add . && git ca && git push"
+install_git_alias "sync" "!git fetch origin && git rebase origin/\$(git branch --show-current)"
+install_git_alias "cleanup" "!git branch --merged | grep -v '\\*\\|main\\|master\\|develop' | xargs -n 1 git branch -d"
+
+echo ""
+
+# 7. Ajout du répertoire bin au PATH
+echo -e "${BLUE}🔧 Configuration du PATH...${NC}"
+
+# Détecter le shell et le fichier de configuration
+SHELL_RC=""
+if [[ "$SHELL" == *"zsh"* ]]; then
+    SHELL_RC="$HOME/.zshrc"
+elif [[ "$SHELL" == *"bash"* ]]; then
+    SHELL_RC="$HOME/.bashrc"
+fi
+
+# Ajout au PATH si nécessaire
+if [ -n "$SHELL_RC" ] && [ -f "$SHELL_RC" ]; then
+    if ! grep -q "${INSTALL_DIR}/bin" "$SHELL_RC" 2>/dev/null; then
+        echo "" >> "$SHELL_RC"
+        echo "# Git Auto-Flow" >> "$SHELL_RC"
+        echo "export PATH=\"${INSTALL_DIR}/bin:\$PATH\"" >> "$SHELL_RC"
+        echo -e "${GREEN}✅ PATH configuré dans $SHELL_RC${NC}"
+    else
+        echo -e "${GREEN}✅ PATH déjà configuré${NC}"
+    fi
+    
+    # Export temporaire pour la session actuelle
+    export PATH="${INSTALL_DIR}/bin:$PATH"
+else
+    echo -e "${YELLOW}⚠️  Ajoutez manuellement au PATH: export PATH=\"${INSTALL_DIR}/bin:\$PATH\"${NC}"
+fi
+
+echo ""
+
+# 8. Instructions finales
 echo ""
 echo -e "${GREEN}🎉 Installation globale terminée!${NC}"
 
 echo ""
-echo -e "${YELLOW}Pour créer un nouveau projet GitHub complet :${NC}"
-echo -e "   ${GREEN}git repo-create mon-projet${NC}     # Projet privé avec workflow complet"
-echo -e "   ${GREEN}git repo-create api --public${NC}   # Projet public"
-echo -e "   ${GREEN}git pc${NC}                        # (Re)lancer la configuration"
+echo -e "${YELLOW}📋 Commandes disponibles:${NC}"
+echo -e "${BLUE}Création de projets:${NC}"
+echo -e "   ${GREEN}git repo-create mon-projet${NC}        # Projet privé avec workflow complet"
+echo -e "   ${GREEN}git repo-create api --public${NC}      # Projet public"
+echo -e "   ${GREEN}git pc${NC}                           # (Re)configurer le projet actuel"
 
 echo ""
-echo -e "${YELLOW}Dans un repo existant :${NC}"
-echo -e "   ${GREEN}git feature-start ma-feature${NC}  # Nouvelle feature"
-echo -e "   ${GREEN}git ca${NC}                       # Commit IA"
-echo -e "   ${GREEN}git pr${NC}                       # PR automatique"
+echo -e "${BLUE}Workflow quotidien:${NC}"
+echo -e "   ${GREEN}git feature-start ma-feature${NC}     # Nouvelle feature"
+echo -e "   ${GREEN}git ca${NC}                          # Commit avec message IA"
+echo -e "   ${GREEN}git pr${NC}                          # Pull Request automatique"
+echo -e "   ${GREEN}git acp${NC}                         # Add + Commit IA + Push"
+
+echo ""
+echo -e "${BLUE}Utilitaires:${NC}"
+echo -e "   ${GREEN}git sync${NC}                        # Synchroniser avec origin"
+echo -e "   ${GREEN}git cleanup${NC}                     # Nettoyer les branches mergées"
 
 echo ""
 echo -e "${BLUE}📚 Documentation complète:${NC}"
 echo -e "   ${YELLOW}${INSTALL_DIR}/README.md${NC}"
+
+echo ""
+echo -e "${BLUE}🔄 Pour activer dans le shell actuel:${NC}"
+echo -e "   ${GREEN}source ~/.zshrc${NC}     # ou source ~/.bashrc"
 
 echo ""
 echo -e "${GREEN}✨ Git Auto-Flow est prêt à l'emploi!${NC}"
