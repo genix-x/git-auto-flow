@@ -41,6 +41,8 @@ def check_prerequisites():
         info(" Installation: https://cli.github.com/")
         return False
 
+from subprocess import CalledProcessError
+
 def create_github_repo(project_name, org=None, force=False, private=True):
     """Crée un nouveau repository GitHub et setup l'environnement complet"""
     
@@ -90,6 +92,9 @@ def create_github_repo(project_name, org=None, force=False, private=True):
         run_command(cmd, check=True)
         success(f"Repository GitHub {'privé' if private else 'public'} {github_org}/{project_name} créé avec succès!")
 
+        # Configuration des permissions
+        set_github_actions_permissions(f"{github_org}/{project_name}", force=force)
+
         # Délai pour laisser GitHub propager le repository
         info("Attente de la propagation du repository GitHub...")
         import time
@@ -125,6 +130,7 @@ def create_github_repo(project_name, org=None, force=False, private=True):
 
         project_path = setup_local_repo(project_name, f"{repo_url}.git", working_dir, force=force)
         
+        # RÉSOLUTION DU CONFLIT : Utiliser le workflow unifié
         if not create_readme_workflow(project_path, project_name):
             error("❌ Le workflow de setup a échoué")
             return
@@ -140,6 +146,31 @@ def create_github_repo(project_name, org=None, force=False, private=True):
         error(f"Le workflow de setup a échoué: {e}")
         error("Le repository GitHub a été créé, mais le setup local a rencontré un problème.")
         sys.exit(1)
+
+def set_github_actions_permissions(repo_full_name, force=False):
+    """
+    Configure le repo pour autoriser les GitHub Actions à créer et approuver des PRs.
+    """
+    info("Configuration des permissions pour les GitHub Actions...")
+    
+    # Confirmation
+    if not force:
+        if not confirm("✅ Autoriser les GitHub Actions à créer et approuver des pull requests ?"):
+            warning("Configuration des permissions annulée.")
+            return
+
+    try:
+        cmd = [
+            'gh', 'api',
+            '--method', 'PUT',
+            f'/repos/{repo_full_name}/actions/permissions/workflow',
+            '-f', 'default_workflow_permissions=write'
+        ]
+        run_command(cmd, check=True)
+        success("Permissions pour les GitHub Actions configurées avec succès!")
+    except CalledProcessError:
+        error("Erreur lors de la configuration des permissions pour les GitHub Actions.")
+        # On ne bloque pas le reste du workflow pour ça
 
 from subprocess import CalledProcessError
 import os
@@ -231,6 +262,7 @@ def create_readme_workflow(project_path, project_name):
         
         # 3. Créer feature branch depuis develop
         info("Création de feature/readme")
+
         run_command(['git', 'checkout', '-b', 'feature/readme'], cwd=project_path)
         
         # 4. Créer README avec contenu dynamique

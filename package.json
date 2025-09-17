@@ -1,6 +1,6 @@
 {
   "name": "git-auto-flow",
-  "version": "0.0.0-development",
+  "version": "0.4.4",
   "description": "Git automation with multi-AI support (Gemini + Groq) - Team-ready package for conventional commits and PR automation",
   "main": "src/index.js",
   "scripts": {
@@ -27,7 +27,7 @@
   "license": "MIT",
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1", 
+    "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.4",
     "semantic-release": "^24.2.7"
   }
