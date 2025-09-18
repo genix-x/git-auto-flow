@@ -93,13 +93,14 @@ def pr_alias(
 
 @app.command(name="ra", hidden=True)
 def ra_alias(
+    version: Optional[str] = typer.Option(None, "--version", help="Forcer un numéro de version spécifique (ex: 1.0.0, 2.1.3)"),
     no_auto_merge: bool = typer.Option(False, "--no-auto-merge", help="Ne pas auto-merger la PR (merge manuel)"),
     merge_method: str = typer.Option("merge", "--merge-method", help="Méthode de merge (merge, squash, rebase)"),
     force: bool = typer.Option(False, "--force", "-f", help="Mode non-interactif (aucune confirmation)"),
     debug: bool = typer.Option(False, "--debug", help="Activer le mode debug pour voir les commandes exécutées")
 ):
     """Alias ultra-court pour release auto"""
-    _release_auto(no_auto_merge=no_auto_merge, merge_method=merge_method, force=force, debug=debug)
+    _release_auto(version=version, no_auto_merge=no_auto_merge, merge_method=merge_method, force=force, debug=debug)
 
 # Sous-commandes (apparaîtront après les commandes directes)
 app.add_typer(issues_app, name="issue", help="Commandes de gestion des issues GitHub")
