@@ -359,34 +359,28 @@ def auto(
         # Récupère le dernier tag pour le calcul de la version
         latest_tag = get_latest_tag()
 
+        # Toujours utiliser l'IA pour analyser les changements
+        info(f"Le dernier tag trouvé est '{latest_tag}'. Il sera utilisé comme base pour l'analyse des changements.")
+        # Génère une PR spécialement pour une release + calcul version
+        release_data = ai.analyze_for_release(diff, files, commits, latest_tag=latest_tag)
+
         if version:
-            # Version forcée par l'utilisateur
+            # Version forcée par l'utilisateur - on garde l'analyse IA mais on override la version
             info(f"🎯 Version forcée: v{version} (utilisateur)")
-            # Créer les données de release manuellement
-            release_data = {
-                'pr': {
-                    'title': f'Release v{version}',
-                    'body': f'## 🚀 Release v{version}\n\nRelease créée avec version forcée.\n\n**Changements:**\n- Mise à jour vers v{version}\n\n---\n*🤖 Généré par Git Auto-Flow*'
-                },
-                'release': {
-                    'version': version,
-                    'version_type': 'forced',
-                    'minor_changes': ['Mise à jour vers v' + version],
-                    'patch_changes': [],
-                    'major_changes': []
-                }
-            }
+            info(f"📋 Changements analysés par IA: {len(release_data['release'].get('minor_changes', []) + release_data['release'].get('patch_changes', []) + release_data['release'].get('major_changes', []))} modifications détectées")
+
+            # Override seulement la version dans les données
+            release_data['release']['version'] = version
+            release_data['release']['version_type'] = 'forced'
+            release_data['pr']['title'] = f'Release v{version}'
         else:
             # Version calculée par l'IA
-            info(f"Le dernier tag trouvé est '{latest_tag}'. Il sera utilisé comme base pour la nouvelle version.")
-            # Génère une PR spécialement pour une release + calcul version
-            release_data = ai.analyze_for_release(diff, files, commits, latest_tag=latest_tag)
             info(f"🏷️  Version calculée: v{release_data['release']['version']} ({release_data['release']['version_type']})")
 
-        if not version:
-            info(f"🏷️  Version: v{release_data['release']['version']} ({release_data['release']['version_type']})")
-        else:
-            info(f"🏷️  Version: v{version} (forcée par utilisateur)")
+        # Affichage final de la version utilisée
+        final_version = version if version else release_data['release']['version']
+        version_type = 'forcée par utilisateur' if version else release_data['release']['version_type']
+        info(f"🏷️  Version finale: v{final_version} ({version_type})")
 
         # Étape 4: Création de la PR avec auto-merge
         info("\n🚀 Étape 4: Création de la PR de release...")
