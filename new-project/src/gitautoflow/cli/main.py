@@ -9,6 +9,7 @@ from typing import Optional
 from .repos import app as repos_app
 from .features import app as features_app
 from .issues import app as issues_app
+from .releases import app as releases_app
 from gitautoflow.utils.logger import header
 from gitautoflow.__meta__ import CLI_HELP, CLI_VERSION_MSG
 
@@ -19,6 +20,7 @@ app = typer.Typer(help=CLI_HELP)
 from .commits import auto_commit as _auto_commit
 from .features import start as _feature_start
 from .prs import auto_pr as _auto_pr
+from .releases import auto as _release_auto
 
 # Commandes directes dans l'ordre alphabétique (Typer impose cet ordre)
 @app.command(name="auto-commit")
@@ -89,8 +91,19 @@ def pr_alias(
     """Alias ultra-court pour auto-pr"""
     _auto_pr(base=base, draft=draft, merge=merge, delete_branch=delete_branch, closes=closes, force=force, debug=debug)
 
+@app.command(name="ra", hidden=True)
+def ra_alias(
+    no_auto_merge: bool = typer.Option(False, "--no-auto-merge", help="Ne pas auto-merger la PR (merge manuel)"),
+    merge_method: str = typer.Option("merge", "--merge-method", help="Méthode de merge (merge, squash, rebase)"),
+    force: bool = typer.Option(False, "--force", "-f", help="Mode non-interactif (aucune confirmation)"),
+    debug: bool = typer.Option(False, "--debug", help="Activer le mode debug pour voir les commandes exécutées")
+):
+    """Alias ultra-court pour release auto"""
+    _release_auto(no_auto_merge=no_auto_merge, merge_method=merge_method, force=force, debug=debug)
+
 # Sous-commandes (apparaîtront après les commandes directes)
 app.add_typer(issues_app, name="issue", help="Commandes de gestion des issues GitHub")
+app.add_typer(releases_app, name="release", help="Commandes d'automatisation des releases")
 app.add_typer(repos_app, name="repo", help="Commandes de gestion des repositories GitHub")
 
 
