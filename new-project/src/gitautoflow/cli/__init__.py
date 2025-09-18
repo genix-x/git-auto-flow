@@ -2,6 +2,6 @@
 Git Auto-Flow - Package CLI
 """
 
-from . import repos
+from . import repos, commits
 
-__all__ = ['repos']
+__all__ = ['repos', 'commits']
