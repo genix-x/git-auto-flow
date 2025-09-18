@@ -130,9 +130,10 @@ def load_config():
         return None
 
 
-def run_command(command: list, cwd: Optional[str] = None, check: bool = True):
+def run_command(command: list, cwd: Optional[str] = None, check: bool = True, debug: bool = False):
     """Helper pour exécuter une commande et logger le résultat"""
-    print(f"Executing command: {' '.join(command)} in directory: {cwd or '.'}")
+    if debug:
+        info(f"[DEBUG] Commande: {' '.join(command)} in directory: {cwd or '.'}")
     try:
         result = subprocess.run(
             command,
@@ -158,7 +159,7 @@ def run_command(command: list, cwd: Optional[str] = None, check: bool = True):
         raise
 
 
-def set_github_actions_permissions(repo_full_name: str, force: bool = False):
+def set_github_actions_permissions(repo_full_name: str, force: bool = False, debug: bool = False):
     """Configure le repo pour autoriser les GitHub Actions à créer et approuver des PRs"""
     info("Configuration des permissions pour les GitHub Actions...")
 
@@ -175,13 +176,13 @@ def set_github_actions_permissions(repo_full_name: str, force: bool = False):
             f'/repos/{repo_full_name}/actions/permissions/workflow',
             '-f', 'default_workflow_permissions=write'
         ]
-        run_command(cmd, check=True)
+        run_command(cmd, check=True, debug=debug)
         success("Permissions pour les GitHub Actions configurées avec succès!")
     except CalledProcessError:
         error("Erreur lors de la configuration des permissions pour les GitHub Actions.")
 
 
-def setup_local_repo(project_name: str, repo_url: str, working_dir: str, force: bool = False) -> str:
+def setup_local_repo(project_name: str, repo_url: str, working_dir: str, force: bool = False, debug: bool = False) -> str:
     """Clone le repo dans le working_dir"""
     try:
         info(f"Setup local repository dans {working_dir}")
@@ -200,7 +201,7 @@ def setup_local_repo(project_name: str, repo_url: str, working_dir: str, force: 
                 shutil.rmtree(str(project_path))
 
             info(f"Clonage du repository {repo_url}...")
-            run_command(['git', 'clone', repo_url, str(project_path)])
+            run_command(['git', 'clone', repo_url, str(project_path)], debug=debug)
         else:
             warning(f"Le repo git {project_path} existe déjà. On continue dedans.")
 
@@ -214,7 +215,7 @@ def setup_local_repo(project_name: str, repo_url: str, working_dir: str, force: 
         raise typer.Exit(1)
 
 
-def create_readme_workflow(project_path: str, project_name: str) -> bool:
+def create_readme_workflow(project_path: str, project_name: str, debug: bool = False) -> bool:
     """Workflow complet README avec Git natif"""
     try:
         info("🚀 Workflow README avec Git natif")
@@ -224,19 +225,19 @@ def create_readme_workflow(project_path: str, project_name: str) -> bool:
         gitkeep_path = Path(project_path) / ".gitkeep"
         gitkeep_path.write_text("# Initial commit\n")
 
-        run_command(['git', 'add', '.gitkeep'], cwd=project_path)
-        run_command(['git', 'commit', '-m', 'Initial commit'], cwd=project_path)
-        run_command(['git', 'branch', '-M', 'main'], cwd=project_path)
-        run_command(['git', 'push', '-u', 'origin', 'main'], cwd=project_path)
+        run_command(['git', 'add', '.gitkeep'], cwd=project_path, debug=debug)
+        run_command(['git', 'commit', '-m', 'Initial commit'], cwd=project_path, debug=debug)
+        run_command(['git', 'branch', '-M', 'main'], cwd=project_path, debug=debug)
+        run_command(['git', 'push', '-u', 'origin', 'main'], cwd=project_path, debug=debug)
 
         # 2. Créer develop depuis main
         info("Création de la branche develop")
-        run_command(['git', 'checkout', '-b', 'develop'], cwd=project_path)
-        run_command(['git', 'push', '-u', 'origin', 'develop'], cwd=project_path)
+        run_command(['git', 'checkout', '-b', 'develop'], cwd=project_path, debug=debug)
+        run_command(['git', 'push', '-u', 'origin', 'develop'], cwd=project_path, debug=debug)
 
         # 3. Créer feature branch depuis develop
         info("Création de feature/readme")
-        run_command(['git', 'checkout', '-b', 'feature/readme'], cwd=project_path)
+        run_command(['git', 'checkout', '-b', 'feature/readme'], cwd=project_path, debug=debug)
 
         # 4. Créer README avec contenu dynamique
         info("Génération du README.md")
@@ -257,37 +258,37 @@ cd {project_name}
         readme_path.write_text(readme_content)
 
         # 5. Commit et push feature
-        run_command(['git', 'add', 'README.md'], cwd=project_path)
-        run_command(['git', 'commit', '-m', 'feat: Add README.md'], cwd=project_path)
-        run_command(['git', 'push', '-u', 'origin', 'feature/readme'], cwd=project_path)
+        run_command(['git', 'add', 'README.md'], cwd=project_path, debug=debug)
+        run_command(['git', 'commit', '-m', 'feat: Add README.md'], cwd=project_path, debug=debug)
+        run_command(['git', 'push', '-u', 'origin', 'feature/readme'], cwd=project_path, debug=debug)
 
         # 6. PR feature → develop + merge automatique
         info("Création PR feature/readme → develop")
         run_command(['gh', 'pr', 'create', '--base', 'develop', '--head', 'feature/readme',
-                    '--title', 'feat: Add README', '--body', 'Initial README', '--fill'], cwd=project_path)
-        run_command(['gh', 'pr', 'merge', '--squash'], cwd=project_path)
+                    '--title', 'feat: Add README', '--body', 'Initial README', '--fill'], cwd=project_path, debug=debug)
+        run_command(['gh', 'pr', 'merge', '--squash'], cwd=project_path, debug=debug)
 
         # 7. Retour sur develop et pull des changements
-        run_command(['git', 'checkout', 'develop'], cwd=project_path)
-        run_command(['git', 'pull'], cwd=project_path)
+        run_command(['git', 'checkout', 'develop'], cwd=project_path, debug=debug)
+        run_command(['git', 'pull'], cwd=project_path, debug=debug)
 
         # 8. PR develop → main + merge automatique
         info("Création PR develop → main (Release)")
         run_command(['gh', 'pr', 'create', '--base', 'main', '--head', 'develop',
-                    '--title', 'Release v0.1.0', '--body', 'First release', '--fill'], cwd=project_path)
-        run_command(['gh', 'pr', 'merge', '--squash'], cwd=project_path)
+                    '--title', 'Release v0.1.0', '--body', 'First release', '--fill'], cwd=project_path, debug=debug)
+        run_command(['gh', 'pr', 'merge', '--squash'], cwd=project_path, debug=debug)
 
         # 9. Tag de release
         info("Création du tag v0.1.0")
-        run_command(['git', 'checkout', 'main'], cwd=project_path)
-        run_command(['git', 'pull'], cwd=project_path)
-        run_command(['git', 'tag', 'v0.1.0'], cwd=project_path)
-        run_command(['git', 'push', '--tags'], cwd=project_path)
+        run_command(['git', 'checkout', 'main'], cwd=project_path, debug=debug)
+        run_command(['git', 'pull'], cwd=project_path, debug=debug)
+        run_command(['git', 'tag', 'v0.1.0'], cwd=project_path, debug=debug)
+        run_command(['git', 'push', '--tags'], cwd=project_path, debug=debug)
 
         # 10. NETTOYAGE : Supprimer la branche feature/readme
         info("Nettoyage des branches temporaires")
-        run_command(['git', 'push', 'origin', '--delete', 'feature/readme'], cwd=project_path)
-        run_command(['git', 'branch', '-D', 'feature/readme'], cwd=project_path)
+        run_command(['git', 'push', 'origin', '--delete', 'feature/readme'], cwd=project_path, debug=debug)
+        run_command(['git', 'branch', '-D', 'feature/readme'], cwd=project_path, debug=debug)
 
         success("✅ Workflow complet terminé !")
         success("✅ Repository prêt avec README, branches GitFlow et release v0.1.0")
@@ -302,7 +303,8 @@ cd {project_name}
 def create_repo(
     repo_spec: str = typer.Argument(..., help="Repository à créer (format: owner/repo-name ou repo-name)"),
     private: bool = typer.Option(True, "--private/--public", help="Repository privé ou public"),
-    force: bool = typer.Option(False, "--force", "-f", help="Mode non-interactif (aucune confirmation)")
+    force: bool = typer.Option(False, "--force", "-f", help="Mode non-interactif (aucune confirmation)"),
+    debug: bool = typer.Option(False, "--debug", help="Affiche les commandes exécutées")
 ):
     """Crée un nouveau repository GitHub et setup l'environnement complet"""
 
@@ -373,11 +375,11 @@ def create_repo(
             '--description', f'Projet {project_name} créé avec Git Auto-Flow'
         ]
 
-        run_command(cmd, check=True)
+        run_command(cmd, check=True, debug=debug)
         success(f"Repository GitHub {'privé' if private else 'public'} {github_org}/{project_name} créé avec succès!")
 
         # Configuration des permissions
-        set_github_actions_permissions(f"{github_org}/{project_name}", force=force)
+        set_github_actions_permissions(f"{github_org}/{project_name}", force=force, debug=debug)
 
         # Délai pour laisser GitHub propager le repository
         info("Attente de la propagation du repository GitHub...")
@@ -418,9 +420,9 @@ def create_repo(
             info("Lancez `git pc` pour la configurer.")
             raise typer.Exit(1)
 
-        project_path = setup_local_repo(project_name, f"{repo_url}.git", working_dir, force=force)
+        project_path = setup_local_repo(project_name, f"{repo_url}.git", working_dir, force=force, debug=debug)
 
-        if not create_readme_workflow(project_path, project_name):
+        if not create_readme_workflow(project_path, project_name, debug=debug):
             error("❌ Le workflow de setup a échoué")
             raise typer.Exit(1)
 
