@@ -299,7 +299,7 @@ cd {project_name}
         return False
 
 
-@app.command()
+@app.command(name="create")
 def create_repo(
     repo_spec: str = typer.Argument(..., help="Repository à créer (format: owner/repo-name ou repo-name)"),
     private: bool = typer.Option(True, "--private/--public", help="Repository privé ou public"),
