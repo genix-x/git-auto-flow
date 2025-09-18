@@ -2,6 +2,7 @@
 Figer les versions des packages
 Passer en variable d'environnements
 
+Supprimer pyinstaller -  il faut ditinguer le payload des outils pour packager, faire des releases
 
 gaf check
 
