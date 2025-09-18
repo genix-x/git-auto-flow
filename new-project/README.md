@@ -70,12 +70,28 @@ source .venv/bin/activate
 gitautoflow --help
 ```
 
+### 📋 Commandes Disponibles
+
+```bash
+gitautoflow --help
+```
+
+```
+╭─ Commands ────────────────────────────────────────────────────────────────────╮
+│ auto-commit     Commit automatique avec rebase + IA (alias: ac)              │
+│ auto-pr         Créer automatiquement une PR avec IA (alias: pr)             │
+│ feature-start   Démarre une nouvelle feature branch GitFlow (alias: fs)      │
+│ version         Affiche la version du projet                                 │
+│ repo            Commandes de gestion des repositories GitHub                 │
+╰───────────────────────────────────────────────────────────────────────────────╯
+```
+
 ## 🏗️ Créer un Repository Complet
 
 ### ⚡ Syntaxe Ultra-Simple
 
 ```bash
-gitautoflow repo create-repo OWNER/REPO-NAME [OPTIONS]
+gitautoflow repo create OWNER/REPO-NAME [OPTIONS]
 ```
 
 ### 🎯 Ce qui est Créé Automatiquement
@@ -92,13 +108,13 @@ gitautoflow repo create-repo OWNER/REPO-NAME [OPTIONS]
 
 ```bash
 # Repository privé avec workflow complet
-gitautoflow repo create-repo genix-x/mon-api
+gitautoflow repo create genix-x/mon-api
 
 # Repository public en mode force (sans confirmations)
-gitautoflow repo create-repo myorg/projet-open --public --force
+gitautoflow repo create myorg/projet-open --public --force
 
 # Format court (utilise config par défaut)
-gitautoflow repo create-repo mon-projet
+gitautoflow repo create mon-projet
 ```
 
 ### 📊 Options Disponibles
@@ -121,7 +137,7 @@ Démarrez une nouvelle feature branch selon GitFlow en une seule commande.
 gitautoflow fs ma-feature
 
 # Commande complète
-gitautoflow feature start ma-feature
+gitautoflow feature-start ma-feature
 
 # Avec options
 gitautoflow fs api-refactor --base main --force --debug

@@ -8,6 +8,7 @@ import typer
 from typing import Optional
 from .repos import app as repos_app
 from .features import app as features_app
+from .issues import app as issues_app
 from gitautoflow.utils.logger import header
 from gitautoflow.__meta__ import CLI_HELP, CLI_VERSION_MSG
 
@@ -89,6 +90,7 @@ def pr_alias(
     _auto_pr(base=base, draft=draft, merge=merge, delete_branch=delete_branch, closes=closes, force=force, debug=debug)
 
 # Sous-commandes (apparaîtront après les commandes directes)
+app.add_typer(issues_app, name="issue", help="Commandes de gestion des issues GitHub")
 app.add_typer(repos_app, name="repo", help="Commandes de gestion des repositories GitHub")
 
 
