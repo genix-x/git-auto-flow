@@ -45,7 +45,15 @@ def confirm(message: str) -> bool:
     return response in ['y', 'yes', 'o', 'oui']
 
 
-def run_gitleaks_scan_all_modified() -> bool:
+def run_git_command(command: list, debug: bool = False, **kwargs):
+    """Exécute une commande Git et log si debug activé"""
+    if debug:
+        info(f"[DEBUG] Commande: {' '.join(command)}")
+
+    return subprocess.run(command, **kwargs)
+
+
+def run_gitleaks_scan_all_modified(debug: bool = False) -> bool:
     """Scan sécurité de TOUS les fichiers modifiés (stagés, non-stagés, untracked)"""
     try:
         # Trouve le chemin vers gitleaks
@@ -64,20 +72,20 @@ def run_gitleaks_scan_all_modified() -> bool:
         all_files = []
 
         # 1. Fichiers stagés
-        staged_result = subprocess.run(['git', 'diff', '--cached', '--name-only'],
-                                     capture_output=True, text=True, check=False)
+        staged_result = run_git_command(['git', 'diff', '--cached', '--name-only'],
+                                        debug=debug, capture_output=True, text=True, check=False)
         if staged_result.returncode == 0:
             all_files.extend([f.strip() for f in staged_result.stdout.strip().split('\n') if f.strip()])
 
         # 2. Fichiers modifiés non-stagés
-        unstaged_result = subprocess.run(['git', 'diff', '--name-only'],
-                                       capture_output=True, text=True, check=False)
+        unstaged_result = run_git_command(['git', 'diff', '--name-only'],
+                                          debug=debug, capture_output=True, text=True, check=False)
         if unstaged_result.returncode == 0:
             all_files.extend([f.strip() for f in unstaged_result.stdout.strip().split('\n') if f.strip()])
 
         # 3. Fichiers untracked
-        untracked_result = subprocess.run(['git', 'ls-files', '--others', '--exclude-standard'],
-                                        capture_output=True, text=True, check=False)
+        untracked_result = run_git_command(['git', 'ls-files', '--others', '--exclude-standard'],
+                                           debug=debug, capture_output=True, text=True, check=False)
         if untracked_result.returncode == 0:
             all_files.extend([f.strip() for f in untracked_result.stdout.strip().split('\n') if f.strip()])
 
@@ -122,7 +130,7 @@ def run_gitleaks_scan_all_modified() -> bool:
         return True
 
 
-def run_git_commit(commit_data: dict, force: bool = False) -> None:
+def run_git_commit(commit_data: dict, force: bool = False, debug: bool = False) -> None:
     """Execute git commit avec les données automatiques"""
     # Construit le message de commit
     if 'type' not in commit_data:
@@ -183,16 +191,16 @@ def run_git_commit(commit_data: dict, force: bool = False) -> None:
         if body:
             full_msg += f"\n\n{body}"
 
-        subprocess.run(['git', 'commit', '-m', full_msg], check=True)
+        run_git_command(['git', 'commit', '-m', full_msg], debug=debug, check=True)
         success("Commit effectué avec succès!")
 
         # Push automatique vers la branche distante
         try:
-            current_branch = subprocess.run(['git', 'branch', '--show-current'],
-                                          capture_output=True, text=True, check=True).stdout.strip()
+            current_branch = run_git_command(['git', 'branch', '--show-current'],
+                                             debug=debug, capture_output=True, text=True, check=True).stdout.strip()
             info(f"📤 Push vers origin/{current_branch}...")
 
-            subprocess.run(['git', 'push', 'origin', current_branch], check=True)
+            run_git_command(['git', 'push', 'origin', current_branch], debug=debug, check=True)
             success("Push effectué avec succès!")
         except subprocess.CalledProcessError as e:
             warning(f"Push échoué: {e}")
@@ -229,14 +237,14 @@ def auto_commit(
 
         # 1. Rebase automatique (seulement si pas sur branche de base)
         info("🔄 Étape 1: Synchronisation avec develop...")
-        current_branch = subprocess.run(['git', 'branch', '--show-current'],
-                                      capture_output=True, text=True, check=True).stdout.strip()
+        current_branch = run_git_command(['git', 'branch', '--show-current'],
+                                         debug=debug, capture_output=True, text=True, check=True).stdout.strip()
 
         # Déterminer la branche de base
         base_branch = "develop"
         try:
-            subprocess.run(['git', 'show-ref', '--verify', '--quiet', 'refs/heads/develop'],
-                         check=True, capture_output=True)
+            run_git_command(['git', 'show-ref', '--verify', '--quiet', 'refs/heads/develop'],
+                            debug=debug, check=True, capture_output=True)
         except subprocess.CalledProcessError:
             # develop n'existe pas, utiliser main
             base_branch = "main"
@@ -248,11 +256,11 @@ def auto_commit(
 
             try:
                 # Fetch pour avoir les dernières infos
-                subprocess.run(['git', 'fetch', 'origin', base_branch], capture_output=True, check=True)
+                run_git_command(['git', 'fetch', 'origin', base_branch], debug=debug, capture_output=True, check=True)
 
                 # Check si la branche est déjà à jour
-                behind_check = subprocess.run(['git', 'rev-list', '--count', f'HEAD..origin/{base_branch}'],
-                                            capture_output=True, text=True, check=True)
+                behind_check = run_git_command(['git', 'rev-list', '--count', f'HEAD..origin/{base_branch}'],
+                                               debug=debug, capture_output=True, text=True, check=True)
                 behind_count = int(behind_check.stdout.strip())
 
                 if behind_count == 0:
@@ -266,8 +274,8 @@ def auto_commit(
                     if has_staged:
                         info("📦 Sauvegarde des changements stagés...")
                         try:
-                            subprocess.run(['git', 'stash', 'push', '--staged', '-m', 'Auto-stash for rebase'],
-                                         check=True, capture_output=True)
+                            run_git_command(['git', 'stash', 'push', '--staged', '-m', 'Auto-stash for rebase'],
+                                            debug=debug, check=True, capture_output=True)
                             success("Changements sauvegardés")
                         except subprocess.CalledProcessError as e:
                             error(f"Erreur lors de la sauvegarde: {e}")
@@ -281,7 +289,7 @@ def auto_commit(
                         if has_staged:
                             info("📦 Restauration des changements...")
                             try:
-                                subprocess.run(['git', 'stash', 'pop'], check=True, capture_output=True)
+                                run_git_command(['git', 'stash', 'pop'], debug=debug, check=True, capture_output=True)
                                 success("Changements restaurés")
                             except subprocess.CalledProcessError as e:
                                 error(f"Erreur lors de la restauration: {e}")
@@ -292,7 +300,7 @@ def auto_commit(
                         if has_staged:
                             info("🔄 Tentative de restauration des changements après échec...")
                             try:
-                                subprocess.run(['git', 'stash', 'pop'], check=True, capture_output=True)
+                                run_git_command(['git', 'stash', 'pop'], debug=debug, check=True, capture_output=True)
                                 success("Changements restaurés")
                             except subprocess.CalledProcessError:
                                 warning("Changements en stash - utilisez 'git stash pop' après résolution")
@@ -309,7 +317,7 @@ def auto_commit(
         # 2. Scan sécurité UNIQUE de tous les fichiers modifiés
         info("🔄 Étape 2: Scan sécurité...")
         info("🔒 Scan sécurité des fichiers modifiés...")
-        if not run_gitleaks_scan_all_modified():
+        if not run_gitleaks_scan_all_modified(debug=debug):
             error("Secrets détectés - commit bloqué pour votre protection!")
             raise typer.Exit(1)
         success("Aucun secret détecté")
@@ -319,7 +327,7 @@ def auto_commit(
         info("📁 git add . automatique...")
 
         try:
-            subprocess.run(['git', 'add', '.'], check=True, capture_output=True)
+            run_git_command(['git', 'add', '.'], debug=debug, check=True, capture_output=True)
             success("Fichiers stagés avec succès")
         except subprocess.CalledProcessError as e:
             error(f"Erreur git add: {e}")
@@ -347,7 +355,7 @@ def auto_commit(
 
         # 7. Execute le commit
         info("🔄 Étape 7: Commit et push...")
-        run_git_commit(commit_data, force=force)
+        run_git_commit(commit_data, force=force, debug=debug)
 
         success("🎉 Processus terminé avec succès!")
 

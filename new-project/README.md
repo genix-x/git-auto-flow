@@ -14,6 +14,7 @@ Workflow ultra-simplifié : créez des repos complets et commitez avec l'IA en u
 - [⚡ Workflow Ultra-Rapide](#-workflow-ultra-rapide)
 - [🚀 Installation](#-installation)
 - [🏗️ Créer un Repository](#️-créer-un-repository-complet)
+- [🌿 Feature Start](#-feature-start)
 - [🤖 Commit Automatique avec IA](#-commit-automatique-avec-ia)
 - [⚙️ Configuration](#️-configuration)
 - [🔄 Renommage du Binaire](#-renommage-du-binaire)
@@ -30,8 +31,9 @@ cd git-auto-flow/new-project && uv sync && source .venv/bin/activate
 # 2. Créer projet complet (60s)
 gitautoflow repo create-repo monusername/super-projet --force
 
-# 3. Développer et commiter avec IA (30s)
+# 3. Développer avec feature branch et commiter avec IA (30s)
 cd ~/workspace/super-projet
+gitautoflow fs ma-feature --force
 # ... votre code ici ...
 gitautoflow ac --force
 
@@ -104,6 +106,75 @@ gitautoflow repo create-repo mon-projet
 | `OWNER/REPO-NAME` | Format explicite recommandé | - |
 | `--private/--public` | Visibilité du repository | `private` |
 | `--force, -f` | Mode non-interactif | `false` |
+| `--debug` | Affiche les commandes exécutées | `false` |
+
+## 🌿 Feature Start
+
+Démarrez une nouvelle feature branch selon GitFlow en une seule commande.
+
+### ⚡ Syntaxe Ultra-Simple
+
+```bash
+# Alias ultra-court (recommandé)
+gitautoflow fs ma-feature
+
+# Commande complète
+gitautoflow feature start ma-feature
+
+# Avec options
+gitautoflow fs api-refactor --base main --force --debug
+```
+
+### 🚀 Workflow GitFlow Automatique
+
+1. **🔄 Sync avec base** : Mise à jour automatique de la branche de base (`develop`)
+2. **🌿 Création branch** : `feature/ma-feature` depuis la base
+3. **📤 Push upstream** : Configuration automatique du tracking distant
+4. **✅ Prêt à développer** : Environnement configuré pour le développement
+
+### 📊 Options Disponibles
+
+| Option | Description | Défaut |
+|--------|-------------|--------|
+| `FEATURE-NAME` | Nom de la feature (sans `feature/`) | - |
+| `--base, -b` | Branche de base | `develop` |
+| `--force, -f` | Force la création/écrasement | `false` |
+| `--debug` | Affiche les commandes Git exécutées | `false` |
+
+### 🎯 Exemples d'Usage
+
+```bash
+# Feature standard depuis develop
+gitautoflow fs auth-system
+
+# Feature depuis une branche spécifique
+gitautoflow fs hotfix --base main
+
+# Force la création (écrase si existe)
+gitautoflow fs new-ui --force
+
+# Mode debug pour voir les commandes
+gitautoflow fs api-v2 --debug
+```
+
+### 📺 Exemple de Sortie
+
+```
+🚀 Démarrage feature: auth-system
+==================================================
+INFO     Branche cible: feature/auth-system
+INFO     Branche de base: develop
+
+INFO     Basculement sur develop
+INFO     Mise à jour de develop depuis origin
+INFO     Création de la branche feature/auth-system
+INFO     Push initial de feature/auth-system
+
+✅ Feature branch créée: feature/auth-system
+✅ Branche trackée sur origin
+💡 Vous pouvez maintenant commencer à développer !
+💡 Pour committer: gitautoflow ac
+```
 
 ## 🤖 Commit Automatique avec IA
 
@@ -180,7 +251,7 @@ gitautoflow ac --debug
 | Option | Description | Usage |
 |--------|-------------|-------|
 | `--force, -f` | Skip confirmations | Mode CI/automatisé |
-| `--debug` | Logs détaillés | Diagnostics/troubleshooting |
+| `--debug` | Affiche les commandes exécutées | Diagnostics/troubleshooting |
 
 ## ⚙️ Configuration
 
