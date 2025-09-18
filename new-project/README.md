@@ -16,6 +16,7 @@ Workflow ultra-simplifié : créez des repos complets et commitez avec l'IA en u
 - [🏗️ Créer un Repository](#️-créer-un-repository-complet)
 - [🌿 Feature Start](#-feature-start)
 - [🤖 Commit Automatique avec IA](#-commit-automatique-avec-ia)
+- [🚀 Pull Request Automatique avec IA](#-pull-request-automatique-avec-ia)
 - [⚙️ Configuration](#️-configuration)
 - [🔄 Renommage du Binaire](#-renommage-du-binaire)
 
@@ -29,15 +30,16 @@ git clone https://github.com/votre-org/git-auto-flow.git
 cd git-auto-flow/new-project && uv sync && source .venv/bin/activate
 
 # 2. Créer projet complet (60s)
-gitautoflow repo create-repo monusername/super-projet --force
+gitautoflow repo create monusername/super-projet --force
 
-# 3. Développer avec feature branch et commiter avec IA (30s)
+# 3. Développer avec feature branch, commiter et créer PR avec IA (30s)
 cd ~/workspace/super-projet
 gitautoflow fs ma-feature --force
 # ... votre code ici ...
 gitautoflow ac --force
+gitautoflow pr --force
 
-# ✅ Résultat: Repository GitHub + GitFlow + Release v0.1.0 + Commit IA !
+# ✅ Résultat: Repository GitHub + GitFlow + Release v0.1.0 + Commit IA + PR IA !
 ```
 
 **🎯 ROI Immédiat : 95% de temps gagné sur la création et gestion de projets.**
@@ -253,6 +255,127 @@ gitautoflow ac --debug
 | `--force, -f` | Skip confirmations | Mode CI/automatisé |
 | `--debug` | Affiche les commandes exécutées | Diagnostics/troubleshooting |
 
+## 🚀 Pull Request Automatique avec IA
+
+Créez des Pull Requests parfaites avec analyse IA automatique et workflow complet.
+
+### ⚡ Syntaxe Ultra-Simple
+
+```bash
+# Alias ultra-court (recommandé)
+gitautoflow pr
+
+# Commande complète
+gitautoflow auto-pr
+
+# Avec options avancées
+gitautoflow pr --base main --merge --delete-branch --force
+```
+
+### 🤖 Workflow IA Intelligent
+
+1. **🔄 Rebase auto** : Sync avec branche de base (`develop`/`main`)
+2. **📤 Push auto** : Push de la branche feature
+3. **🤖 Analyse IA** : Diff → Titre + Description + Labels
+4. **📋 Création PR** : Pull Request générée par IA
+5. **🔄 Auto-merge** (optionnel) : Merge automatique
+6. **🗑️ Cleanup** (optionnel) : Suppression branche après merge
+
+### 🎯 IA Multi-Provider avec Fallback
+
+- **🥇 Gemini AI** (Google) - Provider principal
+- **🥈 Groq** - Fallback automatique si Gemini indisponible
+- **📝 Format** : Titre optimisé + description détaillée + labels pertinents
+
+### 🚀 Exemples d'Usage
+
+```bash
+# PR standard vers develop
+gitautoflow pr
+
+# PR vers main en mode force
+gitautoflow pr --base main --force
+
+# PR avec auto-merge et suppression branche
+gitautoflow pr --merge --delete-branch
+
+# PR draft pour review
+gitautoflow pr --draft
+
+# PR qui ferme une issue
+gitautoflow pr --closes 123
+
+# Mode debug pour voir les commandes
+gitautoflow pr --debug
+```
+
+### 📊 Options Disponibles
+
+| Option | Description | Défaut |
+|--------|-------------|--------|
+| `--base, -b` | Branche de base pour la PR | `develop` |
+| `--draft, -d` | Créer en mode draft | `false` |
+| `--merge, -m` | Auto-merge après création | `false` |
+| `--delete-branch, -D` | Supprimer branche après merge | `false` |
+| `--closes` | Ferme l'issue #N automatiquement | - |
+| `--force, -f` | Pas de confirmation | `false` |
+| `--debug` | Affiche les commandes exécutées | `false` |
+
+### 📺 Exemple de Sortie
+
+```
+🚀 Git Auto-PR avec IA
+==================================================
+INFO     ✅ Branche à jour avec develop
+INFO     📤 Push vérifié
+INFO     🔄 Initialisation IA...
+🤖 APIs: ✅ Gemini
+INFO     🔍 Analyse des changements vs develop...
+INFO     🤖 Génération de la PR avec Multi-IA...
+
+📋 PR proposée:
+   Titre: feat(auth): add JWT token validation middleware
+   Base: develop
+   Labels: feature, enhancement
+
+## Summary
+This PR adds JWT token validation middleware to enhance API security.
+
+## Changes
+- Add JWT validation middleware
+- Update authentication flow
+- Add comprehensive tests
+- Update documentation
+
+## Test Plan
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+- [ ] Manual JWT validation testing
+
+✅ Créer cette PR? (y/N): y
+✅ PR créée avec succès: https://github.com/user/repo/pull/42
+
+🎉 Success! PR disponible: https://github.com/user/repo/pull/42
+```
+
+### 🔄 Workflow de Développement Recommandé
+
+```bash
+# 1. Créer feature
+gitautoflow fs ma-nouvelle-feature
+
+# 2. Développer
+# ... votre code ...
+
+# 3. Commit avec IA
+gitautoflow ac
+
+# 4. Créer PR avec IA
+gitautoflow pr
+
+# 5. PR prête pour review ! 🎉
+```
+
 ## ⚙️ Configuration
 
 ### 🔑 GitHub CLI (Requis)
@@ -322,7 +445,9 @@ uv sync
 - 🤖 **Zéro Réflexion** : IA analyse et génère tout automatiquement
 - ⚡ **Ultra-Rapide** : 1 commande = workflow complet
 - 🏗️ **Setup Complet** : Repository → Release en 60 secondes
+- 🌿 **GitFlow Intégré** : Feature branches pro en 1 commande
 - 🎯 **Standards Pro** : Conventional Commits garantis
+- 🚀 **PR Automatiques** : Pull Requests parfaites générées par IA
 - 🔄 **Robuste** : Multi-IA avec fallback automatique
 - 🛠️ **Architecture Moderne** : Typer + UV + Rich
 - 🔄 **Renommage Facile** : 1 ligne pour changer le nom du binaire
