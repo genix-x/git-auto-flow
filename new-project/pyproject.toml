@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gitautoflow"
+version = "0.1.0"
+dependencies = [
+    "typer[all]>=0.9.0",
+    "rich>=13.0.0",
+    "python-dotenv>=1.1.1",
+    "groq>=0.31.1",
+    "google-generativeai>=0.8.5",
+]
+
+[project.scripts]
+# Point d'entrée principal - changez juste cette ligne pour renommer le binaire
+gitautoflow = "gitautoflow.cli.main:main"
+# Alias court (optionnel)
+gaf = "gitautoflow.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,55 @@
+{
+  "name": "AWS Development Environment",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "features": {
+    "ghcr.io/devcontainers/features/aws-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {},
+    "ghcr.io/devcontainers-extra/features/aws-cdk:2": {},
+    "ghcr.io/devcontainers/features/terraform:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/jckimble/devcontainer-features/ngrok:3": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "amazonwebservices.aws-toolkit-vscode",
+        "ms-python.python",
+        "ms-vscode.vscode-node-debug2",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml"
+      ]
+    }
+  },
+  "forwardPorts": [3000, 8000, 8080],  // Liste des ports à exposer
+  "portsAttributes": {
+    "3000": {
+      "label": "Application principale",
+      "onAutoForward": "notify"
+    },
+    "8000": {
+      "label": "Port secondaire (ex: API)",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "Port tertiaire (ex: Admin)",
+      "onAutoForward": "notify"
+    }
+  },
+  "runArgs": [
+    "--publish=3000:3000",
+    "--publish=8000:8000",
+    "--publish=8080:8080"
+  ],
+  "postCreateCommand": ".devcontainer/post-create.sh",
+  "mounts": [
+    "source=${localEnv:HOME}/.aws,target=/home/vscode/.aws,type=bind,consistency=cached"
+  ],
+  "remoteUser": "vscode"
+}
