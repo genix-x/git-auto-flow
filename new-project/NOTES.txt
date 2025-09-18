@@ -1,4 +1,6 @@
 
+Figer les versions des packages
+Passer en variable d'environnements
 
 uv venv
 source .venv/bin/activate
@@ -8,3 +10,6 @@ uv sync
 ajouter dans gitignore (builds, executables)
 sudo apt install patchelf
 python -m nuitka --onefile main.py 
+
+
+V2 Utilisé litellm - https://github.com/BerriAI/litellm
