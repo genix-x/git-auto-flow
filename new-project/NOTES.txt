@@ -1,0 +1,10 @@
+
+
+uv venv
+source .venv/bin/activate
+deactivate
+uv sync
+
+ajouter dans gitignore (builds, executables)
+sudo apt install patchelf
+python -m nuitka --onefile main.py 
