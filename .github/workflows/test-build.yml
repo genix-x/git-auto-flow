@@ -20,9 +20,6 @@ jobs:
           - os: macos
             runner: macos-latest
             binary_name: gitautoflow-test-macos
-          - os: windows
-            runner: windows-latest
-            binary_name: gitautoflow-test-windows.exe
 
     steps:
       - name: 📥 Checkout code
@@ -37,17 +34,8 @@ jobs:
         if: matrix.os == 'linux'
         run: sudo apt-get update && sudo apt-get install -y patchelf
 
-      - name: 📦 Install UV (Linux/macOS)
-        if: matrix.os != 'windows'
+      - name: 📦 Install UV
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
-
-      - name: 📦 Install UV (Windows)
-        if: matrix.os == 'windows'
-        run: powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-
-      - name: 📋 Add UV to PATH (Windows)
-        if: matrix.os == 'windows'
-        run: echo "$HOME\.cargo\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: 🔧 Install dependencies
         run: |
@@ -67,46 +55,22 @@ jobs:
               main()
           EOF
 
-      - name: 🏗️ Test build with Nuitka (Linux/macOS)
-        if: matrix.os != 'windows'
+      - name: 🏗️ Test build with Nuitka
         run: |
           uv run python -m nuitka \
-            --onefile \
             --assume-yes-for-downloads \
-            --enable-plugin=anti-bloat \
+            --jobs=4 \
+            --include-package-data=gitautoflow \
+            --include-package=lib \
             --output-filename=${{ matrix.binary_name }} \
             --output-dir=dist/ \
-            --include-package-data=gitautoflow \
             launcher.py
 
-      - name: 📝 Create launcher file (Windows)
-        if: matrix.os == 'windows'
-        run: |
-          echo '#!/usr/bin/env python3' > launcher.py
-          echo 'import sys' >> launcher.py
-          echo 'import os' >> launcher.py
-          echo 'sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))' >> launcher.py
-          echo 'from gitautoflow.cli.main import main' >> launcher.py
-          echo 'if __name__ == "__main__":' >> launcher.py
-          echo '    main()' >> launcher.py
-
-      - name: 🏗️ Test build with Nuitka (Windows)
-        if: matrix.os == 'windows'
-        run: |
-          uv run python -m nuitka --onefile --assume-yes-for-downloads --enable-plugin=anti-bloat --output-filename=${{ matrix.binary_name }} --output-dir=dist/ --include-package-data=gitautoflow launcher.py
-
-      - name: ✅ Test binary (Linux/macOS)
-        if: matrix.os != 'windows'
+      - name: ✅ Test binary
         run: |
           chmod +x dist/${{ matrix.binary_name }}
           ./dist/${{ matrix.binary_name }} --help
           ./dist/${{ matrix.binary_name }} version
-
-      - name: ✅ Test binary (Windows)
-        if: matrix.os == 'windows'
-        run: |
-          dist/${{ matrix.binary_name }} --help
-          dist/${{ matrix.binary_name }} version
 
       - name: 📊 Show binary info
         run: |
