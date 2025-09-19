@@ -18,6 +18,11 @@ jobs:
             runner: ubuntu-latest
             binary_name: gitautoflow-linux-x64
             python_arch: x64
+          - os: linux
+            arch: arm64
+            runner: ubuntu-latest
+            binary_name: gitautoflow-linux-arm64
+            python_arch: arm64
 
           # macOS builds
           - os: macos
@@ -66,16 +71,19 @@ jobs:
               main()
           EOF
 
-      - name: 🏗️ Build binary with Nuitka
+      - name: 🏗️ Build binary with Nuitka (fast build that works!)
         run: |
           uv run python -m nuitka \
             --assume-yes-for-downloads \
             --jobs=4 \
             --include-package-data=gitautoflow \
             --include-package=lib \
-            --output-filename=${{ matrix.binary_name }} \
             --output-dir=dist/ \
             launcher.py
+
+      - name: 🏷️ Rename binary to target name
+        run: |
+          mv dist/launcher.bin dist/${{ matrix.binary_name }}
 
       - name: ✅ Test binary
         run: |

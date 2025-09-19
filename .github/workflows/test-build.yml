@@ -62,9 +62,12 @@ jobs:
             --jobs=4 \
             --include-package-data=gitautoflow \
             --include-package=lib \
-            --output-filename=${{ matrix.binary_name }} \
             --output-dir=dist/ \
             launcher.py
+
+      - name: 🏷️ Rename binary to test name
+        run: |
+          mv dist/launcher.bin dist/${{ matrix.binary_name }}
 
       - name: ✅ Test binary
         run: |

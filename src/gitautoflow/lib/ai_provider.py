@@ -1,0 +1,268 @@
+#!/usr/bin/env python3
+"""
+Gestionnaire multi-IA intelligent avec fallback automatique
+"""
+
+import os
+from typing import Dict, Optional
+from dotenv import load_dotenv
+
+
+class AIProvider:
+    """Gestionnaire intelligent multi-IA avec fallback automatique"""
+    
+    def __init__(self):
+        """Initialise le gestionnaire multi-IA"""
+        self._load_env_from_git_root()
+        
+        self.gemini_client = None
+        self.groq_client = None
+        
+        self.gemini_key = os.getenv('GEMINI_API_KEY')
+        self.groq_key = os.getenv('GROQ_API_KEY')
+        
+        self.gemini_available = bool(self.gemini_key)
+        self.groq_available = bool(self.groq_key)
+        
+        if not (self.gemini_available or self.groq_available):
+            env_path = os.path.expanduser('~/.env.gitautoflow')
+            raise ValueError(
+                "❌ Aucune clé API configurée!\n\n"
+                "💡 Configurez vos clés API en éditant le fichier .env:\n"
+                f"   📄 {env_path}\n\n"
+                "🔑 Clés disponibles:\n"
+                "   GEMINI_API_KEY=votre_cle_gemini\n"
+                "   GROQ_API_KEY=votre_cle_groq\n\n"
+                "🔗 Obtenir les clés:\n"
+                "   • Gemini: https://makersuite.google.com/app/apikey\n"
+                "   • Groq: https://console.groq.com/keys\n\n"
+                "⚡ Ou relancez: ./install.sh pour configuration interactive"
+            )
+    
+    def _load_env_from_git_root(self):
+        """Charge le fichier .env depuis le home directory"""
+        env_file = os.path.expanduser('~/.env.gitautoflow')
+        if os.path.exists(env_file):
+            load_dotenv(env_file)
+            return
+        
+        local_env = os.path.join(os.path.dirname(__file__), '../../.env')
+        if os.path.exists(local_env):
+            load_dotenv(local_env)
+    
+    def _get_gemini_client(self):
+        """Initialise le client Gemini si pas encore fait"""
+        if not self.gemini_client and self.gemini_available:
+            try:
+                import sys
+                from pathlib import Path
+                lib_path = Path(__file__).parent
+                if str(lib_path) not in sys.path:
+                    sys.path.insert(0, str(lib_path))
+                
+                from gemini_client import GeminiClient
+                self.gemini_client = GeminiClient()
+                return self.gemini_client
+            except Exception as e:
+                print(f"⚠️  Gemini indisponible: {e}")
+                self.gemini_available = False
+                return None
+        return self.gemini_client
+    
+    def _get_groq_client(self):
+        """Initialise le client Groq si pas encore fait"""
+        if not self.groq_client and self.groq_available:
+            try:
+                import sys
+                from pathlib import Path
+                lib_path = Path(__file__).parent
+                if str(lib_path) not in sys.path:
+                    sys.path.insert(0, str(lib_path))
+                
+                from groq_client import GroqClient
+                self.groq_client = GroqClient(self.groq_key)
+                return self.groq_client
+            except Exception as e:
+                print(f"⚠️  Groq indisponible: {e}")
+                self.groq_available = False
+                return None
+        return self.groq_client
+    
+    def analyze_for_commit(self, diff: str, files: str) -> Dict:
+        """
+        Analyse intelligente avec fallback automatique
+        """
+        if self.gemini_available:
+            try:
+                print("🤖 Analyse avec Gemini...")
+                client = self._get_gemini_client()
+                if client:
+                    return client.analyze_for_commit(diff, files)
+            except Exception as e:
+                print(f"❌ Gemini: {e}")
+                print("🔄 Fallback vers Groq...")
+                self.gemini_available = False
+        
+        if self.groq_available:
+            try:
+                print("🚀 Analyse avec Groq (fallback)...")
+                client = self._get_groq_client()
+                if client:
+                    return client.analyze_for_commit(diff, files)
+            except Exception as e:
+                print(f"❌ Groq: {e}")
+                self.groq_available = False
+        
+        raise RuntimeError(
+            "❌ Aucune IA disponible!\n"
+            "💡 Vérifiez vos clés API et votre connexion internet"
+        )
+    
+    def analyze_for_pr(self, diff: str, files: str, target_branch: str = "develop") -> Dict:
+        """
+        Analyse intelligente pour PR avec fallback automatique
+        """
+        if self.gemini_available:
+            try:
+                print("🤖 Génération PR avec Gemini...")
+                client = self._get_gemini_client()
+                if client:
+                    return client.analyze_for_pr(diff, files, target_branch)
+            except Exception as e:
+                print(f"❌ Gemini: {e}")
+                print("🔄 Fallback vers Groq...")
+                self.gemini_available = False
+        
+        if self.groq_available:
+            try:
+                print("🚀 Génération PR avec Groq (fallback)...")
+                client = self._get_groq_client()
+                if client:
+                    return client.analyze_for_pr(diff, files, target_branch)
+            except Exception as e:
+                print(f"❌ Groq: {e}")
+                self.groq_available = False
+        
+        raise RuntimeError(
+            "❌ Aucune IA disponible!\n"
+            "💡 Vérifiez vos clés API et votre connexion internet"
+        )
+    
+    def analyze_for_release(self, diff: str, files: str, commits: list = None, latest_tag: str = "v0.0.0") -> Dict:
+        """
+        Analyse intelligente pour release PR avec fallback automatique
+        """
+        if self.gemini_available:
+            try:
+                print("🤖 Génération Release PR avec Gemini...")
+                client = self._get_gemini_client()
+                if client:
+                    return client.analyze_for_release(diff, files, commits, latest_tag)
+            except Exception as e:
+                print(f"❌ Gemini: {e}")
+                print("🔄 Fallback vers Groq...")
+                self.gemini_available = False
+        
+        if self.groq_available:
+            try:
+                print("🚀 Génération Release PR avec Groq (fallback)...")
+                client = self._get_groq_client()
+                if client:
+                    return client.analyze_for_release(diff, files, commits, latest_tag)
+            except Exception as e:
+                print(f"❌ Groq: {e}")
+                self.groq_available = False
+        
+        raise RuntimeError(
+            "❌ Aucune IA disponible!\n"
+            "💡 Vérifiez vos clés API et votre connexion internet"
+        )
+
+    def generate_response(self, prompt: str) -> Dict:
+        """
+        Génère une réponse JSON générique avec fallback automatique
+        """
+        if self.gemini_available:
+            try:
+                print("🤖 Analyse avec Gemini...")
+                client = self._get_gemini_client()
+                if client:
+                    return client.generate_json_response(prompt)
+            except Exception as e:
+                print(f"❌ Gemini: {e}")
+                print("🔄 Fallback vers Groq...")
+                self.gemini_available = False
+        
+        if self.groq_available:
+            try:
+                print("🚀 Analyse avec Groq (fallback)...")
+                client = self._get_groq_client()
+                if client:
+                    return client.generate_json_response(prompt)
+            except Exception as e:
+                print(f"❌ Groq: {e}")
+                self.groq_available = False
+        
+        raise RuntimeError(
+            "❌ Aucune IA disponible!\n"
+            "💡 Vérifiez vos clés API et votre connexion internet"
+        )
+    
+    def generate_tickets(self, content: str, context: str = "") -> dict:
+        """
+        Génère des tickets/issues depuis un compte-rendu avec IA
+        """
+        prompt = f'''
+Analyse ce plan de projet (format YAML/texte) et convertis CHAQUE TÂCHE ('task') en une issue GitHub.
+
+PLAN DE PROJET:
+```
+{content}
+```
+
+CONTEXTE ADDITIONNEL:
+{context}
+
+Tu dois répondre UNIQUEMENT avec un JSON valide dans ce format exact. Inclus TOUTES les tâches du plan.
+{{
+  "tickets": [
+    {{
+      "position": 1,
+      "title": "Titre concis et actionnable basé sur la description de la tâche",
+      "description": "Description détaillée de la tâche, incluant les fichiers concernés s'ils sont mentionnés.",
+      "labels": ["enhancement", "priority-medium"],
+      "priority": "medium",
+      "estimate": "2",
+      "dependencies": [1, 2]
+    }}
+  ]
+}}
+
+RÈGLES STRICTES:
+- **Convertis TOUTES les tâches** trouvées dans le plan. Ne pas résumer.
+- Le champ "position" DOIT correspondre au champ "id" de la tâche dans le plan source. C'est crucial pour les dépendances.
+- Le champ "dependencies" DOIT être une liste des "id" des tâches dont cette tâche dépend.
+- Le "title" doit être basé sur la "description" de la tâche dans le plan.
+- La "description" dans le JSON doit être une version plus élaborée de la description de la tâche source.
+- Labels: Choisis parmi: bug, enhancement, documentation, refactor, testing.
+- Priority: high, medium, low.
+- Estimate: nombre de jours (1-5).
+- Le JSON doit être la SEULE chose dans ta réponse. Pas de texte avant ou après. Pas de markdown.
+'''
+        try:
+            return self.generate_response(prompt)
+        except Exception as e:
+            raise RuntimeError(f"Erreur génération tickets: {e}")
+
+    def get_status(self) -> str:
+        """Retourne le statut des APIs disponibles"""
+        status = []
+        if self.gemini_available:
+            status.append("✅ Gemini")
+        if self.groq_available:
+            status.append("✅ Groq")
+        
+        if not status:
+            return "❌ Aucune IA disponible"
+        
+        return f"🤖 APIs: {', '.join(status)}"
