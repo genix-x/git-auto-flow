@@ -53,3 +53,15 @@ __pycache__/
 .aider.*
 .aider*
 
+# Nuitka build artifacts
+dist/
+*.onefile-build/
+*.dist/
+*.build/
+nuitka-crash-report.xml
+
+# Temporary files
+*~
+*.tmp
+test_lib.py~
+

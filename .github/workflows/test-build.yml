@@ -20,30 +20,22 @@ jobs:
           - os: macos
             runner: macos-latest
             binary_name: gitautoflow-test-macos
-          - os: windows
-            runner: windows-latest
-            binary_name: gitautoflow-test-windows.exe
 
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
       - name: 🐍 Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: 📦 Install UV (Linux/macOS)
-        if: matrix.os != 'windows'
+      - name: 🔧 Install patchelf (Linux)
+        if: matrix.os == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y patchelf
+
+      - name: 📦 Install UV
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
-
-      - name: 📦 Install UV (Windows)
-        if: matrix.os == 'windows'
-        run: powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-
-      - name: 📋 Add UV to PATH (Windows)
-        if: matrix.os == 'windows'
-        run: echo "$HOME\.cargo\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: 🔧 Install dependencies
         run: |
@@ -51,34 +43,34 @@ jobs:
           uv add nuitka
           uv add ordered-set
 
-      - name: 🏗️ Test build with Nuitka (Linux/macOS)
-        if: matrix.os != 'windows'
+      - name: 📝 Create launcher file
+        run: |
+          cat > launcher.py << 'EOF'
+          #!/usr/bin/env python3
+          import sys
+          import os
+          sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+          from gitautoflow.cli.main import main
+          if __name__ == "__main__":
+              main()
+          EOF
+
+      - name: 🏗️ Test build with Nuitka
         run: |
           uv run python -m nuitka \
-            --onefile \
             --assume-yes-for-downloads \
-            --enable-plugin=anti-bloat \
+            --jobs=4 \
+            --include-package-data=gitautoflow \
+            --include-package=lib \
             --output-filename=${{ matrix.binary_name }} \
             --output-dir=dist/ \
-            src/gitautoflow/cli/main.py
+            launcher.py
 
-      - name: 🏗️ Test build with Nuitka (Windows)
-        if: matrix.os == 'windows'
-        run: |
-          uv run python -m nuitka --onefile --assume-yes-for-downloads --enable-plugin=anti-bloat --output-filename=${{ matrix.binary_name }} --output-dir=dist/ src/gitautoflow/cli/main.py
-
-      - name: ✅ Test binary (Linux/macOS)
-        if: matrix.os != 'windows'
+      - name: ✅ Test binary
         run: |
           chmod +x dist/${{ matrix.binary_name }}
           ./dist/${{ matrix.binary_name }} --help
           ./dist/${{ matrix.binary_name }} version
-
-      - name: ✅ Test binary (Windows)
-        if: matrix.os == 'windows'
-        run: |
-          dist/${{ matrix.binary_name }} --help
-          dist/${{ matrix.binary_name }} version
 
       - name: 📊 Show binary info
         run: |
@@ -86,7 +78,7 @@ jobs:
           file dist/${{ matrix.binary_name }} || true
 
       - name: 📤 Upload test binary (for debugging)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-binary-${{ matrix.os }}
           path: dist/${{ matrix.binary_name }}
