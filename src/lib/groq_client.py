@@ -7,7 +7,7 @@ import os
 import json
 from typing import Dict, List, Optional
 from groq import Groq
-from prompt_templates import PromptTemplates
+from .prompt_templates import PromptTemplates
 
 
 class GroqClient:
