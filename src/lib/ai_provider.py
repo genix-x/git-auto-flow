@@ -60,7 +60,7 @@ class AIProvider:
                 if str(lib_path) not in sys.path:
                     sys.path.insert(0, str(lib_path))
                 
-                from gemini_client import GeminiClient
+                from .gemini_client import GeminiClient
                 self.gemini_client = GeminiClient()
                 return self.gemini_client
             except Exception as e:
@@ -79,7 +79,7 @@ class AIProvider:
                 if str(lib_path) not in sys.path:
                     sys.path.insert(0, str(lib_path))
                 
-                from groq_client import GroqClient
+                from .groq_client import GroqClient
                 self.groq_client = GroqClient(self.groq_key)
                 return self.groq_client
             except Exception as e:

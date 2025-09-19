@@ -137,6 +137,8 @@ source = { editable = "." }
 dependencies = [
     { name = "google-generativeai" },
     { name = "groq" },
+    { name = "nuitka" },
+    { name = "ordered-set" },
     { name = "python-dotenv" },
     { name = "rich" },
     { name = "typer" },
@@ -152,7 +154,9 @@ build = [
 requires-dist = [
     { name = "google-generativeai", specifier = ">=0.8.5" },
     { name = "groq", specifier = ">=0.31.1" },
+    { name = "nuitka", specifier = ">=2.7.16" },
     { name = "nuitka", marker = "extra == 'build'", specifier = ">=1.8.0" },
+    { name = "ordered-set", specifier = ">=4.1.0" },
     { name = "ordered-set", marker = "extra == 'build'", specifier = ">=4.1.0" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "rich", specifier = ">=13.0.0" },
