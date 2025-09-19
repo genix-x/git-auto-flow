@@ -1,265 +1,191 @@
-# 🤖 Git Auto-Flow
-**Automatisation Git intelligente avec Multi-IA (Gemini + Groq) et Gestion de Projets GitHub**
+# 🚀 Git Auto-Flow v2.0
 
-Simplifiez votre workflow Git avec des commits conventionnels, des PRs générés par IA, et la création de projets GitHub complets à partir de comptes-rendus de réunion.
+**🏭 Usine Numérique AIOps - De l'Idée à la Production en 3 Minutes**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-v0.15.0-blue.svg)](https://github.com/genix-x/git-auto-flow/releases/latest)
+AIOps = Intelligence Artificielle + Automatisation DevOps. Git Auto-Flow transforme votre pipeline en un cerveau autonome qui code, teste et déploie.
 
-## 📑 Sommaire
-- [🏭 Usine Numérique AIOps](#-usine-numérique-aiops---de-lidée-à-la-production-en-3-minutes)
-- [📋 Création Automatique de Tickets](#-création-automatique-de-tickets)  
-- [🚀 Installation](#-installation-ultra-simple)
-- [🎯 Fonctionnalités Complètes](#-fonctionnalités-actuelles)
-- [🐛 Debug & Troubleshooting](#-mode-debug)
-- [🔒 Sécurité](#-sécurité-intégrée)  
-- [⚙️ Configuration](#️-configuration)
-- [🗺️ Roadmap](#-roadmap)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![UV](https://img.shields.io/badge/UV-Package%20Manager-green.svg)](https://github.com/astral-sh/uv)
+[![Typer CLI](https://img.shields.io/badge/CLI-Typer-purple.svg)](https://typer.tiangolo.com)
+[![AI Powered](https://img.shields.io/badge/AI-Gemini%20%7C%20Groq-orange.svg)](https://ai.google.dev)
 
-## 🏭 Usine Numérique AIOps - De l'Idée à la Production en 3 Minutes
-
-**AIOps = Intelligence Artificielle + Automatisation DevOps.** Git Auto-Flow transforme votre pipeline en un cerveau autonome qui code, teste et déploie.
-
-### ⚡ Workflow AIOps Ultra-Rapide (Challenge 3 min)
+## ⚡ Workflow AIOps Ultra-Rapide (Challenge 3 min)
 
 ```bash
 # 1. Setup (30s)
-git clone https://github.com/genix-x/git-auto-flow.git && cd git-auto-flow && ./install.sh
-git repo-create mon-projet --force
+git clone https://github.com/votre-org/git-auto-flow.git
+cd git-auto-flow/new-project && uv sync && source .venv/bin/activate
+gitautoflow repo create mon-utilisateur/mon-projet --force
 
 # 2. Développement (60s)
-git feature-start ma-feature
+cd ~/workspace/mon-projet
+gitautoflow fs ma-feature --force
 # ... Votre code ici ...
 
 # 3. Déploiement (90s)
-git ca --force                     # Commit IA + Scan Sécurité
-git pr --force --auto-merge        # PR auto-mergée vers develop
-git deploy --force                 # Release de develop vers main (auto-tag)
+gitautoflow ac --force                    # Commit IA + Scan Sécurité
+gitautoflow pr --force                    # PR auto-mergée vers develop
+gitautoflow ra --version 1.0.0 --force   # Release develop → main → binaires
 ```
 
 **Architecture GitFlow AIOps :** `main` ← `develop` ← `feature/*`
 
-**✅ ROI Immédiat : 95% de Temps Gagné.**
+**✅ ROI Immédiat : 95% de Temps Gagné + Binaires Multi-Arch Automatiques**
 
-## 📋 Création Automatique de Tickets
+## 🎯 Commandes Disponibles
 
-### ✅ Génération d'Issues depuis Compte-Rendu
+```
+╭─ Commands ────────────────────────────────────────────────────────────────────╮
+│ auto-commit     Commit automatique avec rebase + IA (alias: ac)              │
+│ auto-pr         Créer automatiquement une PR avec IA (alias: pr)             │
+│ feature-start   Démarre une nouvelle feature branch GitFlow (alias: fs)      │
+│ version         Affiche la version du projet                                 │
+│ issue           Commandes de gestion des issues GitHub                       │
+│ release         Commandes d'automatisation des releases                      │
+│ repo            Commandes de gestion des repositories GitHub                 │
+╰───────────────────────────────────────────────────────────────────────────────╯
+```
+
+## 🏗️ Gestion Complète des Repositories
+
+```bash
+# Créer un repository complet (GitFlow + Release v0.1.0)
+gitautoflow repo create utilisateur/projet
+
+# Supprimer un repository (sécurisé avec double confirmation)
+gitautoflow repo delete ancien-projet --force
+```
+
+## 🎫 Issues depuis Compte-Rendu IA
 
 ```bash
 # Analyser un CR de réunion et créer les tickets GitHub
-git create-tickets meeting-notes.md
+gitautoflow issue create meeting-notes.md
 
 # Pour un autre repository
-git create-tickets notes.md --repo genix-x/mon-projet
-
-# Mode debug
-git create-tickets notes.md --debug
+gitautoflow issue create notes.md --repo genix-x/mon-projet
 ```
 
 **Fonctionnalités :**
-- 🧠 Analyse IA du compte-rendu de réunion
-- 📊 Extraction automatique des tâches et priorités
-- 🏷️ Création des labels GitHub (priority-high, enhancement, etc.)
-- 🔗 Gestion des dépendances entre tickets
+- 🧠 Analyse IA du compte-rendu → extraction tâches/priorités
+- 🏷️ Création labels GitHub (priority-high, enhancement, etc.)
+- 🔗 Gestion dépendances entre tickets
 - ⏱️ Estimation automatique en jours
-- ✅ Confirmation interactive avant création
 
-**Exemple de fichier `meeting-notes.md` :**
-```markdown
-# Réunion Planning Sprint
+## 🚀 Releases Multi-Arch Automatiques
 
-## Fonctionnalités à développer
-- Système d'authentification avec OAuth
-- Dashboard utilisateur avec stats
-- API REST pour mobile
-- Tests unitaires complets
+```bash
+# Release automatique complète (version calculée par IA)
+gitautoflow release auto
 
-## Points bloquants
-- L'API dépend de l'auth
-- Tests dépendent de l'API
+# Release avec version forcée (ex: passage en v1.0)
+gitautoflow ra --version 1.0.0 --force
+
+# Prévisualiser la prochaine version
+gitautoflow release next-version
 ```
 
-**Résultat : 4 issues GitHub créées avec labels, priorités et dépendances !**
+**À chaque release, génération automatique de :**
+```
+📦 gitautoflow-linux-x64           # Linux Intel/AMD
+📦 gitautoflow-linux-arm64         # Linux ARM
+📦 gitautoflow-macos-x64           # macOS Intel
+📦 gitautoflow-macos-arm64         # macOS M1/M2
+📦 gitautoflow-windows-x64.exe     # Windows
+📋 checksums.txt                   # SHA256
+```
 
-### ⚡ Workflow Ultra-Automatisé v0.15.0
+## ⚡ Workflow Ultra-Automatisé Complet
 
-#### 🏭 Depuis Meeting → Code Déployé
+**🏭 Du Meeting au Code Déployé :**
 
 ```bash
 # 🎯 1. Créer projet complet depuis 0
-git repo-create mon-super-projet    # Repo + GitFlow + README + v0.1.0
+gitautoflow repo create mon-super-projet    # Repo + GitFlow + README + v0.1.0
 
-# 📋 2. Générer tickets depuis CR réunion  
-git create-tickets meeting-notes.md # IA → Issues GitHub avec dépendances
+# 📋 2. Générer tickets depuis CR réunion
+gitautoflow issue create meeting-notes.md   # IA → Issues GitHub avec dépendances
 
 # ⚡ 3. Dev cycle ultra-rapide (pour l'issue #42)
-git feature-start auth-system       # Feature branch
-git ca                              # Commit IA + Gitleaks scan
-git pr --auto-merge --closes 42     # PR qui ferme l'issue #42 en mergant ✅
+gitautoflow fs auth-system                  # Feature branch
+gitautoflow ac --force                      # Commit IA + Gitleaks scan
+gitautoflow pr --force --closes 42          # PR qui ferme l'issue #42 ✅
 
 # ♻️ 4. Répéter pour chaque ticket
-git feature-start dashboard && git ca && git pr --force
+gitautoflow fs dashboard && gitautoflow ac && gitautoflow pr --force
 
-# 🚀 5. Release automatique
-git checkout develop  
-git pr --base main --auto-merge     # → Auto-release v0.2.0 
+# 🚀 5. Release automatique avec binaires
+gitautoflow ra --version 2.0.0 --force     # → Release + binaires multi-arch
 ```
 
-**Résultat : De la réunion au code en prod en quelques minutes ! ⚡**
+**Résultat : De la réunion au code en prod avec binaires distribués ! ⚡**
 
-## 🚀 Installation Ultra-Simple
+## 🚀 Installation
 
-**Installation interactive (recommandée) :**
+### Prérequis
+- **Python 3.11+** + **UV Package Manager** + **GitHub CLI** (`gh auth login`)
+
+### Installation rapide
 ```bash
-git clone https://github.com/genix-x/git-auto-flow.git && cd git-auto-flow && ./install.sh
+git clone https://github.com/votre-org/git-auto-flow.git
+cd git-auto-flow/new-project
+uv sync && source .venv/bin/activate
+gitautoflow --help
 ```
 
-**Installation automatisée (CI/serveurs) :**
+### Build binaires locaux
 ```bash
-git clone https://github.com/genix-x/git-auto-flow.git && cd git-auto-flow && ./install.sh --non-interactive
+./scripts/build-binary.sh    # Build pour votre plateforme
 ```
-
-Le script v0.15.0 configure automatiquement :
-- ✅ Gitleaks (protection anti-secrets)
-- ✅ Dépendances Python et alias Git
-- ✅ Mode auto-merge pour les PRs
-- ✅ API keys et workflow complet
-
-### 🔗 Obtenir les clés API (optionnel)
-- **Gemini**: https://makersuite.google.com/app/apikey (gratuit)
-- **Groq**: https://console.groq.com/keys (gratuit, prévu v0.16.0)
-
-## 🎯 Fonctionnalités Actuelles
-
-### ✅ Multi-IA avec Fallback Planifié
-- **Gemini** (principal) - Gratuit et performant ✅
-- **Groq** (fallback) - 🔄 En développement (prévu v0.16.0)
-- Basculement automatique planifié pour robustesse maximale
-
-### ✅ 🏗️ **Project & Ticket Management**
-- 🎯 **Création complète de projets GitHub** (`git repo-create`)
-- 📋 **Génération automatique de tickets** depuis meetings (`git create-tickets`) 
-- ⚙️ **Setup automatisé** : repo + branches + README + première release
-- 🔗 **Gestion des dépendances** entre tickets via GitHub API
-- 📊 **Estimation automatique** et labels priorité
-
-### ✅ 🔄 **PR Automation Avancée**
-- 🤖 Auto-merge optionnel avec `--auto-merge`
-- ⚡ Mode force avec `--force` (skip confirmation)
-- 🌿 Contrôle suppression branches avec `--no-auto-delete`
-- 🎯 **Fermeture auto des issues avec `--closes <issue_number>`**
-- 📝 Titre et description générés par IA
-- 📋 Support mode draft et labels
-
-### ✅ 💻 **Commit Automation + Sécurité**
-- 🔒 **Scan automatique des secrets** avec Gitleaks avant chaque commit
-- 🧠 Analyse automatique du git diff avec IA
-- 📏 Messages conventionnels (Angular standard)
-- 🛡️ **Protection totale** : Bloque les commits contenant des clés API, mots de passe, etc.
-
-## 🐛 Mode Debug
-
-Pour diagnostiquer les problèmes ou voir les commandes exécutées en temps réel :
-
-```bash
-# Commit avec debug (voir toutes les commandes git/gitleaks)
-git ca --debug
-
-# PR avec debug (voir commandes gh, git)
-git pr --debug
-
-# Release avec debug (voir tout le processus)
-python3 src/git-release-auto.py --debug
-```
-
-**Quand utiliser le debug :**
-- ❌ Erreurs de gitleaks ou permissions
-- ❌ Problèmes de rebase ou conflits
-- ❌ Échecs de création PR
-- 🔍 Comprendre le workflow interne
-
-### 🚨 Troubleshooting
-
-**"Aucune IA disponible"**
-```bash
-# Vérifier les clés API
-cat ~/.env.gitautoflow | grep -E "(GEMINI|GROQ)"
-```
-
-**"GitHub CLI non trouvé"**  
-```bash
-# Installation + Authentification
-brew install gh && gh auth login        # macOS
-sudo apt install gh && gh auth login    # Ubuntu
-```
-
-## 🔒 Sécurité Intégrée
-
-### Protection Anti-Secrets avec Gitleaks
-Chaque commit est automatiquement scanné pour détecter :
-- 🔑 Clés API (AWS, Google, GitHub, etc.)
-- 🔐 Mots de passe en dur dans le code
-- 🎫 Tokens d'authentification
-- 📧 Adresses email privées
-- 🛡️ Certificats SSL et clés privées
-
-### 🚨 Exemple de Protection en Action
-```bash
-# Vous ajoutez accidentellement une clé API
-echo "API_KEY=sk-1234567890abcdef" > config.js
-git ca
-
-# 🛡️ Git Auto-Flow vous protège automatiquement !
-🚨 SECRETS DÉTECTÉS:
-❌ Scan sécurité échoué - commit bloqué pour votre protection!
-```
-
-**✅ Correction sécurisée :**
-```bash
-echo "API_KEY=process.env.MY_API_KEY" > config.js
-git ca  # ✅ Scan réussi, commit autorisé !
-```
+*Détails complets dans [BUILD.md](BUILD.md)*
 
 ## ⚙️ Configuration
 
-**Fichier `~/.env.gitautoflow` :**
+### GitHub CLI (Requis)
 ```bash
-# APIs 
-GEMINI_API_KEY=your_key
-GROQ_API_KEY=your_key  # 🔄 Non supporté actuellement
-
-# Organisation GitHub  
-GITHUB_ORG=genix-x
-WORKING_DIR=/Users/vous/projects/genix
-GITHUB_BASE_URL=https://github.com/genix-x/
+gh auth login && gh auth status
 ```
 
-## 🗺️ Roadmap
+### Clés API IA (Optionnel - Fallback automatique)
+```bash
+# Créez ~/.env.gitautoflow
+GEMINI_API_KEY=your_gemini_key_here
+GROQ_API_KEY=your_groq_key_here
+WORKING_DIR=/home/user/workspace
+```
 
-### ✅ **Versions Disponibles**
-- v0.15.0 : Auto-merge PR + installation non-interactive
-- v0.14.0 : Corrections deploy PR + suppression auto-branches
-- v0.13.0 : Options --no-auto-delete et --force pour PR
-- v0.11.0 : Workflow git-repo-create complet
-- v0.10.0 : Création tickets avec dépendances GitHub API
-- v0.6.0 : Création automatique tickets depuis meetings
+## 🎯 Avantages v2.0
+
+- 🔒 **Sécurité Ultime** : Scan GitLeaks automatique - ZÉRO risque de fuite
+- 🤖 **Zéro Réflexion** : IA analyse et génère tout automatiquement
+- ⚡ **Ultra-Rapide** : 1 commande = workflow complet
+- 🏗️ **Setup Complet** : Repository → Release → Binaires en 3 minutes
+- 🎫 **Issues IA** : Compte-rendus → Tickets GitHub automatiquement
+- 📦 **Binaires Multi-Arch** : Linux/macOS/Windows générés à chaque release
+- 🛠️ **Architecture Moderne** : Typer + UV + Rich + GitHub Actions
+- 🔄 **Renommage Facile** : 1 ligne pour changer le nom du binaire
+
+## 🔄 Renommage du Binaire
+
+```bash
+# Éditez pyproject.toml - changez juste cette ligne :
+[project.scripts]
+mon-nom = "gitautoflow.cli.main:main"  # ← Votre nom ici
+
+# Appliquez
+uv sync && mon-nom --help  # ✅ Nouveau nom !
+```
+
+*Script automatisé et détails dans [RENAME.md](RENAME.md)*
 
 ---
 
-## 🎉 Avantages
+<div align="center">
 
-- 🔒 **Sécurité Ultime** : Scan automatique des secrets - ZÉRO risque de fuite !
-- 🤖 **Zéro réflexion** : L'IA analyse et génère tout
-- ⚡ **Ultra-rapide** : 1 commande = workflow complet
-- 🛡️ **Protection Totale** : Rebase + push intelligent + détection secrets
-- 🎯 **Standards** : Commits/PRs conventionnels garantis
-- 🔄 **Robuste** : Fallback multi-IA automatique
-- 👥 **Équipe** : Package réutilisable sur tous projets
-- 🎯 **Gestion Complète** : De la réunion au code déployé !
+**🚀 Git Auto-Flow v2.0 - Plus jamais de setup fastidieux ! Binaires inclus ! 🔒✨**
 
----
+[⭐ Star ce projet](https://github.com/votre-org/git-auto-flow) | [🐛 Issues](https://github.com/votre-org/git-auto-flow/issues) | [💡 Discussions](https://github.com/votre-org/git-auto-flow/discussions) | [📦 Releases](https://github.com/votre-org/git-auto-flow/releases)
 
-**🚀 Git Auto-Flow - Plus jamais de commits mal formatés, de secrets exposés, ou de setup projet fastidieux ! 🔒✨**
+*Développé avec ❤️ par l'équipe Git Auto-Flow*
 
-*Développé avec ❤️ par Genix Team*
+</div>

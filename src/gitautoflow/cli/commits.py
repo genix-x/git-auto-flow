@@ -21,8 +21,8 @@ app = typer.Typer(help="Commandes de commit automatique avec IA")
 def import_lib_modules():
     """Import dynamique des modules lib du projet parent"""
     try:
-        # Chemin vers le projet parent
-        parent_lib = Path(__file__).parent.parent.parent.parent.parent / "src" / "lib"
+        # Chemin vers le répertoire lib du projet
+        parent_lib = Path(__file__).parent.parent.parent.parent / "src" / "lib"
         if parent_lib.exists():
             sys.path.insert(0, str(parent_lib))
 
