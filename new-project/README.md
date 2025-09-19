@@ -17,6 +17,8 @@ Workflow ultra-simplifié : créez des repos complets et commitez avec l'IA en u
 - [🌿 Feature Start](#-feature-start)
 - [🤖 Commit Automatique avec IA](#-commit-automatique-avec-ia)
 - [🚀 Pull Request Automatique avec IA](#-pull-request-automatique-avec-ia)
+- [🎫 Gestion des Issues GitHub](#-gestion-des-issues-github)
+- [🚀 Release Automatique](#-release-automatique)
 - [⚙️ Configuration](#️-configuration)
 - [🔄 Renommage du Binaire](#-renommage-du-binaire)
 
@@ -32,14 +34,20 @@ cd git-auto-flow/new-project && uv sync && source .venv/bin/activate
 # 2. Créer projet complet (60s)
 gitautoflow repo create monusername/super-projet --force
 
-# 3. Développer avec feature branch, commiter et créer PR avec IA (30s)
+# 3. Développer avec feature branch, commiter et créer PR + release avec IA (60s)
 cd ~/workspace/super-projet
 gitautoflow fs ma-feature --force
 # ... votre code ici ...
 gitautoflow ac --force
 gitautoflow pr --force
 
-# ✅ Résultat: Repository GitHub + GitFlow + Release v0.1.0 + Commit IA + PR IA !
+# 4. (Optionnel) Créer issues depuis un compte-rendu
+gitautoflow issue create meeting-notes.md --force
+
+# 5. (Optionnel) Release automatique avec binaires multi-arch
+gitautoflow ra --version 1.0.0 --force
+
+# ✅ Résultat: Écosystème complet GitHub + Issues + Release + Binaires !
 ```
 
 **🎯 ROI Immédiat : 95% de temps gagné sur la création et gestion de projets.**
@@ -82,6 +90,8 @@ gitautoflow --help
 │ auto-pr         Créer automatiquement une PR avec IA (alias: pr)             │
 │ feature-start   Démarre une nouvelle feature branch GitFlow (alias: fs)      │
 │ version         Affiche la version du projet                                 │
+│ issue           Commandes de gestion des issues GitHub                       │
+│ release         Commandes d'automatisation des releases                      │
 │ repo            Commandes de gestion des repositories GitHub                 │
 ╰───────────────────────────────────────────────────────────────────────────────╯
 ```
@@ -125,6 +135,30 @@ gitautoflow repo create mon-projet
 | `--private/--public` | Visibilité du repository | `private` |
 | `--force, -f` | Mode non-interactif | `false` |
 | `--debug` | Affiche les commandes exécutées | `false` |
+
+### 🗑️ Supprimer un Repository
+
+**⚠️ ATTENTION: Action irréversible qui supprime définitivement le repository !**
+
+```bash
+# Suppression avec double confirmation de sécurité (recommandé)
+gitautoflow repo delete mon-utilisateur/ancien-projet
+
+# Suppression avec format court (utilise l'utilisateur courant)
+gitautoflow repo delete ancien-projet
+
+# Mode force - suppression directe sans confirmation (DANGEREUX)
+gitautoflow repo delete test-repo --force
+
+# Avec debug pour voir les commandes
+gitautoflow repo delete mon-projet --debug
+```
+
+**Sécurité :**
+- ✅ Vérification que le repository existe
+- ✅ Double confirmation en mode interactif
+- ✅ Saisie du nom exact du repository
+- ⚠️ Mode `--force` bypass toutes les confirmations
 
 ## 🌿 Feature Start
 
@@ -392,6 +426,119 @@ gitautoflow pr
 # 5. PR prête pour review ! 🎉
 ```
 
+## 🎫 Gestion des Issues GitHub
+
+Créez automatiquement des issues GitHub depuis un compte-rendu de réunion avec analyse IA.
+
+### ⚡ Syntaxe Ultra-Simple
+
+```bash
+# Analyse et création d'issues depuis un fichier
+gitautoflow issue create reunion-sprint.md
+
+# Avec options avancées
+gitautoflow issue create meeting-notes.md --repo genix-x/mon-projet --force --debug
+```
+
+### 🤖 Workflow IA Intelligent
+
+1. **📄 Lecture du fichier** : Analyse du compte-rendu (markdown, texte)
+2. **🤖 Analyse IA** : Extraction automatique des tâches et priorités
+3. **🏷️ Labels automatiques** : Création des labels avec couleurs (priority-high, bug, enhancement)
+4. **🔗 Dépendances** : Gestion des liens entre issues
+5. **📋 Création GitHub** : Issues créées avec descriptions détaillées
+
+### 📊 Options Disponibles
+
+| Option | Description | Usage |
+|--------|-------------|-------|
+| `FILE_PATH` | Fichier de compte-rendu à analyser | Requis |
+| `--repo` | Repository cible (owner/repo-name) | Auto-détecté si dans un repo |
+| `--force, -f` | Pas de confirmation | Mode CI/automatisé |
+| `--debug` | Affiche les commandes exécutées | Diagnostics |
+
+### 🚀 Exemple d'Usage
+
+```bash
+# Fichier de réunion → Issues GitHub automatiques
+gitautoflow issue create docs/reunion-sprint-3.md
+
+# Résultat : 5 issues créées avec priorités, labels et dépendances
+```
+
+## 🚀 Release Automatique
+
+Automatisez complètement vos releases : develop → main → tag → release GitHub avec binaires.
+
+### ⚡ Syntaxes Disponibles
+
+```bash
+# Release automatique complète (version calculée par IA)
+gitautoflow release auto
+
+# Release avec version forcée (ex: passage en v1.0)
+gitautoflow release auto --version 1.0.0
+
+# Alias ultra-court
+gitautoflow ra --version 2.1.0 --force
+
+# Prévisualiser la prochaine version (sans rien faire)
+gitautoflow release next-version
+```
+
+### 🤖 Workflow Automatique Complet
+
+1. **🔄 Sync develop** : Mise à jour de la branche develop
+2. **🔍 Analyse des changements** : Comparaison develop vs main
+3. **🤖 Calcul de version IA** : Semantic versioning automatique (ou version forcée)
+4. **📋 Génération PR** : Pull Request develop → main avec IA
+5. **🔄 Auto-merge** : Fusion automatique de la PR
+6. **🏷️ Création tag** : Tag Git avec la nouvelle version
+7. **🚀 GitHub Release** : Release avec notes générées par IA
+8. **📦 Binaires multi-arch** : Build automatique (Linux, macOS, Windows)
+
+### 📊 Options Disponibles
+
+| Option | Description | Défaut |
+|--------|-------------|--------|
+| `--version` | Forcer un numéro de version (ex: 1.0.0) | Calculé par IA |
+| `--no-auto-merge` | Ne pas merger automatiquement la PR | Auto-merge |
+| `--merge-method` | Méthode de merge (merge, squash, rebase) | `merge` |
+| `--force, -f` | Pas de confirmation | `false` |
+| `--debug` | Affiche les commandes exécutées | `false` |
+
+### 🎯 Exemples d'Usage
+
+```bash
+# Release automatique standard
+gitautoflow release auto
+
+# Forcer le passage en v1.0 (première release majeure)
+gitautoflow release auto --version 1.0.0 --force
+
+# Release avec squash merge et debug
+gitautoflow ra --merge-method squash --debug
+
+# Juste voir la prochaine version (utile pour planifier)
+gitautoflow release next-version
+```
+
+### 📦 Binaires Multi-Architecture Automatiques
+
+À chaque release, le système génère automatiquement :
+
+```
+📦 Assets générés automatiquement:
+├── gitautoflow-linux-x64           # Linux Intel/AMD
+├── gitautoflow-linux-arm64         # Linux ARM
+├── gitautoflow-macos-x64           # macOS Intel
+├── gitautoflow-macos-arm64         # macOS M1/M2
+├── gitautoflow-windows-x64.exe     # Windows
+└── checksums.txt                   # Checksums SHA256
+```
+
+**🎯 Résultat : Release complète prête pour distribution sur toutes les plateformes !**
+
 ## ⚙️ Configuration
 
 ### 🔑 GitHub CLI (Requis)
@@ -461,12 +608,16 @@ uv sync
 - 🤖 **Zéro Réflexion** : IA analyse et génère tout automatiquement
 - ⚡ **Ultra-Rapide** : 1 commande = workflow complet
 - 🏗️ **Setup Complet** : Repository → Release en 60 secondes
+- 🗑️ **Gestion Complète** : Création ET suppression sécurisée des repos
 - 🌿 **GitFlow Intégré** : Feature branches pro en 1 commande
 - 🎯 **Standards Pro** : Conventional Commits garantis
 - 🚀 **PR Automatiques** : Pull Requests parfaites générées par IA
+- 🎫 **Issues IA** : Génération d'issues depuis comptes-rendus
+- 📦 **Releases Complètes** : Tag + Release + Binaires multi-arch automatiques
 - 🔄 **Robuste** : Multi-IA avec fallback automatique
-- 🛠️ **Architecture Moderne** : Typer + UV + Rich
+- 🛠️ **Architecture Moderne** : Typer + UV + Rich + GitHub Actions
 - 🔄 **Renommage Facile** : 1 ligne pour changer le nom du binaire
+- 💻 **Multi-Plateforme** : Binaires Linux, macOS, Windows générés automatiquement
 
 ## 🤝 Contribution
 

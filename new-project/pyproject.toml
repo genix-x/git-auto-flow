@@ -13,6 +13,12 @@ dependencies = [
     "google-generativeai>=0.8.5",
 ]
 
+[project.optional-dependencies]
+build = [
+    "nuitka>=1.8.0",
+    "ordered-set>=4.1.0",
+]
+
 [project.scripts]
 # Point d'entrée principal - changez juste cette ligne pour renommer le binaire
 gitautoflow = "gitautoflow.cli.main:main"

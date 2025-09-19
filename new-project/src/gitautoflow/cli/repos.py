@@ -8,6 +8,7 @@ import sys
 import subprocess
 import time
 import os
+import json
 from pathlib import Path
 from subprocess import CalledProcessError
 import shutil
@@ -436,6 +437,87 @@ def create_repo(
     except Exception as e:
         error(f"Le workflow de setup a échoué: {e}")
         error("Le repository GitHub a été créé, mais le setup local a rencontré un problème.")
+        raise typer.Exit(1)
+
+
+@app.command()
+def delete(
+    repo_spec: str = typer.Argument(..., help="Repository à supprimer (format: owner/repo-name ou repo-name)"),
+    force: bool = typer.Option(False, "--force", "-f", help="Mode non-interactif (aucune confirmation)"),
+    debug: bool = typer.Option(False, "--debug", help="Affiche les commandes exécutées")
+):
+    """Supprime un repository GitHub (ATTENTION: action irréversible!)"""
+
+    if not check_prerequisites():
+        raise typer.Exit(1)
+
+    # Parse du repo spec
+    if '/' in repo_spec:
+        owner, repo_name = repo_spec.split('/', 1)
+    else:
+        # Utiliser l'utilisateur GitHub courant
+        try:
+            result = subprocess.run(['gh', 'api', 'user'], capture_output=True, text=True, check=True)
+            user_data = json.loads(result.stdout)
+            owner = user_data.get('login', 'unknown')
+            repo_name = repo_spec
+            repo_spec = f"{owner}/{repo_name}"
+        except:
+            error("Impossible de déterminer l'utilisateur GitHub. Utilisez le format owner/repo-name")
+            raise typer.Exit(1)
+
+    header(f"🗑️ Suppression du repository GitHub: {repo_spec}")
+
+    # Vérifier que le repository existe
+    try:
+        if debug:
+            info(f"[DEBUG] Vérification de l'existence: gh repo view {repo_spec}")
+        result = subprocess.run(['gh', 'repo', 'view', repo_spec], capture_output=True, text=True, check=True)
+        info(f"✅ Repository trouvé: {repo_spec}")
+    except subprocess.CalledProcessError:
+        error(f"❌ Repository '{repo_spec}' introuvable ou inaccessible")
+        raise typer.Exit(1)
+
+    # Avertissement de sécurité
+    warning("⚠️  ATTENTION: Cette action est IRREVERSIBLE!")
+    warning("⚠️  Toutes les données (code, issues, PRs, releases) seront PERDUES!")
+    console.print(f"[red bold]Repository à supprimer: {repo_spec}[/red bold]")
+
+    # Demande de confirmation
+    if not force:
+        if not confirm(f"❌ Êtes-vous ABSOLUMENT SÛR de vouloir supprimer '{repo_spec}' ?"):
+            info("✅ Suppression annulée - aucune action effectuée")
+            return
+
+        # Double confirmation pour plus de sécurité
+        console.print(f"\n[red]Tapez exactement '[bold]{repo_name}[/bold]' pour confirmer:[/red]")
+        confirmation = console.input("[yellow]> [/yellow]").strip()
+        if confirmation != repo_name:
+            error(f"❌ Confirmation incorrecte (attendu: '{repo_name}', reçu: '{confirmation}')")
+            info("✅ Suppression annulée - aucune action effectuée")
+            return
+    else:
+        warning("🔥 MODE FORCE - Suppression automatique sans confirmation")
+
+    try:
+        # Commande de suppression
+        cmd = ['gh', 'repo', 'delete', repo_spec, '--yes']
+
+        if debug:
+            info(f"[DEBUG] Commande: {' '.join(cmd)}")
+
+        info(f"🗑️ Suppression en cours de {repo_spec}...")
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+
+        success(f"✅ Repository '{repo_spec}' supprimé avec succès!")
+        info("💡 Le repository n'est plus accessible et toutes ses données sont perdues")
+
+    except subprocess.CalledProcessError as e:
+        error(f"❌ Erreur lors de la suppression: {e.stderr if e.stderr else str(e)}")
+        if "403" in str(e.stderr):
+            error("💡 Vérifiez que vous avez les permissions d'administration sur ce repository")
+        elif "404" in str(e.stderr):
+            error("💡 Le repository n'existe pas ou n'est pas accessible")
         raise typer.Exit(1)
 
 
