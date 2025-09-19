@@ -4,7 +4,9 @@ Git Auto-Flow - Gestion des feature branches
 Migration vers architecture Typer
 """
 
+import sys
 import subprocess
+from pathlib import Path
 
 import typer
 
@@ -12,6 +14,27 @@ import typer
 from gitautoflow.utils.logger import info, success, error, warning, header
 
 app = typer.Typer(help="Gestion des feature branches GitFlow")
+
+# Import des modules lib (chemin relatif au projet parent)
+def import_lib_modules():
+    """Import dynamique des modules lib du projet parent"""
+    try:
+        # Chemin vers le projet parent
+        parent_lib = Path(__file__).parent.parent.parent / "lib"
+        if parent_lib.exists():
+            sys.path.insert(0, str(parent_lib))
+
+            from ai_provider import AIProvider
+            from git_utils import GitUtils
+            from debug_logger import debug_command, set_global_debug_mode
+
+            return AIProvider, GitUtils, debug_command, set_global_debug_mode
+        else:
+            error(f"Module lib non trouvé dans: {parent_lib}")
+            raise typer.Exit(1)
+    except ImportError as e:
+        error(f"Impossible d'importer les modules lib: {e}")
+        raise typer.Exit(1)
 
 
 def run_command(command: list, description: str = "", debug: bool = False):

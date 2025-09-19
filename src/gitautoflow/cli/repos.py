@@ -119,7 +119,7 @@ def load_config():
     try:
         # Import dynamique du module de config
         import importlib.util
-        config_path = Path(__file__).parent.parent.parent.parent.parent / "src" / "git-project-config.py"
+        config_path = Path(__file__).parent.parent.parent / "git-project-config.py"
         if not config_path.exists():
             return None
 
