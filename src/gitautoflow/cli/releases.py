@@ -22,7 +22,7 @@ def import_lib_modules():
     """Import dynamique des modules lib du projet parent"""
     try:
         # Chemin vers le projet parent
-        parent_lib = Path(__file__).parent.parent.parent.parent.parent / "src" / "lib"
+        parent_lib = Path(__file__).parent.parent.parent / "lib"
         if parent_lib.exists():
             sys.path.insert(0, str(parent_lib))
 
