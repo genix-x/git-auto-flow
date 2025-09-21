@@ -17,23 +17,15 @@ from gitautoflow.utils.logger import info, success, error, warning, header, cons
 
 app = typer.Typer(help="Commandes de commit automatique avec IA")
 
-# Import des modules lib (chemin relatif au projet parent)
+# Import des modules lib depuis le package gitautoflow
 def import_lib_modules():
-    """Import dynamique des modules lib du projet parent"""
+    """Import dynamique des modules lib du package gitautoflow"""
     try:
-        # Chemin vers le projet parent
-        parent_lib = Path(__file__).parent.parent.parent / "lib"
-        if parent_lib.exists():
-            sys.path.insert(0, str(parent_lib))
+        from gitautoflow.lib.ai_provider import AIProvider
+        from gitautoflow.lib.git_utils import GitUtils
+        from gitautoflow.lib.debug_logger import debug_command, set_global_debug_mode
 
-            from ai_provider import AIProvider
-            from git_utils import GitUtils
-            from debug_logger import debug_command, set_global_debug_mode
-
-            return AIProvider, GitUtils, debug_command, set_global_debug_mode
-        else:
-            error(f"Module lib non trouvé dans: {parent_lib}")
-            raise typer.Exit(1)
+        return AIProvider, GitUtils, debug_command, set_global_debug_mode
     except ImportError as e:
         error(f"Impossible d'importer les modules lib: {e}")
         raise typer.Exit(1)

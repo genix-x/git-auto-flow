@@ -8,8 +8,8 @@ import json
 import google.generativeai as genai
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
-from prompt_templates import PromptTemplates
-from debug_logger import debug_command
+from .prompt_templates import PromptTemplates
+from .debug_logger import debug_command
 
 
 class GeminiClient:
