@@ -122,22 +122,44 @@ gitautoflow ra --version 2.0.0 --force     # → Release + binaires multi-arch
 
 ## 🚀 Installation
 
-### Prérequis
-- **Python 3.11+** + **UV Package Manager** + **GitHub CLI** (`gh auth login`)
+La méthode recommandée est d'utiliser le script d'installation qui détecte automatiquement votre système d'exploitation (macOS ou Linux) et votre architecture (Intel ou ARM) pour télécharger le binaire approprié depuis les releases GitHub.
 
-### Installation rapide
+### Installation (macOS / Linux)
+
+Exécutez la commande suivante dans votre terminal. Le script gère les droits `sudo` si nécessaire et sauvegarde toute version existante.
+
 ```bash
-git clone https://github.com/votre-org/git-auto-flow.git
-cd git-auto-flow/new-project
-uv sync && source .venv/bin/activate
-gitautoflow --help
+OWNER=genix-x REPO=git-auto-flow BINARY_PREFIX=gitautoflow INSTALL_NAME=gitautoflow \
+  curl -sL https://raw.githubusercontent.com/genix-x/git-auto-flow/main/install.sh | bash
 ```
 
-### Build binaires locaux
+### Installer une version spécifique
+
+Pour installer une version précise, ajoutez la variable `VERSION` (remplacez `v2.0.1` par la version souhaitée) :
+
 ```bash
-./scripts/build-binary.sh    # Build pour votre plateforme
+OWNER=genix-x REPO=git-auto-flow BINARY_PREFIX=gitautoflow INSTALL_NAME=gitautoflow VERSION=v2.0.1 \
+  curl -sL https://raw.githubusercontent.com/genix-x/git-auto-flow/main/install.sh | bash
 ```
-*Détails complets dans [BUILD.md](BUILD.md)*
+
+### Désinstallation
+
+Pour supprimer le binaire de votre système :
+
+```bash
+curl -sL https://raw.githubusercontent.com/genix-x/git-auto-flow/main/install.sh | bash -- --uninstall
+```
+
+### Installation pour le développement
+
+Si vous souhaitez contribuer au projet, vous pouvez l'installer localement :
+- **Prérequis :** Python 3.11+, UV, GitHub CLI (`gh auth login`)
+- **Installation :**
+  ```bash
+  git clone https://github.com/genix-x/git-auto-flow.git
+  cd git-auto-flow && uv sync && source .venv/bin/activate
+  gitautoflow --help
+  ```
 
 ## ⚙️ Configuration
 

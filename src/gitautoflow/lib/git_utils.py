@@ -9,7 +9,7 @@ from typing import Tuple
 
 # Import du système de debug centralisé
 try:
-    from debug_logger import debug_command, get_debug_logger
+    from .debug_logger import debug_command, get_debug_logger
 except ImportError:
     # Fallback si debug_logger n'est pas disponible
     def debug_command(cmd, description=""):
