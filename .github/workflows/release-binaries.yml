@@ -57,11 +57,11 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y patchelf
 
       - name: 📦 Install UV (non-ARM64 builds)
-        if: !(matrix.os == 'linux' && matrix.arch == 'arm64')
+        if: matrix.os != 'linux' || matrix.arch != 'arm64'
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
       - name: 🔧 Install dependencies (non-ARM64 builds)
-        if: !(matrix.os == 'linux' && matrix.arch == 'arm64')
+        if: matrix.os != 'linux' || matrix.arch != 'arm64'
         run: |
           uv sync
           uv add nuitka
