@@ -102,7 +102,9 @@ jobs:
           EOF
               uv sync &&
               uv add nuitka ordered-set &&
-              uv run python -m nuitka --assume-yes-for-downloads --jobs=4 --include-package-data=gitautoflow --include-package=lib --output-dir=dist/ launcher.py
+              uv run python -m nuitka --assume-yes-for-downloads --jobs=4 --include-package-data=gitautoflow --include-package=lib --output-dir=dist/ launcher.py &&
+              mv dist/launcher.bin dist/${{ matrix.binary_name }} &&
+              chmod 755 dist/${{ matrix.binary_name }}
             "
 
       - name: 🏗️ Build binary with Nuitka (x64 and macOS)
@@ -116,7 +118,8 @@ jobs:
             --output-dir=dist/ \
             launcher.py
 
-      - name: 🏷️ Rename binary to target name
+      - name: 🏷️ Rename binary to target name (non-ARM64 builds)
+        if: matrix.os != 'linux' || matrix.arch != 'arm64'
         run: |
           mv dist/launcher.bin dist/${{ matrix.binary_name }}
 
