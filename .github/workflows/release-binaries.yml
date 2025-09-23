@@ -123,10 +123,20 @@ jobs:
         run: |
           mv dist/launcher.bin dist/${{ matrix.binary_name }}
 
-      - name: ✅ Test binary
+      - name: ✅ Test binary (non-ARM64 builds)
+        if: matrix.os != 'linux' || matrix.arch != 'arm64'
         run: |
           chmod +x dist/${{ matrix.binary_name }}
           ./dist/${{ matrix.binary_name }} --help
+
+      - name: ✅ Test ARM64 binary
+        if: matrix.os == 'linux' && matrix.arch == 'arm64'
+        run: |
+          # Test via Docker with ARM64 emulation
+          docker run --rm --platform linux/arm64 \
+            -v $PWD:/workspace -w /workspace \
+            ubuntu:22.04 \
+            ./dist/${{ matrix.binary_name }} --help
 
       - name: 📊 Show binary info
         run: |
