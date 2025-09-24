@@ -102,7 +102,7 @@ jobs:
           EOF
               uv sync &&
               uv add nuitka ordered-set &&
-              uv run python -m nuitka --assume-yes-for-downloads --jobs=4 --include-package-data=gitautoflow --include-package=lib --output-dir=dist/ --standalone --onefile launcher.py &&
+              uv run python -m nuitka --assume-yes-for-downloads --jobs=4 --include-package-data=gitautoflow --include-package=lib --output-dir=dist/ launcher.py &&
               mv dist/launcher.bin dist/${{ matrix.binary_name }} &&
               chmod 755 dist/${{ matrix.binary_name }}
             "
@@ -132,10 +132,10 @@ jobs:
       - name: ✅ Test ARM64 binary
         if: matrix.os == 'linux' && matrix.arch == 'arm64'
         run: |
-          # Test via Docker with ARM64 emulation (standalone binary)
+          # Test via Docker with ARM64 emulation + Python
           docker run --rm --platform linux/arm64 \
             -v $PWD:/workspace -w /workspace \
-            ubuntu:22.04 \
+            python:3.11-slim-bullseye \
             ./dist/${{ matrix.binary_name }} --help
 
       - name: 📊 Show binary info
