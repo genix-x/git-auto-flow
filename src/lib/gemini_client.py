@@ -33,7 +33,7 @@ class GeminiClient:
         
         # Configure Gemini
         genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.0-flash')
     
     def _load_env_from_git_root(self):
         """Charge le fichier .env depuis le home directory"""
