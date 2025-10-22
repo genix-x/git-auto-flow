@@ -75,7 +75,13 @@ def get_latest_tag() -> str:
         tags = result.stdout.strip().split('\n')
 
         if tags and tags[0]:
-            return tags[0]
+            # Nettoie le tag pour retirer les "v" en trop
+            # Exemple: "vvv1.8.0" devient "v1.8.0"
+            latest_tag = tags[0]
+            # Garde seulement le premier "v" et les chiffres
+            import re
+            cleaned_tag = re.sub(r'^v+', 'v', latest_tag)
+            return cleaned_tag
         else:
             return "v0.0.0"
     except Exception:
