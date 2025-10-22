@@ -116,6 +116,8 @@ jobs:
             --include-package-data=gitautoflow \
             --include-package=lib \
             --output-dir=dist/ \
+            --standalone \
+            --onefile \
             launcher.py
 
       - name: 🏷️ Rename binary to target name (non-ARM64 builds)
