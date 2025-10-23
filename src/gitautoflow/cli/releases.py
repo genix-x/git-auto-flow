@@ -7,6 +7,7 @@ Migration de git-release-auto.py vers architecture Typer
 import sys
 import subprocess
 import time
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -79,7 +80,6 @@ def get_latest_tag() -> str:
             # Exemple: "vvv1.8.0" devient "v1.8.0"
             latest_tag = tags[0]
             # Garde seulement le premier "v" et les chiffres
-            import re
             cleaned_tag = re.sub(r'^v+', 'v', latest_tag)
             return cleaned_tag
         else:
@@ -101,7 +101,6 @@ def create_github_release(release_data: dict, debug_command) -> bool:
     """
     try:
         # Nettoie la version pour éviter les "v" en double
-        import re
         version = release_data['version']
         cleaned_version = re.sub(r'^v+', 'v', version)
 
@@ -152,7 +151,6 @@ def create_github_release(release_data: dict, debug_command) -> bool:
 def generate_release_notes(release_data: dict) -> str:
     """Génère les release notes formatées pour GitHub"""
     # Nettoie la version pour éviter les "v" en double
-    import re
     version = release_data['version']
     cleaned_version = re.sub(r'^v+', 'v', version)
     
@@ -380,7 +378,6 @@ def auto(
 
         if version:
             # Version forcée par l'utilisateur - on garde l'analyse IA mais on override la version
-            import re
             cleaned_version = re.sub(r'^v+', 'v', version)
             info(f"🎯 Version forcée: {cleaned_version} (utilisateur)")
             info(f"📋 Changements analysés par IA: {len(release_data['release'].get('minor_changes', []) + release_data['release'].get('patch_changes', []) + release_data['release'].get('major_changes', []))} modifications détectées")
@@ -397,7 +394,6 @@ def auto(
 
         # Affichage final de la version utilisée (nettoyée)
         final_version = version if version else release_data['release']['version']
-        import re
         cleaned_final_version = re.sub(r'^v+', 'v', final_version)
         version_type = 'forcée par utilisateur' if version else release_data['release']['version_type']
         info(f"🏷️  Version finale: {cleaned_final_version} ({version_type})")
@@ -494,7 +490,6 @@ def next_version(
 
         # Affiche juste la version (nettoyée si elle contient déjà un "v")
         version = release_data['release']['version']
-        import re
         cleaned_version = re.sub(r'^v+', 'v', version)
         console.print(cleaned_version)
 
