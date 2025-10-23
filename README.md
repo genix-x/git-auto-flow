@@ -46,32 +46,6 @@ gitautoflow ra --version 1.0.0 --force   # Release develop → main → binaires
 ╰───────────────────────────────────────────────────────────────────────────────╯
 ```
 
-## 🏗️ Gestion Complète des Repositories
-
-```bash
-# Créer un repository complet (GitFlow + Release v0.1.0)
-gitautoflow repo create utilisateur/projet
-
-# Supprimer un repository (sécurisé avec double confirmation)
-gitautoflow repo delete ancien-projet --force
-```
-
-## 🎫 Issues depuis Compte-Rendu IA
-
-```bash
-# Analyser un CR de réunion et créer les tickets GitHub
-gitautoflow issue create meeting-notes.md
-
-# Pour un autre repository
-gitautoflow issue create notes.md --repo genix-x/mon-projet
-```
-
-**Fonctionnalités :**
-- 🧠 Analyse IA du compte-rendu → extraction tâches/priorités
-- 🏷️ Création labels GitHub (priority-high, enhancement, etc.)
-- 🔗 Gestion dépendances entre tickets
-- ⏱️ Estimation automatique en jours
-
 ## 🚀 Releases Multi-Arch Automatiques
 
 ```bash
@@ -91,7 +65,6 @@ gitautoflow release next-version
 📦 gitautoflow-linux-arm64         # Linux ARM
 📦 gitautoflow-macos-x64           # macOS Intel
 📦 gitautoflow-macos-arm64         # macOS M1/M2
-📦 gitautoflow-windows-x64.exe     # Windows
 📋 checksums.txt                   # SHA256
 ```
 
@@ -176,16 +149,32 @@ GROQ_API_KEY=your_groq_key_here
 WORKING_DIR=/home/user/workspace
 ```
 
-## 🎯 Avantages v2.0
+## 🏗️ Gestion Complète des Repositories
 
-- 🔒 **Sécurité Ultime** : Scan GitLeaks automatique - ZÉRO risque de fuite
-- 🤖 **Zéro Réflexion** : IA analyse et génère tout automatiquement
-- ⚡ **Ultra-Rapide** : 1 commande = workflow complet
-- 🏗️ **Setup Complet** : Repository → Release → Binaires en 3 minutes
-- 🎫 **Issues IA** : Compte-rendus → Tickets GitHub automatiquement
-- 📦 **Binaires Multi-Arch** : Linux/macOS/Windows générés à chaque release
-- 🛠️ **Architecture Moderne** : Typer + UV + Rich + GitHub Actions
-- 🔄 **Renommage Facile** : 1 ligne pour changer le nom du binaire
+```bash
+# Créer un repository complet (GitFlow + Release v0.1.0)
+gitautoflow repo create utilisateur/projet
+
+# Supprimer un repository (sécurisé avec double confirmation)
+gitautoflow repo delete ancien-projet --force
+```
+
+## 🎫 Issues depuis Compte-Rendu IA
+
+```bash
+# Analyser un CR de réunion et créer les tickets GitHub
+gitautoflow issue create meeting-notes.md
+
+# Pour un autre repository
+gitautoflow issue create notes.md --repo genix-x/mon-projet
+```
+
+**Fonctionnalités :**
+- 🧠 Analyse IA du compte-rendu → extraction tâches/priorités
+- 🏷️ Création labels GitHub (priority-high, enhancement, etc.)
+- 🔗 Gestion dépendances entre tickets
+- ⏱️ Estimation automatique en jours
+
 
 ## 🔄 Renommage du Binaire
 
