@@ -1,202 +1,145 @@
-# 🚀 Git Auto-Flow v2.0
+# Git Auto-Flow v2.0
 
-**🏭 Usine Numérique AIOps - De l'Idée à la Production en 3 Minutes**
+[![version](https://img.shields.io/badge/version-2.0-blue)](https://github.com/user/project/releases)
+[![ci](https://img.shields.io/github/actions/workflow/status/user/project/test-build.yml?branch=main)](https://github.com/user/project/actions)
+[![downloads](https://img.shields.io/github/downloads/user/project/total)](https://github.com/user/project/releases)
 
-AIOps = Intelligence Artificielle + Automatisation DevOps. Git Auto-Flow transforme votre pipeline en un cerveau autonome qui code, teste et déploie.
-
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![UV](https://img.shields.io/badge/UV-Package%20Manager-green.svg)](https://github.com/astral-sh/uv)
-[![Typer CLI](https://img.shields.io/badge/CLI-Typer-purple.svg)](https://typer.tiangolo.com)
-[![AI Powered](https://img.shields.io/badge/AI-Gemini%20%7C%20Groq-orange.svg)](https://ai.google.dev)
-
-## ⚡ Workflow AIOps Ultra-Rapide (Challenge 3 min)
-
-```bash
-# 1. Setup (30s)
-git clone https://github.com/votre-org/git-auto-flow.git
-cd git-auto-flow/new-project && uv sync && source .venv/bin/activate
-gitautoflow repo create mon-utilisateur/mon-projet --force
-
-# 2. Développement (60s)
-cd ~/workspace/mon-projet
-gitautoflow fs ma-feature --force
-# ... Votre code ici ...
-
-# 3. Déploiement (90s)
-gitautoflow ac --force                    # Commit IA + Scan Sécurité
-gitautoflow pr --force                    # PR auto-mergée vers develop
-gitautoflow ra --version 1.0.0 --force   # Release develop → main → binaires
-```
-
-**Architecture GitFlow AIOps :** `main` ← `develop` ← `feature/*`
-
-**✅ ROI Immédiat : 95% de Temps Gagné + Binaires Multi-Arch Automatiques**
-
-## 🎯 Commandes Disponibles
-
-```
-╭─ Commands ────────────────────────────────────────────────────────────────────╮
-│ auto-commit     Commit automatique avec rebase + IA (alias: ac)              │
-│ auto-pr         Créer automatiquement une PR avec IA (alias: pr)             │
-│ feature-start   Démarre une nouvelle feature branch GitFlow (alias: fs)      │
-│ version         Affiche la version du projet                                 │
-│ issue           Commandes de gestion des issues GitHub                       │
-│ release         Commandes d'automatisation des releases                      │
-│ repo            Commandes de gestion des repositories GitHub                 │
-╰───────────────────────────────────────────────────────────────────────────────╯
-```
-
-## 🚀 Releases Multi-Arch Automatiques
-
-```bash
-# Release automatique complète (version calculée par IA)
-gitautoflow release auto
-
-# Release avec version forcée (ex: passage en v1.0)
-gitautoflow ra --version 1.0.0 --force
-
-# Prévisualiser la prochaine version
-gitautoflow release next-version
-```
-
-**À chaque release, génération automatique de :**
-```
-📦 gitautoflow-linux-x64           # Linux Intel/AMD
-📦 gitautoflow-linux-arm64         # Linux ARM
-📦 gitautoflow-macos-x64           # macOS Intel
-📦 gitautoflow-macos-arm64         # macOS M1/M2
-📋 checksums.txt                   # SHA256
-```
-
-## ⚡ Workflow Ultra-Automatisé Complet
-
-**🏭 Du Meeting au Code Déployé :**
-
-```bash
-# 🎯 1. Créer projet complet depuis 0
-gitautoflow repo create mon-super-projet    # Repo + GitFlow + README + v0.1.0
-
-# 📋 2. Générer tickets depuis CR réunion
-gitautoflow issue create meeting-notes.md   # IA → Issues GitHub avec dépendances
-
-# ⚡ 3. Dev cycle ultra-rapide (pour l'issue #42)
-gitautoflow fs auth-system                  # Feature branch
-gitautoflow ac --force                      # Commit IA + Gitleaks scan
-gitautoflow pr --force --closes 42          # PR qui ferme l'issue #42 ✅
-
-# ♻️ 4. Répéter pour chaque ticket
-gitautoflow fs dashboard && gitautoflow ac && gitautoflow pr --force
-
-# 🚀 5. Release automatique avec binaires
-gitautoflow ra --version 2.0.0 --force     # → Release + binaires multi-arch
-```
-
-**Résultat : De la réunion au code en prod avec binaires distribués ! ⚡**
-
-## 🚀 Installation
-
-La méthode recommandée est d'utiliser le script d'installation qui détecte automatiquement votre système d'exploitation (macOS ou Linux) et votre architecture (Intel ou ARM) pour télécharger le binaire approprié depuis les releases GitHub.
-
-### Installation (macOS / Linux)
-
-Exécutez la commande suivante dans votre terminal. Le script gère les droits `sudo` si nécessaire et sauvegarde toute version existante.
-
-```bash
-OWNER=genix-x REPO=git-auto-flow BINARY_PREFIX=gitautoflow INSTALL_NAME=gitautoflow \
-  curl -sL https://raw.githubusercontent.com/genix-x/git-auto-flow/main/install.sh | bash
-```
-
-### Installer une version spécifique
-
-Pour installer une version précise, ajoutez la variable `VERSION` (remplacez `v2.0.1` par la version souhaitée) :
-
-```bash
-OWNER=genix-x REPO=git-auto-flow BINARY_PREFIX=gitautoflow INSTALL_NAME=gitautoflow VERSION=v2.0.1 \
-  curl -sL https://raw.githubusercontent.com/genix-x/git-auto-flow/main/install.sh | bash
-```
-
-### Désinstallation
-
-Pour supprimer le binaire de votre système :
-
-```bash
-curl -sL https://raw.githubusercontent.com/genix-x/git-auto-flow/main/install.sh | bash -- --uninstall
-```
-
-### Installation pour le développement
-
-Si vous souhaitez contribuer au projet, vous pouvez l'installer localement :
-- **Prérequis :** Python 3.11+, UV, GitHub CLI (`gh auth login`)
-- **Installation :**
-  ```bash
-  git clone https://github.com/genix-x/git-auto-flow.git
-  cd git-auto-flow && uv sync && source .venv/bin/activate
-  gitautoflow --help
-  ```
-
-## ⚙️ Configuration
-
-### GitHub CLI (Requis)
-```bash
-gh auth login && gh auth status
-```
-
-### Clés API IA (Optionnel - Fallback automatique)
-```bash
-# Créez ~/.env.gitautoflow
-GEMINI_API_KEY=your_gemini_key_here
-GROQ_API_KEY=your_groq_key_here
-WORKING_DIR=/home/user/workspace
-```
-
-## 🏗️ Gestion Complète des Repositories
-
-```bash
-# Créer un repository complet (GitFlow + Release v0.1.0)
-gitautoflow repo create utilisateur/projet
-
-# Supprimer un repository (sécurisé avec double confirmation)
-gitautoflow repo delete ancien-projet --force
-```
-
-## 🎫 Issues depuis Compte-Rendu IA
-
-```bash
-# Analyser un CR de réunion et créer les tickets GitHub
-gitautoflow issue create meeting-notes.md
-
-# Pour un autre repository
-gitautoflow issue create notes.md --repo genix-x/mon-projet
-```
-
-**Fonctionnalités :**
-- 🧠 Analyse IA du compte-rendu → extraction tâches/priorités
-- 🏷️ Création labels GitHub (priority-high, enhancement, etc.)
-- 🔗 Gestion dépendances entre tickets
-- ⏱️ Estimation automatique en jours
-
-
-## 🔄 Renommage du Binaire
-
-```bash
-# Éditez pyproject.toml - changez juste cette ligne :
-[project.scripts]
-mon-nom = "gitautoflow.cli.main:main"  # ← Votre nom ici
-
-# Appliquez
-uv sync && mon-nom --help  # ✅ Nouveau nom !
-```
-
-*Script automatisé et détails dans [RENAME.md](RENAME.md)*
+> Boost your Git productivity with AI-powered commands.
 
 ---
 
-<div align="center">
+### 🚀 Quick Install & Setup (30 seconds)
 
-**🚀 Git Auto-Flow v2.0 - Plus jamais de setup fastidieux ! Binaires inclus ! 🔒✨**
+1.  **Install**
+    ```bash
+    curl -sL https://raw.githubusercontent.com/genix-x/git-auto-flow/main/install.sh | bash
+    ```
 
-[⭐ Star ce projet](https://github.com/votre-org/git-auto-flow) | [🐛 Issues](https://github.com/votre-org/git-auto-flow/issues) | [💡 Discussions](https://github.com/votre-org/git-auto-flow/discussions) | [📦 Releases](https://github.com/votre-org/git-auto-flow/releases)
+2.  **Verify Installation**
+    ```bash
+    gitautoflow version
+    ```
+    *Expected output:* `gitautoflow version 2.0.0`
 
-*Développé avec ❤️ par l'équipe Git Auto-Flow*
+3.  **Next Steps: Authenticate**
+    For AI features, set your API key. The tool will prompt you on first use.
+    ```bash
+    # Example: The first AI command will trigger the key setup
+    gitautoflow issues suggest "Refactor login page"
+    ```
 
-</div>
+---
+
+### Table of Contents
+
+- [Core Features](#core-features)
+- [Simplified Workflow](#simplified-workflow)
+- [Advanced Usage](#advanced-usage)
+
+---
+
+### ✨ Core Features
+
+Here are the essential commands to get you started.
+
+| Command | Description | Example |
+| :--- | :--- | :--- |
+| `repo create` | Create a new repository on GitHub. | `gitautoflow repo create my-new-project --private` |
+| `issues suggest` | Get AI-powered suggestions for an issue. | `gitautoflow issues suggest "Implement dark mode"` |
+| `features start` | Start a new feature branch from an issue. | `gitautoflow features start 123` |
+| `prs create` | Create a pull request with an AI-generated description. | `gitautoflow prs create` |
+| `version` | Check the installed version. | `gitautoflow version` |
+| `--help` | Get help on any command. | `gitautoflow features --help` |
+
+---
+
+### Workflow Example: From Issue to PR
+
+A simple, 3-step workflow to ship a feature.
+
+1.  **Start a Feature from an Issue**
+    ```bash
+    # Creates a new branch 'feature/15-add-user-authentication'
+    gitautoflow features start 15
+    ```
+
+2.  **Code & Commit Your Changes**
+    ```bash
+    # Your usual git workflow
+    git add .
+    git commit -m "feat: implement user authentication endpoint"
+    ```
+
+3.  **Create a Pull Request**
+    The tool uses AI to generate a title and description from your commits.
+    ```bash
+    gitautoflow prs create
+    ```
+
+---
+
+### 🛠️ Advanced Usage
+
+<details>
+<summary><strong>Install a Specific Version</strong></summary>
+
+You can install a specific version of `git-auto-flow` by passing the version number to the install script.
+
+```bash
+# Example: To install a specific version (e.g., 1.5.0), use the -v flag.
+curl -sL https://raw.githubusercontent.com/genix-x/git-auto-flow/main/install.sh | bash -s -- -v 1.5.0
+```
+</details>
+
+<details>
+<summary><strong>Developer Installation</strong></summary>
+
+If you want to contribute to the project, you can install it in editable mode.
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/OusamaBenyounes/git-auto-flow.git
+    cd git-auto-flow
+    ```
+
+2.  **Create a virtual environment:**
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate
+    ```
+
+3.  **Install in editable mode:**
+    ```bash
+    pip install -e .
+    ```
+4.  **Verify your local installation:**
+    ```bash
+    gitautoflow version
+    ```
+</details>
+
+<details>
+<summary><strong>Advanced Configuration</strong></summary>
+
+Configuration is handled via environment variables or a `.env` file in your project root.
+
+-   `AI_PROVIDER`: Set your preferred AI provider (`gemini` or `groq`).
+-   `GEMINI_API_KEY`: Your Google Gemini API key.
+-   `GROQ_API_KEY`: Your Groq API key.
+-   `GITHUB_TOKEN`: Your GitHub Personal Access Token for repository operations.
+
+Example `.env` file:
+```
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_api_key_here
+GITHUB_TOKEN=ghp_your_github_token_here
+```
+</details>
+
+<details>
+<summary><strong>Troubleshooting</strong></summary>
+
+-   **Command not found:** If your shell can't find `gitautoflow`, make sure `~/.local/bin` is in your `PATH`. Add `export PATH="$HOME/.local/bin:$PATH"` to your `.bashrc`, `.zshrc`, or equivalent shell profile file.
+-   **Authentication issues:** Ensure your `GITHUB_TOKEN` has the correct permissions (e.g., `repo`, `workflow`).
+-   **Check for help:** Use the `--help` flag for detailed command options: `gitautoflow --help` or `gitautoflow features --help`.
+</details>
