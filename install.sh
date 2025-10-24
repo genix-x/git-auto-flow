@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install.sh — GitAutoFlow installer with binary fallback to Python source
+# install.sh — GitAutoFlow installer with smart binary detection
 set -euo pipefail
 
 #############################
@@ -31,11 +31,41 @@ curl_api() {
 }
 
 #############################
+# Test if binary works
+#############################
+test_binary() {
+  local bin_path="$1"
+  
+  echo "🔍 Testing binary..."
+  
+  # Test 1: Can execute?
+  if ! "${bin_path}" --help >/dev/null 2>&1; then
+    echo "❌ Binary fails to execute (--help test)"
+    return 1
+  fi
+  
+  # Test 2: Check for dyld errors
+  if "${bin_path}" --help 2>&1 | grep -q "dyld.*Library not loaded"; then
+    echo "❌ Binary has missing Python dependencies (dyld error)"
+    return 1
+  fi
+  
+  # Test 3: Version check
+  if ! "${bin_path}" version >/dev/null 2>&1; then
+    echo "⚠️  Binary works but 'version' command fails"
+    # Non-bloquant
+  fi
+  
+  echo "✅ Binary test passed"
+  return 0
+}
+
+#############################
 # Uninstall
 #############################
 if [[ "${1:-}" == "--uninstall" || "${1:-}" == "uninstall" ]]; then
   echo "🧹 Uninstalling ${INSTALL_NAME}..."
-  
+
   for d in "${PREFERRED_DIRS[@]}"; do
     if [[ -f "${d}/${INSTALL_NAME}" || -L "${d}/${INSTALL_NAME}" ]]; then
       if [[ -w "${d}" ]]; then
@@ -49,7 +79,7 @@ if [[ "${1:-}" == "--uninstall" || "${1:-}" == "uninstall" ]]; then
       echo "✅ Removed ${d}/${INSTALL_NAME}"
     fi
   done
-  
+
   if [[ -d "${INSTALL_DIR_SOURCE}" ]]; then
     if [[ -w "$(dirname ${INSTALL_DIR_SOURCE})" ]]; then
       rm -rf "${INSTALL_DIR_SOURCE}"
@@ -58,7 +88,7 @@ if [[ "${1:-}" == "--uninstall" || "${1:-}" == "uninstall" ]]; then
     fi
     echo "✅ Removed ${INSTALL_DIR_SOURCE}"
   fi
-  
+
   echo "✅ Uninstall complete!"
   exit 0
 fi
@@ -69,58 +99,99 @@ fi
 install_from_source() {
   echo ""
   echo "📦 Installing from Python source..."
-  
+
+  # Check Git
   if ! command -v git >/dev/null; then
-    echo "❌ git not found. Install git first."
+    echo "❌ git not found. Install git first:"
+    echo "   macOS: brew install git"
+    echo "   Linux: sudo apt install git"
     exit 1
   fi
-  
+
+  # Check Python
   if ! command -v python3 >/dev/null; then
-    echo "❌ python3 not found. Install Python 3.8+ first."
+    echo "❌ python3 not found. Install Python 3.11+ first:"
+    echo "   macOS: brew install python@3.11"
+    echo "   Linux: sudo apt install python3.11 python3.11-venv"
     exit 1
   fi
-  
+
+  PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}' | cut -d. -f1,2)
+  echo "✅ Found Python ${PYTHON_VERSION}"
+
   # Install UV
   if ! command -v uv >/dev/null; then
-    echo "📥 Installing UV..."
+    echo "📥 Installing UV package manager..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
+    
+    # Add to PATH for this session
     export PATH="$HOME/.local/bin:$PATH"
-    source "$HOME/.cargo/env" 2>/dev/null || true
+    if [[ -f "$HOME/.cargo/env" ]]; then
+      source "$HOME/.cargo/env"
+    fi
+    
+    # Verify UV installed
+    if ! command -v uv >/dev/null; then
+      echo "⚠️  UV installed but not in PATH. Add to your shell:"
+      echo "   export PATH=\"\$HOME/.local/bin:\$PATH\""
+      echo ""
+      echo "Retrying with explicit path..."
+      UV_BIN="$HOME/.local/bin/uv"
+      if [[ ! -f "${UV_BIN}" ]]; then
+        echo "❌ UV installation failed"
+        exit 1
+      fi
+    else
+      UV_BIN="uv"
+    fi
+  else
+    UV_BIN="uv"
   fi
-  
+
   # Determine branch
   BRANCH="main"
   if [[ -n "${VERSION}" && "${VERSION}" != "latest" ]]; then
     BRANCH="${VERSION}"
   fi
-  
+
   # Clone
   echo "📥 Cloning ${OWNER}/${REPO} (${BRANCH})..."
   if [[ -d "${INSTALL_DIR_SOURCE}" ]]; then
+    echo "🗑️  Removing existing source..."
     if [[ -w "$(dirname ${INSTALL_DIR_SOURCE})" ]]; then
       rm -rf "${INSTALL_DIR_SOURCE}"
     elif command -v sudo >/dev/null; then
       sudo rm -rf "${INSTALL_DIR_SOURCE}"
     fi
   fi
+
+  # Create parent dir with sudo if needed
+  PARENT_DIR="$(dirname ${INSTALL_DIR_SOURCE})"
+  if [[ ! -d "${PARENT_DIR}" ]]; then
+    if [[ -w "$(dirname ${PARENT_DIR})" ]]; then
+      mkdir -p "${PARENT_DIR}"
+    elif command -v sudo >/dev/null; then
+      sudo mkdir -p "${PARENT_DIR}"
+      sudo chown "$(whoami)" "${PARENT_DIR}"
+    fi
+  fi
+
+  git clone --depth 1 --branch "${BRANCH}" \
+    "https://github.com/${OWNER}/${REPO}.git" "${INSTALL_DIR_SOURCE}"
+
+  # Install deps
+  echo "📦 Installing dependencies with UV..."
+  cd "${INSTALL_DIR_SOURCE}"
   
-  if [[ -w "$(dirname ${INSTALL_DIR_SOURCE})" ]]; then
-    git clone --depth 1 --branch "${BRANCH}" \
-      "https://github.com/${OWNER}/${REPO}.git" "${INSTALL_DIR_SOURCE}"
-  elif command -v sudo >/dev/null; then
-    sudo git clone --depth 1 --branch "${BRANCH}" \
-      "https://github.com/${OWNER}/${REPO}.git" "${INSTALL_DIR_SOURCE}"
-    sudo chown -R "$(whoami)" "${INSTALL_DIR_SOURCE}"
-  else
-    echo "❌ Cannot write to $(dirname ${INSTALL_DIR_SOURCE})"
+  # Use explicit UV path if needed
+  "${UV_BIN}" sync
+
+  # Verify venv created
+  if [[ ! -f ".venv/bin/activate" ]]; then
+    echo "❌ Virtual environment not created"
     exit 1
   fi
-  
-  # Install deps
-  echo "📦 Installing dependencies..."
-  cd "${INSTALL_DIR_SOURCE}"
-  uv sync
-  
+
   # Find wrapper location
   WRAPPER_DIR=""
   USE_SUDO_WRAPPER=false
@@ -134,19 +205,29 @@ install_from_source() {
       break
     fi
   done
-  
+
   if [[ -z "${WRAPPER_DIR}" ]]; then
-    echo "❌ No directory found for wrapper"
+    echo "❌ No writable directory found in PATH"
+    echo "💡 Candidates checked: ${PREFERRED_DIRS[*]}"
     exit 1
   fi
-  
+
   # Create wrapper
   echo "🔗 Creating wrapper in ${WRAPPER_DIR}..."
   WRAPPER_CONTENT="#!/bin/bash
-source ${INSTALL_DIR_SOURCE}/.venv/bin/activate
+# GitAutoFlow wrapper (source installation)
+set -e
+VENV_DIR=\"${INSTALL_DIR_SOURCE}/.venv\"
+
+if [[ ! -f \"\${VENV_DIR}/bin/activate\" ]]; then
+  echo \"❌ Virtual environment not found at \${VENV_DIR}\"
+  exit 1
+fi
+
+source \"\${VENV_DIR}/bin/activate\"
 exec python -m gitautoflow.cli.main \"\$@\"
 "
-  
+
   if [[ "${USE_SUDO_WRAPPER}" == true ]]; then
     echo "${WRAPPER_CONTENT}" | sudo tee "${WRAPPER_DIR}/${INSTALL_NAME}" > /dev/null
     sudo chmod +x "${WRAPPER_DIR}/${INSTALL_NAME}"
@@ -154,19 +235,23 @@ exec python -m gitautoflow.cli.main \"\$@\"
     echo "${WRAPPER_CONTENT}" > "${WRAPPER_DIR}/${INSTALL_NAME}"
     chmod +x "${WRAPPER_DIR}/${INSTALL_NAME}"
   fi
-  
+
   echo ""
   echo "🎉 ${INSTALL_NAME} installed from source!"
   echo "📍 Wrapper: ${WRAPPER_DIR}/${INSTALL_NAME}"
   echo "📦 Source: ${INSTALL_DIR_SOURCE}"
   echo ""
-  
-  if "${WRAPPER_DIR}/${INSTALL_NAME}" --version >/dev/null 2>&1; then
-    echo "✅ Verified!"
+
+  # Verify installation
+  if "${WRAPPER_DIR}/${INSTALL_NAME}" version >/dev/null 2>&1; then
+    VERSION_OUTPUT=$("${WRAPPER_DIR}/${INSTALL_NAME}" version 2>/dev/null | head -1)
+    echo "✅ Verified: ${VERSION_OUTPUT}"
   else
-    echo "⚠️  Installed but verification failed"
+    echo "⚠️  Installed but 'version' command failed (non-critical)"
   fi
-  
+
+  echo ""
+  echo "👉 Run: ${INSTALL_NAME} --help"
   exit 0
 }
 
@@ -191,7 +276,8 @@ case "$(uname -s)" in
   Linux)  PLATFORM="linux" ;;
   *)
     echo "🚨 Unsupported OS: $(uname -s)"
-    exit 1
+    echo "ℹ️  Falling back to source installation..."
+    install_from_source
     ;;
 esac
 
@@ -201,7 +287,8 @@ case "$(uname -m)" in
   arm64|aarch64) ARCH="arm64" ;;
   *)
     echo "🚨 Unsupported arch: $(uname -m)"
-    exit 1
+    echo "ℹ️  Falling back to source installation..."
+    install_from_source
     ;;
 esac
 
@@ -268,17 +355,18 @@ done
 
 if [[ -z "${INSTALL_DIR}" ]]; then
   echo "❌ No install directory found"
-  exit 1
+  echo "ℹ️  Falling back to source..."
+  install_from_source
 fi
 
 echo "🔧 Installing to ${INSTALL_DIR} (sudo: ${USE_SUDO})"
 
-# Backup existing (FIXED)
+# Backup existing
 if command -v "${INSTALL_NAME}" >/dev/null 2>&1; then
   EXISTING_PATH="$(command -v ${INSTALL_NAME})"
   BACKUP_PATH="${EXISTING_PATH}.bak-$(date +%s)"
   echo "💾 Backing up existing binary..."
-  
+
   if [[ "${USE_SUDO}" == true ]]; then
     sudo mv "${EXISTING_PATH}" "${BACKUP_PATH}" 2>/dev/null || {
       echo "⚠️  Cannot backup, removing instead..."
@@ -292,7 +380,7 @@ if command -v "${INSTALL_NAME}" >/dev/null 2>&1; then
   fi
 fi
 
-# Install
+# Install binary
 TARGET_PATH="${INSTALL_DIR}/${INSTALL_NAME}"
 if [[ "${USE_SUDO}" == true ]]; then
   sudo mv "${DOWNLOAD_PATH}" "${TARGET_PATH}"
@@ -307,11 +395,11 @@ echo "🎉 ${INSTALL_NAME} ${VERSION} installed!"
 echo "📍 ${TARGET_PATH}"
 echo ""
 
-# Verify
-echo "🔍 Verifying..."
-if ! "${TARGET_PATH}" --version >/dev/null 2>&1; then
-  echo "⚠️  Binary failed verification"
-  echo "ℹ️  Falling back to source..."
+# Test binary (NEW!)
+if ! test_binary "${TARGET_PATH}"; then
+  echo ""
+  echo "⚠️  Binary installation failed validation"
+  echo "ℹ️  Removing broken binary and falling back to source..."
   if [[ "${USE_SUDO}" == true ]]; then
     sudo rm -f "${TARGET_PATH}"
   else
@@ -320,6 +408,7 @@ if ! "${TARGET_PATH}" --version >/dev/null 2>&1; then
   install_from_source
 fi
 
-echo "✅ Verified!"
+echo ""
+echo "✅ Installation complete!"
 echo "👉 Run: ${INSTALL_NAME} --help"
 echo ""
