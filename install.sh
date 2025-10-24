@@ -1,21 +1,16 @@
 #!/usr/bin/env bash
-# install.sh — Generic GitHub release binary installer
-# Usage examples:
-#   OWNER=genix-x REPO=git-auto-flow BINARY_PREFIX=gitautoflow INSTALL_NAME=gitautoflow \
-#     curl -sL https://example.com/install.sh | bash
-#   OWNER=genix-x REPO=git-auto-flow BINARY_PREFIX=gitautoflow INSTALL_NAME=gitautoflow VERSION=v1.5.1 \
-#     curl -sL https://example.com/install.sh | bash
-#   curl -sL https://example.com/install.sh | bash -- --uninstall
+# install.sh — GitAutoFlow installer with binary fallback to Python source
 set -euo pipefail
 
 #############################
-# Config (override with env)
+# Config
 #############################
-OWNER="${OWNER:-genix-x}"                # ex: genix-x
-REPO="${REPO:-git-auto-flow}"            # ex: git-auto-flow
-BINARY_PREFIX="${BINARY_PREFIX:-gitautoflow}"  # ex: gitautoflow
-INSTALL_NAME="${INSTALL_NAME:-gitautoflow}"    # ex: command name (final filename)
-VERSION="${VERSION:-}"                   # ex: v1.5.1 (leave empty for latest)
+OWNER="${OWNER:-genix-x}"
+REPO="${REPO:-git-auto-flow}"
+BINARY_PREFIX="${BINARY_PREFIX:-gitautoflow}"
+INSTALL_NAME="${INSTALL_NAME:-gitautoflow}"
+VERSION="${VERSION:-}"
+FORCE_SOURCE="${FORCE_SOURCE:-false}"
 
 #############################
 # Internals
@@ -24,10 +19,9 @@ API_BASE="https://api.github.com/repos/${OWNER}/${REPO}/releases"
 TMP_DIR="$(mktemp -d -t ${BINARY_PREFIX}_install.XXXXXX)"
 trap 'rm -rf "${TMP_DIR}"' EXIT INT TERM
 
-# Common install dirs to try (order matters)
 PREFERRED_DIRS=( "/usr/local/bin" "/opt/homebrew/bin" "$HOME/.local/bin" "/usr/bin" )
+INSTALL_DIR_SOURCE="/opt/${REPO}"
 
-# Helper: call GitHub API with optional auth
 curl_api() {
   if [[ -n "${GITHUB_TOKEN:-}" ]]; then
     curl -s -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" "$@"
@@ -36,88 +30,213 @@ curl_api() {
   fi
 }
 
-# Help / Uninstall
+#############################
+# Uninstall
+#############################
 if [[ "${1:-}" == "--uninstall" || "${1:-}" == "uninstall" ]]; then
-  echo "🧹 Uninstall mode — searching for ${INSTALL_NAME} in common dirs..."
+  echo "🧹 Uninstalling ${INSTALL_NAME}..."
+  
   for d in "${PREFERRED_DIRS[@]}"; do
     if [[ -f "${d}/${INSTALL_NAME}" || -L "${d}/${INSTALL_NAME}" ]]; then
-      if [[ -w "${d}/${INSTALL_NAME}" ]]; then
+      if [[ -w "${d}" ]]; then
         rm -f "${d}/${INSTALL_NAME}"
       elif command -v sudo >/dev/null; then
         sudo rm -f "${d}/${INSTALL_NAME}"
       else
-        echo "❌ Found ${d}/${INSTALL_NAME} but cannot remove it (no write perm and no sudo)."
+        echo "❌ Cannot remove ${d}/${INSTALL_NAME} (no permission)"
         exit 1
       fi
       echo "✅ Removed ${d}/${INSTALL_NAME}"
-      exit 0
     fi
   done
-  echo "ℹ️ ${INSTALL_NAME} not found in standard locations."
+  
+  if [[ -d "${INSTALL_DIR_SOURCE}" ]]; then
+    if [[ -w "$(dirname ${INSTALL_DIR_SOURCE})" ]]; then
+      rm -rf "${INSTALL_DIR_SOURCE}"
+    elif command -v sudo >/dev/null; then
+      sudo rm -rf "${INSTALL_DIR_SOURCE}"
+    fi
+    echo "✅ Removed ${INSTALL_DIR_SOURCE}"
+  fi
+  
+  echo "✅ Uninstall complete!"
   exit 0
 fi
 
-# Check token notice (private repo requires token)
+#############################
+# Install from source
+#############################
+install_from_source() {
+  echo ""
+  echo "📦 Installing from Python source..."
+  
+  if ! command -v git >/dev/null; then
+    echo "❌ git not found. Install git first."
+    exit 1
+  fi
+  
+  if ! command -v python3 >/dev/null; then
+    echo "❌ python3 not found. Install Python 3.8+ first."
+    exit 1
+  fi
+  
+  # Install UV
+  if ! command -v uv >/dev/null; then
+    echo "📥 Installing UV..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+    source "$HOME/.cargo/env" 2>/dev/null || true
+  fi
+  
+  # Determine branch
+  BRANCH="main"
+  if [[ -n "${VERSION}" && "${VERSION}" != "latest" ]]; then
+    BRANCH="${VERSION}"
+  fi
+  
+  # Clone
+  echo "📥 Cloning ${OWNER}/${REPO} (${BRANCH})..."
+  if [[ -d "${INSTALL_DIR_SOURCE}" ]]; then
+    if [[ -w "$(dirname ${INSTALL_DIR_SOURCE})" ]]; then
+      rm -rf "${INSTALL_DIR_SOURCE}"
+    elif command -v sudo >/dev/null; then
+      sudo rm -rf "${INSTALL_DIR_SOURCE}"
+    fi
+  fi
+  
+  if [[ -w "$(dirname ${INSTALL_DIR_SOURCE})" ]]; then
+    git clone --depth 1 --branch "${BRANCH}" \
+      "https://github.com/${OWNER}/${REPO}.git" "${INSTALL_DIR_SOURCE}"
+  elif command -v sudo >/dev/null; then
+    sudo git clone --depth 1 --branch "${BRANCH}" \
+      "https://github.com/${OWNER}/${REPO}.git" "${INSTALL_DIR_SOURCE}"
+    sudo chown -R "$(whoami)" "${INSTALL_DIR_SOURCE}"
+  else
+    echo "❌ Cannot write to $(dirname ${INSTALL_DIR_SOURCE})"
+    exit 1
+  fi
+  
+  # Install deps
+  echo "📦 Installing dependencies..."
+  cd "${INSTALL_DIR_SOURCE}"
+  uv sync
+  
+  # Find wrapper location
+  WRAPPER_DIR=""
+  USE_SUDO_WRAPPER=false
+  for d in "${PREFERRED_DIRS[@]}"; do
+    if [[ -d "${d}" && -w "${d}" ]]; then
+      WRAPPER_DIR="${d}"
+      break
+    elif [[ -d "${d}" ]] && command -v sudo >/dev/null; then
+      WRAPPER_DIR="${d}"
+      USE_SUDO_WRAPPER=true
+      break
+    fi
+  done
+  
+  if [[ -z "${WRAPPER_DIR}" ]]; then
+    echo "❌ No directory found for wrapper"
+    exit 1
+  fi
+  
+  # Create wrapper
+  echo "🔗 Creating wrapper in ${WRAPPER_DIR}..."
+  WRAPPER_CONTENT="#!/bin/bash
+source ${INSTALL_DIR_SOURCE}/.venv/bin/activate
+exec python -m gitautoflow.cli.main \"\$@\"
+"
+  
+  if [[ "${USE_SUDO_WRAPPER}" == true ]]; then
+    echo "${WRAPPER_CONTENT}" | sudo tee "${WRAPPER_DIR}/${INSTALL_NAME}" > /dev/null
+    sudo chmod +x "${WRAPPER_DIR}/${INSTALL_NAME}"
+  else
+    echo "${WRAPPER_CONTENT}" > "${WRAPPER_DIR}/${INSTALL_NAME}"
+    chmod +x "${WRAPPER_DIR}/${INSTALL_NAME}"
+  fi
+  
+  echo ""
+  echo "🎉 ${INSTALL_NAME} installed from source!"
+  echo "📍 Wrapper: ${WRAPPER_DIR}/${INSTALL_NAME}"
+  echo "📦 Source: ${INSTALL_DIR_SOURCE}"
+  echo ""
+  
+  if "${WRAPPER_DIR}/${INSTALL_NAME}" --version >/dev/null 2>&1; then
+    echo "✅ Verified!"
+  else
+    echo "⚠️  Installed but verification failed"
+  fi
+  
+  exit 0
+}
+
+#############################
+# Force source mode
+#############################
+if [[ "${FORCE_SOURCE}" == "true" ]]; then
+  install_from_source
+fi
+
+#############################
+# Binary installation
+#############################
+
 if [[ -z "${GITHUB_TOKEN:-}" ]]; then
-  echo "⚠️  GITHUB_TOKEN not set — assuming repo is public. If private, export GITHUB_TOKEN first."
-else
-  # quick sanity
-  : # token present
+  echo "⚠️  GITHUB_TOKEN not set — assuming public repo"
 fi
 
 # Detect platform
 case "$(uname -s)" in
-  Darwin) PLATFORM="macos" ;; 
-  Linux)  PLATFORM="linux" ;; 
+  Darwin) PLATFORM="macos" ;;
+  Linux)  PLATFORM="linux" ;;
   *)
-    echo "🚨 Unsupported OS: $(uname -s). This installer supports macOS and Linux."
+    echo "🚨 Unsupported OS: $(uname -s)"
     exit 1
-    ;; 
+    ;;
 esac
 
 # Detect arch
 case "$(uname -m)" in
-  x86_64) ARCH="x64" ;; 
-  arm64|aarch64) ARCH="arm64" ;; 
+  x86_64) ARCH="x64" ;;
+  arm64|aarch64) ARCH="arm64" ;;
   *)
-    echo "🚨 Unsupported architecture: $(uname -m). Only x86_64 and arm64 supported."
+    echo "🚨 Unsupported arch: $(uname -m)"
     exit 1
-    ;; 
+    ;;
 esac
 
-# Resolve version (latest if empty)
+# Resolve version
 if [[ -z "${VERSION}" ]]; then
-  echo "ℹ️  Fetching latest release tag from GitHub..."
+  echo "ℹ️  Fetching latest release..."
   VERSION="$(curl_api "${API_BASE}/latest" 2>/dev/null | grep -m1 '"tag_name":' || true)"
   VERSION="$(echo "${VERSION}" | sed -E 's/.*"([^"]+)".*/\1/' || true)"
   if [[ -z "${VERSION}" ]]; then
-    echo "❌ Failed to determine latest release. If repo is private, ensure GITHUB_TOKEN is set and has repo scope."
-    exit 1
+    echo "❌ Cannot determine latest release"
+    echo "ℹ️  Falling back to source..."
+    install_from_source
   fi
 fi
-echo "📦 Installing ${INSTALL_NAME} — release: ${VERSION} (looking for ${BINARY_PREFIX}-${PLATFORM}-${ARCH})"
 
-# Find asset download URL
-# Prefer exact match for prefix + platform + arch; fallback to first match containing those tokens.
+echo "📦 Installing ${INSTALL_NAME} ${VERSION} (${PLATFORM}-${ARCH})"
+
+# Find asset
 ASSET_URL="$(curl_api "${API_BASE}/tags/${VERSION}" \
   | grep -E 'browser_download_url' \
-  | grep "${BINARY_PREFIX}" || true)"
-
-# filter for platform and arch
-ASSET_URL="$(echo "${ASSET_URL}" | grep "${PLATFORM}" || true)"
-ASSET_URL="$(echo "${ASSET_URL}" | grep "${ARCH}" || true)"
-ASSET_URL="$(echo "${ASSET_URL}" | head -n1 | sed -E 's/.*"([^"]+)".*/\1/' || true)"
+  | grep "${BINARY_PREFIX}" \
+  | grep "${PLATFORM}" \
+  | grep "${ARCH}" \
+  | head -n1 \
+  | sed -E 's/.*"([^"]+)".*/\1/' || true)"
 
 if [[ -z "${ASSET_URL}" ]]; then
-  echo "❌ No matching asset found for '${BINARY_PREFIX}' + '${PLATFORM}' + '${ARCH}' in release ${VERSION}."
-  echo "Assets found (for debug):"
-  curl_api "${API_BASE}/tags/${VERSION}" | grep -E 'browser_download_url' || true
-  exit 1
+  echo "❌ No binary for ${PLATFORM}-${ARCH}"
+  echo "ℹ️  Falling back to source..."
+  install_from_source
 fi
 
-echo "📥 Download URL found: ${ASSET_URL}"
+echo "📥 Downloading: ${ASSET_URL}"
 
-# Download file (use auth header for private repos)
+# Download
 DOWNLOAD_PATH="${TMP_DIR}/${INSTALL_NAME}.download"
 if [[ -n "${GITHUB_TOKEN:-}" ]]; then
   curl -sL -H "Authorization: token ${GITHUB_TOKEN}" -o "${DOWNLOAD_PATH}" "${ASSET_URL}"
@@ -126,57 +245,56 @@ else
 fi
 
 if [[ ! -s "${DOWNLOAD_PATH}" ]]; then
-  echo "❌ Download failed or file is empty."
-  exit 1
+  echo "❌ Download failed"
+  echo "ℹ️  Falling back to source..."
+  install_from_source
 fi
 
 chmod +x "${DOWNLOAD_PATH}"
 
-# Determine install directory (first writable or requiring sudo)
+# Find install dir
 INSTALL_DIR=""
 USE_SUDO=false
 for d in "${PREFERRED_DIRS[@]}"; do
   if [[ -d "${d}" && -w "${d}" ]]; then
     INSTALL_DIR="${d}"
-    USE_SUDO=false
     break
-  elif [[ -d "${d}" ]]; then
-    # exists but not writable — we can still use it with sudo
-    if command -v sudo >/dev/null; then
-      INSTALL_DIR="${d}"
-      USE_SUDO=true
-      break
-    fi
+  elif [[ -d "${d}" ]] && command -v sudo >/dev/null; then
+    INSTALL_DIR="${d}"
+    USE_SUDO=true
+    break
   fi
 done
 
 if [[ -z "${INSTALL_DIR}" ]]; then
-  echo "❌ No suitable installation directory found. Create one of: ${PREFERRED_DIRS[*]} or run with sudo."
+  echo "❌ No install directory found"
   exit 1
 fi
 
-echo "🔧 Installing to ${INSTALL_DIR} (sudo required: ${USE_SUDO})"
+echo "🔧 Installing to ${INSTALL_DIR} (sudo: ${USE_SUDO})"
 
-# Backup existing binary if present
+# Backup existing (FIXED)
 if command -v "${INSTALL_NAME}" >/dev/null 2>&1; then
   EXISTING_PATH="$(command -v ${INSTALL_NAME})"
-  TS="$(date +%s)"
-  BACKUP_PATH="${EXISTING_PATH}.bak-${TS}"
-  echo "💾 Existing ${INSTALL_NAME} found at ${EXISTING_PATH}. Backing up to ${BACKUP_PATH}"
-  if mv "${EXISTING_PATH}" "${BACKUP_PATH}" 2>/dev/null; then
-    echo "✅ Backup done."
-  elif command -v sudo >/dev/null; then
-    sudo mv "${EXISTING_PATH}" "${BACKUP_PATH}"
-    echo "✅ Backup done (with sudo)."
+  BACKUP_PATH="${EXISTING_PATH}.bak-$(date +%s)"
+  echo "💾 Backing up existing binary..."
+  
+  if [[ "${USE_SUDO}" == true ]]; then
+    sudo mv "${EXISTING_PATH}" "${BACKUP_PATH}" 2>/dev/null || {
+      echo "⚠️  Cannot backup, removing instead..."
+      sudo rm -f "${EXISTING_PATH}"
+    }
   else
-    echo "⚠️ Could not backup existing binary (no permission)."
+    mv "${EXISTING_PATH}" "${BACKUP_PATH}" 2>/dev/null || {
+      echo "⚠️  Cannot backup, removing instead..."
+      rm -f "${EXISTING_PATH}"
+    }
   fi
 fi
 
-# Move into place
+# Install
 TARGET_PATH="${INSTALL_DIR}/${INSTALL_NAME}"
 if [[ "${USE_SUDO}" == true ]]; then
-  echo "⚡ Using sudo to move binary..."
   sudo mv "${DOWNLOAD_PATH}" "${TARGET_PATH}"
   sudo chmod +x "${TARGET_PATH}"
 else
@@ -185,6 +303,23 @@ else
 fi
 
 echo ""
-echo "🎉 ${INSTALL_NAME} ${VERSION} installed to ${TARGET_PATH}"
-echo "👉 Run: ${INSTALL_NAME} (if not in PATH, add ${INSTALL_DIR} to your PATH)"
+echo "🎉 ${INSTALL_NAME} ${VERSION} installed!"
+echo "📍 ${TARGET_PATH}"
+echo ""
+
+# Verify
+echo "🔍 Verifying..."
+if ! "${TARGET_PATH}" --version >/dev/null 2>&1; then
+  echo "⚠️  Binary failed verification"
+  echo "ℹ️  Falling back to source..."
+  if [[ "${USE_SUDO}" == true ]]; then
+    sudo rm -f "${TARGET_PATH}"
+  else
+    rm -f "${TARGET_PATH}"
+  fi
+  install_from_source
+fi
+
+echo "✅ Verified!"
+echo "👉 Run: ${INSTALL_NAME} --help"
 echo ""
