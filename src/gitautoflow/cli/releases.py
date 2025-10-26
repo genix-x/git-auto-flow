@@ -7,6 +7,7 @@ Migration de git-release-auto.py vers architecture Typer
 import sys
 import subprocess
 import time
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -75,7 +76,12 @@ def get_latest_tag() -> str:
         tags = result.stdout.strip().split('\n')
 
         if tags and tags[0]:
-            return tags[0]
+            # Nettoie le tag pour retirer les "v" en trop
+            # Exemple: "vvv1.8.0" devient "v1.8.0"
+            latest_tag = tags[0]
+            # Garde seulement le premier "v" et les chiffres
+            cleaned_tag = re.sub(r'^v+', 'v', latest_tag)
+            return cleaned_tag
         else:
             return "v0.0.0"
     except Exception:
@@ -94,7 +100,9 @@ def create_github_release(release_data: dict, debug_command) -> bool:
         bool: True si succès
     """
     try:
-        version = f"v{release_data['version']}"
+        # Nettoie la version pour éviter les "v" en double
+        version = release_data['version']
+        cleaned_version = re.sub(r'^v+', 'v', version)
 
         # 1. Checkout main pour créer le tag
         info("📂 Checkout main pour la release...")
@@ -105,29 +113,29 @@ def create_github_release(release_data: dict, debug_command) -> bool:
         subprocess.run(['git', 'pull', 'origin', 'main'], capture_output=True, check=True)
 
         # 3. Créer le tag local
-        info(f"🏷️  Création du tag {version}...")
-        tag_cmd = ['git', 'tag', '-a', version, '-m', f'Release {version}']
-        debug_command(tag_cmd, f"create tag {version}")
+        info(f"🏷️  Création du tag {cleaned_version}...")
+        tag_cmd = ['git', 'tag', '-a', cleaned_version, '-m', f'Release {cleaned_version}']
+        debug_command(tag_cmd, f"create tag {cleaned_version}")
         subprocess.run(tag_cmd, check=True)
 
         # 4. Push le tag
-        info(f"📤 Push du tag {version}...")
-        push_tag_cmd = ['git', 'push', 'origin', version]
-        debug_command(push_tag_cmd, f"push tag {version}")
+        info(f"📤 Push du tag {cleaned_version}...")
+        push_tag_cmd = ['git', 'push', 'origin', cleaned_version]
+        debug_command(push_tag_cmd, f"push tag {cleaned_version}")
         subprocess.run(push_tag_cmd, check=True)
 
         # 5. Générer les release notes depuis les données IA
         release_notes = generate_release_notes(release_data)
 
         # 6. Créer la GitHub Release
-        info(f"🚀 Création de la GitHub Release {version}...")
+        info(f"🚀 Création de la GitHub Release {cleaned_version}...")
         gh_cmd = [
-            'gh', 'release', 'create', version,
-            '--title', f'{version}',
+            'gh', 'release', 'create', cleaned_version,
+            '--title', f'{cleaned_version}',
             '--notes', release_notes
         ]
 
-        debug_command(gh_cmd, f"create GitHub release {version}")
+        debug_command(gh_cmd, f"create GitHub release {cleaned_version}")
         subprocess.run(gh_cmd, check=True)
 
         return True
@@ -142,7 +150,11 @@ def create_github_release(release_data: dict, debug_command) -> bool:
 
 def generate_release_notes(release_data: dict) -> str:
     """Génère les release notes formatées pour GitHub"""
-    notes = f"## 🚀 Release v{release_data['version']}\n\n"
+    # Nettoie la version pour éviter les "v" en double
+    version = release_data['version']
+    cleaned_version = re.sub(r'^v+', 'v', version)
+    
+    notes = f"## 🚀 Release {cleaned_version}\n\n"
 
     if release_data.get('breaking_changes'):
         notes += "### ⚠️ BREAKING CHANGES\n"
@@ -162,7 +174,7 @@ def generate_release_notes(release_data: dict) -> str:
             notes += f"- {change}\n"
         notes += "\n"
 
-    notes += f"**Full Changelog**: https://github.com/{get_repo_name()}/compare/{get_latest_tag()}...v{release_data['version']}\n"
+    notes += f"**Full Changelog**: https://github.com/{get_repo_name()}/compare/{get_latest_tag()}...{cleaned_version}\n"
 
     return notes
 
@@ -366,21 +378,25 @@ def auto(
 
         if version:
             # Version forcée par l'utilisateur - on garde l'analyse IA mais on override la version
-            info(f"🎯 Version forcée: v{version} (utilisateur)")
+            cleaned_version = re.sub(r'^v+', 'v', version)
+            info(f"🎯 Version forcée: {cleaned_version} (utilisateur)")
             info(f"📋 Changements analysés par IA: {len(release_data['release'].get('minor_changes', []) + release_data['release'].get('patch_changes', []) + release_data['release'].get('major_changes', []))} modifications détectées")
 
             # Override seulement la version dans les données
             release_data['release']['version'] = version
             release_data['release']['version_type'] = 'forced'
-            release_data['pr']['title'] = f'Release v{version}'
+            release_data['pr']['title'] = f'Release {cleaned_version}'
         else:
             # Version calculée par l'IA
-            info(f"🏷️  Version calculée: v{release_data['release']['version']} ({release_data['release']['version_type']})")
+            version_from_ai = release_data['release']['version']
+            cleaned_ai_version = re.sub(r'^v+', 'v', version_from_ai)
+            info(f"🏷️  Version calculée: {cleaned_ai_version} ({release_data['release']['version_type']})")
 
-        # Affichage final de la version utilisée
+        # Affichage final de la version utilisée (nettoyée)
         final_version = version if version else release_data['release']['version']
+        cleaned_final_version = re.sub(r'^v+', 'v', final_version)
         version_type = 'forcée par utilisateur' if version else release_data['release']['version_type']
-        info(f"🏷️  Version finale: v{final_version} ({version_type})")
+        info(f"🏷️  Version finale: {cleaned_final_version} ({version_type})")
 
         # Étape 4: Création de la PR avec auto-merge
         info("\n🚀 Étape 4: Création de la PR de release...")
@@ -389,12 +405,12 @@ def auto(
         pr_url = run_gh_pr_create_release(release_data['pr'], immediate_merge, merge_method, force, debug_command)
 
         if pr_url and immediate_merge:
-            success(f"\n🎉 PR mergée! Création de la release v{release_data['release']['version']}...")
+            success(f"\n🎉 PR mergée! Création de la release {cleaned_final_version}...")
 
             # Étape 5: Création automatique de la release
             if create_github_release(release_data['release'], debug_command):
-                success(f"🏷️  Release v{release_data['release']['version']} créée avec succès!")
-                success(f"🔗 Voir: https://github.com/{get_repo_name()}/releases/tag/v{release_data['release']['version']}")
+                success(f"🏷️  Release {cleaned_final_version} créée avec succès!")
+                success(f"🔗 Voir: https://github.com/{get_repo_name()}/releases/tag/{cleaned_final_version}")
             else:
                 warning("Erreur lors de la création de la release GitHub")
         elif pr_url:
@@ -472,8 +488,10 @@ def next_version(
         # Génère l'analyse pour calculer la version
         release_data = ai.analyze_for_release(diff, files, commits, latest_tag=latest_tag)
 
-        # Affiche juste la version
-        console.print(f"v{release_data['release']['version']}")
+        # Affiche juste la version (nettoyée si elle contient déjà un "v")
+        version = release_data['release']['version']
+        cleaned_version = re.sub(r'^v+', 'v', version)
+        console.print(cleaned_version)
 
         if debug:
             info(f"Type de version: {release_data['release']['version_type']}")
